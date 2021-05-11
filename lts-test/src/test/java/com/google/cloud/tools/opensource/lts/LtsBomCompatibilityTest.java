@@ -47,8 +47,7 @@ public class LtsBomCompatibilityTest {
     // SafeConstructor parses YAML only with simple values.
     Yaml yaml = new Yaml(new SafeConstructor());
 
-    URL resource =
-        LtsCompatibilityChecker.class.getClassLoader().getResource(INPUT_RESOURCE_NAME);
+    URL resource = LtsCompatibilityChecker.class.getClassLoader().getResource(INPUT_RESOURCE_NAME);
     try (InputStream yamlInputStream = resource.openStream()) {
       Map<String, Object> input = yaml.load(yamlInputStream);
       List<Map<String, Object>> repositories =

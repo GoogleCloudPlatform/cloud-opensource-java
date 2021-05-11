@@ -17,11 +17,7 @@
 package com.google.cloud.tools.opensource.lts;
 
 import com.google.cloud.tools.opensource.dependencies.Bom;
-import java.io.IOException;
 import java.nio.file.Path;
-import nu.xom.ParsingException;
-import org.eclipse.aether.resolution.ArtifactResolutionException;
-import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 interface BuildFileModifier {
   void modifyFiles(String name, Path projectDirectory, Bom bom) throws TestSetupFailureException;

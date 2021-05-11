@@ -19,8 +19,8 @@ package com.google.cloud.tools.opensource.lts;
 import com.google.common.base.Preconditions;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Objects;
 import java.util.Map;
+import java.util.Objects;
 
 final class RepositoryTestCase {
 
@@ -90,11 +90,11 @@ final class RepositoryTestCase {
     }
 
     RepositoryTestCase that = (RepositoryTestCase) object;
-    return java.util.Objects.equals(gitUrl, that.gitUrl) && java.util.Objects
-        .equals(name, that.name)
-        && java.util.Objects.equals(gitTag, that.gitTag) && java.util.Objects
-        .equals(modification, that.modification) && java.util.Objects
-        .equals(commands, that.commands);
+    return java.util.Objects.equals(gitUrl, that.gitUrl)
+        && java.util.Objects.equals(name, that.name)
+        && java.util.Objects.equals(gitTag, that.gitTag)
+        && java.util.Objects.equals(modification, that.modification)
+        && java.util.Objects.equals(commands, that.commands);
   }
 
   public int hashCode() {

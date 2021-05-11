@@ -30,5 +30,5 @@ enum Modification {
     } else {
       throw new VerifyException("Unexpected modifier: " + this);
     }
-   }
+  }
 }

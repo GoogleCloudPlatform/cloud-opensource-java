@@ -63,18 +63,21 @@ class MavenProjectModifier implements BuildFileModifier {
   private static final String MAVEN_POM_NAMESPACE_URL = "http://maven.apache.org/POM/4.0.0";
 
   @Override
-  public void modifyFiles(String name, Path projectDirectory, Bom bom) throws TestSetupFailureException {
+  public void modifyFiles(String name, Path projectDirectory, Bom bom)
+      throws TestSetupFailureException {
     try {
       modifyPomFiles(projectDirectory, bom);
-    } catch (ArtifactResolutionException| InvalidVersionSpecificationException|ParsingException|IOException ex) {
+    } catch (ArtifactResolutionException
+        | InvalidVersionSpecificationException
+        | ParsingException
+        | IOException ex) {
       throw new TestSetupFailureException("Couldn't modify pom.xml files", ex);
     }
   }
 
-
   private static void modifyPomFiles(Path projectRoot, Bom bom)
       throws IOException, ParsingException, InvalidVersionSpecificationException,
-      ArtifactResolutionException {
+          ArtifactResolutionException {
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectRoot);
 
     ImmutableList<Artifact> bomManagedDependencies = bom.getManagedDependencies();

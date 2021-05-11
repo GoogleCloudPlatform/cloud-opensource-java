@@ -16,50 +16,16 @@
 
 package com.google.cloud.tools.opensource.lts;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
-import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
-import com.google.cloud.tools.opensource.classpath.ClassPathResult;
-import com.google.cloud.tools.opensource.classpath.GradleDependencyMediation;
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.base.Charsets;
-import com.google.common.base.Verify;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
-import com.google.common.io.MoreFiles;
 import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Logger;
-import nu.xom.Builder;
-import nu.xom.Document;
-import nu.xom.Element;
-import nu.xom.Elements;
-import nu.xom.Node;
-import nu.xom.Nodes;
-import nu.xom.ParsingException;
-import nu.xom.Text;
-import nu.xom.XPathContext;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.resolution.ArtifactRequest;
-import org.eclipse.aether.resolution.ArtifactResolutionException;
-import org.eclipse.aether.resolution.ArtifactResult;
-import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /**
  * Runs the repositories' tests specified in the {@code testCase} with the libraries in the LTS BOM
