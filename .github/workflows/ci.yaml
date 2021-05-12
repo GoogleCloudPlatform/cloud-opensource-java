@@ -16,6 +16,7 @@ jobs:
       with:
         java-version: ${{matrix.java}}
     - run: java -version
+    - run: xmllint -version
     - run: mkdir -p ~/.m2 && cp settings.xml ~/.m2/
     - run: ./mvnw -B -e -ntp install
     - run: cd gradle-plugin && ./gradlew build publishToMavenLocal
