@@ -17,11 +17,11 @@
 package com.google.cloud.tools.opensource.lts;
 
 import com.google.cloud.tools.opensource.dependencies.Bom;
-import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.logging.Logger;
@@ -67,7 +67,7 @@ class LtsCompatibilityChecker {
 
     if (checkoutStatusCode != 0) {
       String outputContent =
-          com.google.common.io.Files.asCharSource(gitOutput, Charsets.UTF_8).read();
+          com.google.common.io.Files.asCharSource(gitOutput, StandardCharsets.UTF_8).read();
       logger.severe("Failed to checkout the repository:\n" + outputContent);
       throw new TestFailureException("Could not checkout the Git URL: " + url);
     }
@@ -81,7 +81,8 @@ class LtsCompatibilityChecker {
     // Build the project, following the "commands" field
     Path shellScript = projectDirectory.resolve("lts_test.sh");
     String shellScriptLocation = shellScript.toAbsolutePath().toString();
-    com.google.common.io.Files.asCharSink(shellScript.toFile(), Charsets.UTF_8).write(commands);
+    com.google.common.io.Files.asCharSink(shellScript.toFile(), StandardCharsets.UTF_8)
+        .write(commands);
 
     logger.info("Running the commands");
 
@@ -97,7 +98,8 @@ class LtsCompatibilityChecker {
 
     int buildStatusCode = bashProcess.waitFor();
 
-    String outputContent = com.google.common.io.Files.asCharSource(output, Charsets.UTF_8).read();
+    String outputContent =
+        com.google.common.io.Files.asCharSource(output, StandardCharsets.UTF_8).read();
     logger.severe("Output:\n" + outputContent);
 
     // Avoid messing up the log with the output and the exception

@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.lts;
 
 import com.google.cloud.tools.opensource.dependencies.Bom;
-import com.google.common.base.Charsets;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
@@ -89,7 +88,7 @@ class BeamProjectModifier implements BuildFileModifier {
       //    buildGradleContent.replaceAll(
       //      "compile enforcedPlatform\\(library.java.google_cloud_platform_libraries_bom\\)",
       //      "compileOnly enforcedPlatform(library.java.google_cloud_platform_libraries_bom)");
-      Files.asCharSink(gradleFile.toFile(), Charsets.UTF_8).write(buildGradleContent);
+      Files.asCharSink(gradleFile.toFile(), StandardCharsets.UTF_8).write(buildGradleContent);
     }
   }
 
@@ -109,7 +108,7 @@ class BeamProjectModifier implements BuildFileModifier {
         !buildGradleContentTestRuntimeClassPathModified.equals(buildGradleContent),
         "The step should modify BeamModulePlugin.groovy");
 
-    Files.asCharSink(beamModulePluginFile.toFile(), Charsets.UTF_8)
+    Files.asCharSink(beamModulePluginFile.toFile(), StandardCharsets.UTF_8)
         .write(buildGradleContentTestRuntimeClassPathModified);
   }
 }

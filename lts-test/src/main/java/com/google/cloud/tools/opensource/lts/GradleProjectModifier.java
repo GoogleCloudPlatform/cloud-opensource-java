@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.lts;
 
 import com.google.cloud.tools.opensource.dependencies.Bom;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.io.MoreFiles;
 import java.io.IOException;
@@ -52,7 +51,7 @@ class GradleProjectModifier implements BuildFileModifier {
             "\ndependencies \\{",
             "\ndependencies {\n    testRuntime enforcedPlatform('" + bomCoordinates + "')");
 
-    com.google.common.io.Files.asCharSink(gradleFile.toFile(), Charsets.UTF_8)
+    com.google.common.io.Files.asCharSink(gradleFile.toFile(), StandardCharsets.UTF_8)
         .write(buildGradleContent);
   }
 }

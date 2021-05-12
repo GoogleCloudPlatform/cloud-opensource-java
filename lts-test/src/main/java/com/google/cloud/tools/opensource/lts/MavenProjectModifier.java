@@ -27,12 +27,12 @@ import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.MoreFiles;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -284,7 +284,8 @@ class MavenProjectModifier implements BuildFileModifier {
       classpathDependencyExcludes.appendChild(new Text("\n"));
     }
 
-    com.google.common.io.Files.asCharSink(pomFile.toFile(), Charsets.UTF_8).write(document.toXML());
+    com.google.common.io.Files.asCharSink(pomFile.toFile(), StandardCharsets.UTF_8)
+        .write(document.toXML());
   }
 
   private static Artifact resolveArtifact(String coordinates) throws ArtifactResolutionException {
