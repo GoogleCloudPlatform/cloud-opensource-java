@@ -16,17 +16,18 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import com.google.cloud.tools.opensource.dependencies.Bom;
-import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
 import org.eclipse.aether.artifact.Artifact;
 import org.junit.Assert;
 import org.junit.Test;
+import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 
 public class BomTest {
   
