@@ -14,25 +14,19 @@
  * limitations under the License.
  */
 
-package com.google.cloud.tools.opensource.lts;
+package org.apache.beam.gradle
 
-import com.google.common.base.VerifyException;
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
-/** The type of how to modify build files of a project. */
-enum Modification {
-  MAVEN,
-  GRADLE,
-  BEAM;
 
-  BuildFileModifier getModifier() {
-    if (this == MAVEN) {
-      return new MavenProjectModifier();
-    } else if (this == GRADLE) {
-      return new GradleProjectModifier();
-    } else if (this == BEAM) {
-      return new BeamProjectModifier();
-    } else {
-      throw new VerifyException("Unexpected modification: " + this);
-    }
+if (config.getName() != "errorprone" && !inDependencyUpdates) {
+  config.resolutionStrategy {
+    // Filtering versionless coordinates that depend on BOM. Beam project needs to set the
+    // versions for only handful libraries when building the project (BEAM-9542).
+    def librariesWithVersion = project.library.java.values().findAll { it.split(':').size() > 2 }
+    force librariesWithVersion
   }
 }
+

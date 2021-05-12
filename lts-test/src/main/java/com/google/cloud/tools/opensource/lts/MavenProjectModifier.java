@@ -130,7 +130,7 @@ class MavenProjectModifier implements BuildFileModifier {
     }
   }
 
-  static Element getOrCreateNode(Element parent, String name) {
+  private static Element getOrCreateNode(Element parent, String name) {
     Elements targetNodes = parent.getChildElements(name, MAVEN_POM_NAMESPACE_URL);
     if (targetNodes.size() >= 1) {
       return targetNodes.get(0);

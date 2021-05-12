@@ -75,18 +75,18 @@ final class RepositoryTestCase {
       return Modification.MAVEN;
     } else if ("Gradle".equals(input)) {
       return Modification.GRADLE;
+    } else if ("Beam".equals(input)) {
+      return Modification.BEAM;
     }
     throw new IllegalArgumentException("Invalid input for modification: " + input);
   }
 
+  @Override
   public boolean equals(Object object) {
     if (this == object) {
       return true;
     }
     if (object == null || getClass() != object.getClass()) {
-      return false;
-    }
-    if (!super.equals(object)) {
       return false;
     }
 
@@ -98,6 +98,7 @@ final class RepositoryTestCase {
         && java.util.Objects.equals(commands, that.commands);
   }
 
+  @Override
   public int hashCode() {
     return Objects.hash(gitUrl, name, gitTag, modification, commands);
   }

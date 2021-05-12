@@ -14,25 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.cloud.tools.opensource.lts;
-
-import com.google.common.base.VerifyException;
-
-/** The type of how to modify build files of a project. */
-enum Modification {
-  MAVEN,
-  GRADLE,
-  BEAM;
-
-  BuildFileModifier getModifier() {
-    if (this == MAVEN) {
-      return new MavenProjectModifier();
-    } else if (this == GRADLE) {
-      return new GradleProjectModifier();
-    } else if (this == BEAM) {
-      return new BeamProjectModifier();
-    } else {
-      throw new VerifyException("Unexpected modification: " + this);
-    }
-  }
+dependencies {
+  compile project(':gax'),
+  compile 'com.google.cloud:google-cloud-spanner:1.2.3'
 }

@@ -21,18 +21,39 @@ import com.google.common.io.Files;
 import com.google.common.truth.Truth;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import org.junit.Before;
 import org.junit.Test;
 
-public class GradleProjectModifierTest {
+public class BeamProjectModifierTest {
+  BuildFileModifier modifier = Modification.BEAM.getModifier();
+  Bom bom;
+  Path copiedProject;
+
+  @Before
+  public void setup() throws Exception {
+    bom = Bom.readBom("com.google.guava:guava-bom:30.0-jre");
+    copiedProject = TestHelper.createProjectCopy("testdata/example-gradle-project");
+  }
+
+  @Test
+  public void testRuntimeClasspathLogicChange() throws Exception {
+    modifier.modifyFiles("test", copiedProject, bom);
+    Path beamModulePluginFile =
+        copiedProject.resolve("subproject").resolve("BeamModulePlugin.groovy");
+    String beamModulePluginContent =
+        Files.asCharSource(beamModulePluginFile.toFile(), StandardCharsets.UTF_8).read();
+
+    Truth.assertThat(beamModulePluginContent)
+        .contains("![\"errorprone\", \"testRuntimeClasspath\"].contains(config.getName())");
+  }
+
   @Test
   public void testEnforcedPlatformInsertion() throws Exception {
-    BuildFileModifier modifier = Modification.GRADLE.getModifier();
-    Bom bom = Bom.readBom("com.google.guava:guava-bom:30.0-jre");
-
-    Path copiedProject = TestHelper.createProjectCopy("testdata/example-gradle-project");
     modifier.modifyFiles("test", copiedProject, bom);
-
-    Path gradleFile = copiedProject.resolve("subproject").resolve("build.gradle");
+    Path gradleFile =
+        copiedProject.resolve(
+            Paths.get("sdks", "java", "io", "google-cloud-platform", "build.gradle"));
     String buildGradleContent =
         Files.asCharSource(gradleFile.toFile(), StandardCharsets.UTF_8).read();
 

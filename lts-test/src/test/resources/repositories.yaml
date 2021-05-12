@@ -11,7 +11,7 @@ repositories:
     url: https://github.com/apache/beam.git
     # This is a branch, not a tag. But it works
     tag: release-2.30.0
-    modification: Gradle
+    modification: Beam
     commands: |
       if [ "$CI" == true ]; then
         # Beam's net.linguica.gradle.maven.settings plugin cannot work with GitHub Actions' default
