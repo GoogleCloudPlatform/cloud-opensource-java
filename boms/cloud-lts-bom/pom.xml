@@ -57,7 +57,7 @@
     <google.auth.library.version>0.25.2</google.auth.library.version>
     <google.oauth.client.version>1.31.4</google.oauth.client.version>
     <google.cloud.bigquery.version>1.127.11</google.cloud.bigquery.version>
-    <google.cloud.storage.version>1.113.11</google.cloud.storage.version>>
+    <google.cloud.storage.version>1.113.11</google.cloud.storage.version>
     <google.cloud.pubsub.version>1.112.0</google.cloud.pubsub.version>
     <google.cloud.spanner.version>6.0.0</google.cloud.spanner.version>
     <google.cloud.bigtable.version>1.21.2</google.cloud.bigtable.version>
