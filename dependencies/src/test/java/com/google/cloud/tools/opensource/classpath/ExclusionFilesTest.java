@@ -22,12 +22,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -347,7 +347,7 @@ public class ExclusionFilesTest {
             Files.readAllBytes(
                 absolutePathOfResource(
                     "exclusion-sample-rules/expected-exclusion-output-file.xml")),
-            Charsets.UTF_8);
+            StandardCharsets.UTF_8);
 
     assertEquals(expected, actual);
   }
