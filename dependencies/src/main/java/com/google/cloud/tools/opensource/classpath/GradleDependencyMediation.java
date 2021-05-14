@@ -95,7 +95,10 @@ public class GradleDependencyMediation implements DependencyMediation {
     // Step 3: Build annotated class path.
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
-      if (selectedCoordinates.contains(Artifacts.toCoordinates(artifact))) {
+      if (selectedCoordinates.contains(Artifacts.toCoordinates(artifact))
+          && artifact.getFile() != null) {
+        // If artifact's file is null, it means there was a problem in downloading the artifact.
+        // Such failure information is recorded in dependencyGraph's artifactProblems.
         annotatedClassPath.put(new ClassPathEntry(artifact), dependencyPath);
       }
     }

@@ -1,5 +1,9 @@
 # Linkage Checker Enforcer Rule and Linkage Monitor Change Log
 
+## 1.5.9
+* Added an exclusion rule for invalid references in appengien-api-1.0-sdk ([#2045](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2045))
+
 ## 1.5.8
 * Fixed the bug of the Linkage Checker enforcer rule not reporting failures when it cannot find
   exclusion files ([#2006](

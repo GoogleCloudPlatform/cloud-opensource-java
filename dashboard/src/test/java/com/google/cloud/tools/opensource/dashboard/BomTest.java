@@ -30,15 +30,23 @@ import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 
 public class BomTest {
-
-  private static final Path CLOUD_OSS_BOM_PATH =
-      Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();  
   
   @Test
-  public void testArtifactsExist()
+  public void testLtsBom()
       throws IOException, MavenRepositoryException {
-    List<Artifact> artifacts =
-        Bom.readBom(CLOUD_OSS_BOM_PATH).getManagedDependencies();
+    Path bomPath = Paths.get("..", "boms", "cloud-lts-bom", "pom.xml").toAbsolutePath();  
+    checkBom(bomPath);
+  }
+  
+  @Test
+  public void testLibrariesBom()
+      throws IOException, MavenRepositoryException {
+    Path bomPath = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();  
+    checkBom(bomPath);
+  }
+
+  private void checkBom(Path bomPath) throws MavenRepositoryException, IOException {
+    List<Artifact> artifacts = Bom.readBom(bomPath).getManagedDependencies();
     for (Artifact artifact : artifacts) {
       assertReachable(buildMavenCentralUrl(artifact));
     }
