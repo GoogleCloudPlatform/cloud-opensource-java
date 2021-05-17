@@ -56,6 +56,7 @@
     <gax.httpjson.version>0.81.0</gax.httpjson.version>
     <common.protos.version>2.2.1</common.protos.version>
     <iam.protos.version>1.0.14</iam.protos.version>
+    <cloud.sql.jdbc.socket.factory.version>1.2.3</cloud.sql.jdbc.socket.factory.version>
   </properties>
 
   <distributionManagement>
@@ -266,6 +267,11 @@
          <groupId>com.google.api.grpc</groupId>
          <artifactId>grpc-google-iam-v1</artifactId>
          <version>${iam.protos.version}</version>
+       </dependency>
+       <dependency>
+         <groupId>com.google.cloud.sql</groupId>
+         <artifactId>jdbc-socket-factory-core</artifactId>
+         <version>${cloud.sql.jdbc.socket.factory.version}</version>
        </dependency>
 
     </dependencies>
