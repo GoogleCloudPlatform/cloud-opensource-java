@@ -53,7 +53,6 @@
     <beam.version>2.28.0</beam.version>
     <appengine.api.1.0.sdk.version>1.9.87</appengine.api.1.0.sdk.version>
     <datastore.v1.proto.client.version>1.6.3</datastore.v1.proto.client.version>
-    <google.auth.library.version>0.25.2</google.auth.library.version>
     <google.cloud.bigtable.version>1.21.2</google.cloud.bigtable.version>
     <google.cloud.bigtable.client.version>1.19.1</google.cloud.bigtable.client.version>
     <protobuf.version>3.16.0</protobuf.version>
@@ -70,6 +69,7 @@
     <gax.httpjson.version>0.81.0-sp.1</gax.httpjson.version>
     <google.api.client.version>1.31.3-sp.1</google.api.client.version>
     <api.common.version>1.10.1-sp.1</api.common.version>
+    <google.auth.library.version>0.25.2-sp.1</google.auth.library.version>
     <google.oauth.client.version>1.31.4-sp.1</google.oauth.client.version>
     <google.cloud.spanner.version>3.3.3-sp.1</google.cloud.spanner.version>
     <google.cloud.monitoring.version>2.1.0-sp.1</google.cloud.monitoring.version>
