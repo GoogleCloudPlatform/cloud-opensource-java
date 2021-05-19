@@ -30,7 +30,7 @@ repositories:
           -x analyzeClassesDependencies
   - name: google-api-java-client
     url: https://github.com/googleapis/google-api-java-client.git
-    tag: v1.31.5
+    tag: v1.31.3-sp.1
     modification: Maven
     commands: |
       mkdir /tmp/foo && cd /tmp/foo
@@ -52,7 +52,7 @@ repositories:
           -T 1C
   - name: google-auth-library-java
     url: https://github.com/googleapis/google-auth-library-java.git
-    tag: v0.25.2
+    tag: v0.25.2-sp.1
     modification: Maven
     # appengine module doesn't work
     # https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1974#issuecomment-806153876
@@ -67,7 +67,7 @@ repositories:
           -T 1C
   - name: google-http-java-client
     url: https://github.com/googleapis/google-http-java-client.git
-    tag: v1.39.1
+    tag: v1.39.2-sp.1
     modification: Maven
     # google-http-client-appengine does not work with the latest appengine-client-1.0-sdk
     # but the module is not part of the BOM.
@@ -90,7 +90,7 @@ repositories:
       ./gradlew --scan --info --console=plain --continue test
   - name: google-oauth-java-client
     url: https://github.com/googleapis/google-oauth-java-client.git
-    tag: v1.31.4
+    tag: v1.31.4-sp.1
     modification: Maven
     commands: |
       mvn --batch-mode --show-version --no-transfer-progress test \
@@ -126,7 +126,7 @@ repositories:
           :grpc-testing:check
   - name: java-bigquery
     url: https://github.com/googleapis/java-bigquery.git
-    tag: v1.127.11
+    tag: v1.127.12-sp.1
     modification: Maven
     commands: |
       mvn --batch-mode --show-version --no-transfer-progress test \
@@ -151,7 +151,7 @@ repositories:
           -Dgcloud.download.skip=true
   - name: java-monitoring
     url: https://github.com/googleapis/java-monitoring.git
-    tag: v2.1.0
+    tag: v2.1.0-sp.1
     modification: Maven
     commands: |
       mvn --batch-mode --show-version --no-transfer-progress test \
@@ -163,7 +163,7 @@ repositories:
           -T 1C
   - name: java-pubsub
     url: https://github.com/googleapis/java-pubsub.git
-    tag: v1.112.0
+    tag: v1.111.0-sp.1
     modification: Maven
     commands: |
       mvn --batch-mode --show-version --no-transfer-progress test \
@@ -175,7 +175,7 @@ repositories:
           -T 1C
   - name: java-spanner
     url: https://github.com/googleapis/java-spanner.git
-    tag: v6.0.0
+    tag: v3.3.3-sp.1
     modification: Maven
     commands: |
       mvn --batch-mode --show-version --no-transfer-progress test \
@@ -187,7 +187,7 @@ repositories:
           -T 1C
   - name: java-storage
     url: https://github.com/googleapis/java-storage.git
-    tag: v1.113.14
+    tag: v1.113.14-sp.1
     modification: Maven
     commands: |
       mvn --batch-mode --show-version --no-transfer-progress test \
