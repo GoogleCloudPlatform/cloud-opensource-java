@@ -55,12 +55,12 @@
     <datastore.v1.proto.client.version>1.6.3</datastore.v1.proto.client.version>
     <google.cloud.bigtable.version>1.21.2</google.cloud.bigtable.version>
     <google.cloud.bigtable.client.version>1.19.1</google.cloud.bigtable.client.version>
-    <protobuf.version>3.16.0</protobuf.version>
     
     <!-- finalized versions -->    
     <!-- JRE for Java 8. Beam's dependency (gcsio) uses JRE flavor -->
     <guava.version>30.1.1-jre</guava.version>
     <google.autovalue.version>1.8.1</google.autovalue.version>
+    <protobuf.version>3.16.0</protobuf.version>
     <http.version>1.39.2-sp.1</http.version>
     <io.grpc.version>1.36.1</io.grpc.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
