@@ -45,7 +45,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <guava.version>30.1.1-android</guava.version>
-    <google.cloud.java.version>0.153.0</google.cloud.java.version>
+    <google.cloud.java.version>0.154.0</google.cloud.java.version>
     <google.cloud.core.version>1.94.8</google.cloud.core.version>
     <io.grpc.version>1.37.1</io.grpc.version>
     <http.version>1.39.2</http.version>
