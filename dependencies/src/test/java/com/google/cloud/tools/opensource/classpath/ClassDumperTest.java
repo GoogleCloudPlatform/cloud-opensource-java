@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.junit.After;
 import org.junit.Assert;
@@ -418,5 +420,20 @@ public class ClassDumperTest {
     // This should not raise NullPointerException
     boolean result = classDumper.catchesLinkageErrorOnClass("javax.mail.internet.MailDateFormat");
     assertFalse(result);
+  }
+
+  @Test
+  public void testInvalidJarFile() throws Exception {
+    String pomFile = "libraries-bom-2.7.0.pom";
+    Path nonZipFile = TestHelper.absolutePathOfResource(pomFile);
+    Artifact nonZipArtifact = new DefaultArtifact("com.google.cloud:libraries-bom:2.7.0")
+        .setFile(nonZipFile.toFile());
+
+    try {
+      ClassDumper.create(ImmutableList.of(new ClassPathEntry(nonZipArtifact)));
+      Assert.fail("ClassDumper shoudl raise IOException for an invalid JAR file.");
+    } catch (IOException ex) {
+      ex.getMessage().contains(pomFile);
+    }
   }
 }
