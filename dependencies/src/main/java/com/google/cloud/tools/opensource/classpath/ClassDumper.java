@@ -92,10 +92,14 @@ class ClassDumper {
     
     Map<String, ClassPathEntry> map = new HashMap<>();
     for (ClassPathEntry entry : entries) {
-      for (String className : entry.getFileNames()) {
-        if (!map.containsKey(className)) {
-          map.put(className, entry);
+      try {
+        for (String className : entry.getFileNames()) {
+          if (!map.containsKey(className)) {
+            map.put(className, entry);
+          }
         }
+      } catch (IOException ex) {
+        throw new IOException("Failed to read content of " + entry.getJar(), ex);
       }
     }
     
