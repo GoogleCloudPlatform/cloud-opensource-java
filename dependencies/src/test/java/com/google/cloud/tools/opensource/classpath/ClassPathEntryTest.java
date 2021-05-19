@@ -160,4 +160,20 @@ public class ClassPathEntryTest {
     } catch (NullPointerException expected) {
     }
   }
+
+  @Test
+  public void testInvalidJarFile() throws Exception {
+    String pomFile = "libraries-bom-2.7.0.pom";
+    Path nonZipFile = TestHelper.absolutePathOfResource(pomFile);
+    Artifact nonZipArtifact = new DefaultArtifact("com.google.cloud:libraries-bom:2.7.0")
+        .setFile(nonZipFile.toFile());
+    ClassPathEntry classPathEntry = new ClassPathEntry(nonZipArtifact);
+
+    try {
+      classPathEntry.getFileNames();
+      Assert.fail("getFileNames() should raise IOException for an invalid JAR file.");
+    } catch (IOException expected) {
+      Truth.assertThat(expected.getMessage()).contains(pomFile);
+    }
+  }
 }
