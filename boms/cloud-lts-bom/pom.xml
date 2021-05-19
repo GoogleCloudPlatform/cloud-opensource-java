@@ -53,6 +53,7 @@
     <beam.version>2.30.0-SNAPSHOT</beam.version>
     <appengine.api.1.0.sdk.version>1.9.87</appengine.api.1.0.sdk.version>
     <datastore.v1.proto.client.version>1.6.3</datastore.v1.proto.client.version>
+    <androidpublisher.version>v3-rev20210429-1.31.0</androidpublisher.version>
     <google.cloud.bigtable.version>1.21.2</google.cloud.bigtable.version>
     <google.cloud.bigtable.client.version>1.19.1</google.cloud.bigtable.client.version>
     
@@ -247,8 +248,6 @@
         <artifactId>bigtable-hbase-beam</artifactId>
         <version>${google.cloud.bigtable.client.version}</version>
       </dependency>
-
-      <!-- What will replace com.google.apis:google-api-services-cloudtrace? -->
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-trace</artifactId>
@@ -273,6 +272,11 @@
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-spanner</artifactId>
         <version>${google.cloud.spanner.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.apis</groupId>
+        <artifactId>google-api-services-androidpublisher</artifactId>
+        <version>${androidpublisher.version}</version>
       </dependency>
 
       <!-- API Infrastructure section -->
