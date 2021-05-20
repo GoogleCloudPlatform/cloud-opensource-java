@@ -77,7 +77,7 @@ fi
 
 if [[ "${SUFFIX}" = "bom" ]]; then
   cd boms/cloud-oss-bom
-elif [[ "${SUFFIX}" = "lts" ]]
+elif [[ "${SUFFIX}" = "lts" ]]; then
   cd boms/cloud-lts-bom
 fi
 
