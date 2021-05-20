@@ -110,6 +110,8 @@ public final class ClassPathEntry {
         }
       }
       this.fileNames = builder.build();
+    } catch (IOException ex) {
+      throw new IOException("Failed to read content of " + jar, ex);
     }
   }
 
