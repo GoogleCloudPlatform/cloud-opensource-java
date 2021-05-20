@@ -11,7 +11,7 @@
   <packaging>pom</packaging>
 
   <name>Google Cloud Long Term Support BOM</name>
-  <!-- TODO: Add the description element before the release -->
+  <description>Google Cloud Long Term Support BOM</description>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java</url>
   <organization>
     <name>Google LLC</name>
