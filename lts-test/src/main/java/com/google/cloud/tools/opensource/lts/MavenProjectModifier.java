@@ -183,10 +183,16 @@ class MavenProjectModifier implements BuildFileModifier {
       return;
     }
 
+
+
+    ImmutableMap<String, String> versionlessCoordinatesToVersion =
+        managedDependencies.stream()
+            .map(ClassPathEntry::getArtifact)
+            .collect(ImmutableMap.toImmutableMap(Artifacts::makeKey, Artifact::getVersion));
+
     // Look at project/build/plugins/plugin for surefire plugin
     Nodes classifierNodes =
         document.query("//ns:project/ns:dependencies/ns:dependency/ns:classifier", context);
-
     // Surefire configuration cannot distinguish artifacts' classifiers. Therefore we do not exclude
     // artifacts with classifiers
     Set<String> dependenciesWithClassifiers = new HashSet<>();
@@ -202,6 +208,25 @@ class MavenProjectModifier implements BuildFileModifier {
       String groupId =
           dependency.getChildElements("groupId", MAVEN_POM_NAMESPACE_URL).get(0).getValue();
       dependenciesWithClassifiers.add(groupId + ":" + artifactId);
+    }
+    Nodes dependencyNodes =
+        document.query("//ns:project/ns:dependencies/ns:dependency", context);
+
+    for (Node dependencyNode: dependencyNodes) {
+      Element dependency = (Element) dependencyNode;
+      String artifactId =
+          dependency.getChildElements("artifactId", MAVEN_POM_NAMESPACE_URL).get(0).getValue();
+      String groupId =
+          dependency.getChildElements("groupId", MAVEN_POM_NAMESPACE_URL).get(0).getValue();
+
+      if (dependenciesWithClassifiers.contains(groupId + ":" + artifactId)) {
+        Element version = getOrCreateNode(dependency, "version");
+        String versionInBom = versionlessCoordinatesToVersion.get(groupId + ":" + artifactId);
+        if (versionInBom != null) {
+          version.removeChildren();
+          version.appendChild(versionInBom);
+        }
+      }
     }
 
     Element projectNode = (Element) document.query("//ns:project", context).get(0);
@@ -223,11 +248,6 @@ class MavenProjectModifier implements BuildFileModifier {
       additionalClasspathElements.appendChild(additionalClasspathElement);
       additionalClasspathElements.appendChild(new Text("\n"));
     }
-
-    ImmutableMap<String, String> versionlessCoordinatesToVersion =
-        managedDependencies.stream()
-            .map(ClassPathEntry::getArtifact)
-            .collect(ImmutableMap.toImmutableMap(Artifacts::makeKey, Artifact::getVersion));
 
     // Google-cloud-storage depends on com.google.cloud:google-cloud-core:jar:tests:1.94.3.
     // Because com.google.cloud:google-cloud-core is excluded at runtime, we have to add it back.

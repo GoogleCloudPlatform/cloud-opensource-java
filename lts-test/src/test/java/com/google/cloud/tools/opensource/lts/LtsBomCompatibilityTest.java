@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.lts;
 
+import static org.junit.Assert.assertTrue;
+
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import java.io.InputStream;
 import java.net.URL;
@@ -52,6 +54,7 @@ public class LtsBomCompatibilityTest {
     Yaml yaml = new Yaml(new SafeConstructor());
 
     URL resource = LtsCompatibilityChecker.class.getClassLoader().getResource(INPUT_RESOURCE_NAME);
+    boolean testFound = false;
     try (InputStream yamlInputStream = resource.openStream()) {
       Map<String, Object> input = yaml.load(yamlInputStream);
       List<Map<String, Object>> repositories =
@@ -65,10 +68,12 @@ public class LtsBomCompatibilityTest {
         if (!targetRepositoryName.equals(testCase.getName())) {
           continue;
         }
+        testFound = true;
 
         LtsCompatibilityChecker runner = new LtsCompatibilityChecker(testCase);
         runner.run(bom, testRoot);
       }
     }
+    assertTrue(testFound);
   }
 }

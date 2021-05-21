@@ -25,6 +25,15 @@
     <version>0.1-SNAPSHOT</version>
   </parent>
 
+  <dependencies>
+    <dependency>
+      <groupId>com.google.api</groupId>
+      <artifactId>gax-grpc</artifactId>
+      <classifier>testlib</classifier>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
   <artifactId>example-maven-project</artifactId>
 
 </project>
