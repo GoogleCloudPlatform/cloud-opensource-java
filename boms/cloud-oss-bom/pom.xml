@@ -54,6 +54,7 @@
         When updating gax.version, update gax.httpjson.version too. -->
     <gax.version>1.64.0</gax.version>
     <gax.httpjson.version>0.81.0</gax.httpjson.version>
+    <auth.version>0.26.0</auth.version>
     <common.protos.version>2.2.1</common.protos.version>
     <iam.protos.version>1.0.14</iam.protos.version>
   </properties>
@@ -236,7 +237,7 @@
       <dependency>
         <groupId>com.google.auth</groupId>
         <artifactId>google-auth-library-bom</artifactId>
-        <version>0.25.5</version>
+        <version>${auth.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
