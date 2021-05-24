@@ -51,7 +51,6 @@
     <!-- interrim placeholder versions -->
     <!-- TODO: For each library, update the versions to the LTS version -->
     <beam.version>2.28.0</beam.version>
-    <appengine.api.1.0.sdk.version>1.9.87</appengine.api.1.0.sdk.version>
     <datastore.v1.proto.client.version>1.6.3</datastore.v1.proto.client.version>
     <google.cloud.bigtable.version>1.21.2</google.cloud.bigtable.version>
     <google.cloud.bigtable.client.version>1.19.1</google.cloud.bigtable.client.version>
@@ -77,6 +76,7 @@
     <google.cloud.pubsub.version>1.111.0-sp.1</google.cloud.pubsub.version>
     <google.cloud.bigquery.version>1.127.12-sp.1</google.cloud.bigquery.version>
     <google.cloud.storage.version>1.113.14-sp.1</google.cloud.storage.version>
+    <appengine.api.1.0.sdk.version>1.9.86</appengine.api.1.0.sdk.version>
     <androidpublisher.version>v3-rev20210429-1.31.0</androidpublisher.version>
   </properties>
 
