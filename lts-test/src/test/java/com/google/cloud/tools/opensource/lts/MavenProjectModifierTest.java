@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import nu.xom.Builder;
 import nu.xom.Document;
+import nu.xom.Element;
 import nu.xom.Node;
 import nu.xom.ParsingException;
 import nu.xom.XPathContext;
@@ -43,15 +44,27 @@ public class MavenProjectModifierTest {
     modifier.modifyFiles("test", copiedProject, bom);
 
     Path rootPomFile = copiedProject.resolve("pom.xml");
-    verifyGuavaBomModification(rootPomFile);
+
+    Builder builder = new Builder();
+    Document document = builder.build(rootPomFile.toFile());
+    verifyGuavaBomModification(document);
 
     Path subProjectPomFile = copiedProject.resolve("subproject").resolve("pom.xml");
-    verifyGuavaBomModification(subProjectPomFile);
+    Document subProjectDocument = builder.build(subProjectPomFile.toFile());
+
+    verifyGuavaBomModification(subProjectDocument);
   }
 
-  void verifyGuavaBomModification(Path pomFile) throws ParsingException, IOException {
-    Builder builder = new Builder();
-    Document document = builder.build(pomFile.toFile());
+  void verifyTestClassifierModification(Document document) throws ParsingException, IOException {
+    ImmutableList<Node> dependencyNodes =
+        ImmutableList.copyOf(document.query("//ns:project/ns:build/ns:dependencies/ns:dependency", context));
+
+    Element firstDependency = (Element) dependencyNodes.get(0);
+
+    firstDependency.getChildElements("version");
+  }
+
+  void verifyGuavaBomModification(Document document) throws ParsingException, IOException {
     ImmutableList<Node> pluginElements =
         ImmutableList.copyOf(document.query("//ns:project/ns:build/ns:plugins/ns:plugin", context));
 
