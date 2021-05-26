@@ -22,6 +22,7 @@ jobs:
           - grpc-java
           - java-bigquery
           - java-bigtable-hbase
+          - java-datastore
           - java-monitoring
           - java-pubsub
           - java-spanner
