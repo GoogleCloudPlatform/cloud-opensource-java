@@ -47,12 +47,13 @@ public class MavenProjectModifierTest {
 
     Builder builder = new Builder();
     Document document = builder.build(rootPomFile.toFile());
-    verifyGuavaBomModification(document);
+    // The exclusion is one-less smaller for testlib artifact
+    verifyGuavaBomModification(document, 69, 68);
 
     Path subProjectPomFile = copiedProject.resolve("subproject").resolve("pom.xml");
     Document subProjectDocument = builder.build(subProjectPomFile.toFile());
 
-    verifyGuavaBomModification(subProjectDocument);
+    verifyGuavaBomModification(subProjectDocument, 69, 69);
   }
 
   void verifyTestClassifierModification(Document document) throws ParsingException, IOException {
@@ -64,7 +65,8 @@ public class MavenProjectModifierTest {
     firstDependency.getChildElements("version");
   }
 
-  void verifyGuavaBomModification(Document document) throws ParsingException, IOException {
+  void verifyGuavaBomModification(Document document, int expectedAdditionalClasspathElementCount,
+      int expectedClasspathDependencyExcludeCount) {
     ImmutableList<Node> pluginElements =
         ImmutableList.copyOf(document.query("//ns:project/ns:build/ns:plugins/ns:plugin", context));
 
@@ -84,13 +86,13 @@ public class MavenProjectModifierTest {
                 context));
 
     // The artifacts in the guava-bom 30.0 and their dependencies.
-    Truth.assertThat(additionalClasspathElements).hasSize(69);
+    Truth.assertThat(additionalClasspathElements).hasSize(expectedAdditionalClasspathElementCount);
 
     ImmutableList<Node> classpathDependencyExcludes =
         ImmutableList.copyOf(
             surefirePluginNode.query(
                 "ns:configuration/ns:classpathDependencyExcludes/ns:classpathDependencyExclude",
                 context));
-    Truth.assertThat(classpathDependencyExcludes).hasSize(69);
+    Truth.assertThat(classpathDependencyExcludes).hasSize(expectedClasspathDependencyExcludeCount);
   }
 }
