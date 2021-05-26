@@ -73,7 +73,7 @@
     <google.cloud.pubsub.version>1.111.0-sp.1</google.cloud.pubsub.version>
     <google.cloud.bigquery.version>1.127.12-sp.1</google.cloud.bigquery.version>
     <google.cloud.bigtable.version>1.22.0-sp.1</google.cloud.bigtable.version>
-    <google.cloud.bigtable.client.version>1.20.0-sp.1</google.cloud.bigtable.client.version>
+    <bigtable-hbase-beam.version>1.20.0-sp.1</bigtable-hbase-beam.version>
     <google.cloud.storage.version>1.113.14-sp.1</google.cloud.storage.version>
     <datastore.v1.proto.client.version>1.6.4-sp.1</datastore.v1.proto.client.version>
     <appengine.api.1.0.sdk.version>1.9.86</appengine.api.1.0.sdk.version>
@@ -246,7 +246,7 @@
       <dependency>
         <groupId>com.google.cloud.bigtable</groupId>
         <artifactId>bigtable-hbase-beam</artifactId>
-        <version>${google.cloud.bigtable.client.version}</version>
+        <version>${bigtable-hbase-beam.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
