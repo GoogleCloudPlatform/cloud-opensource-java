@@ -149,6 +149,19 @@ repositories:
           -Denforcer.skip=true \
           -Dmaven.javadoc.skip=true \
           -Dgcloud.download.skip=true
+  - name: java-datastore
+    # This repository hosts com.google.cloud.datastore:datastore-v1-proto-client
+    url: https://github.com/googleapis/java-datastore.git
+    tag: v1.106.5-sp.1
+    modification: Maven
+    commands: |
+      mvn --batch-mode --show-version --no-transfer-progress verify \
+          --projects datastore-v1-proto-client \
+          -DtrimStackTrace=false \
+          -Dclirr.skip=true \
+          -Denforcer.skip=true \
+          -Dmaven.javadoc.skip=true \
+          -Dgcloud.download.skip=true
   - name: java-monitoring
     url: https://github.com/googleapis/java-monitoring.git
     tag: v2.1.0-sp.1
