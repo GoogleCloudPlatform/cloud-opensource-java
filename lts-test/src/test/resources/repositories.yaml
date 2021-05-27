@@ -139,7 +139,7 @@ repositories:
   - name: java-bigtable-hbase
     url: https://github.com/googleapis/java-bigtable-hbase.git
     # The repository will undergo overhaul. No need to investigate current v1 branch
-    tag: v1.19.1
+    tag: v1.20.0-sp.1
     modification: Maven
     commands: |
       mvn --batch-mode --show-version --no-transfer-progress verify \
