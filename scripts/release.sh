@@ -16,7 +16,7 @@ Die() {
 }
 
 DieUsage() {
-  Die "Usage: ./release.sh <dependencies|bom> <release version> [<post-release-version>]"
+  Die "Usage: ./release.sh <dependencies|bom|lts> <release version> [<post-release-version>]"
 }
 
 # Usage: CheckVersion <version>
@@ -41,7 +41,7 @@ gcertstatus --quiet --check_ssh=false --check_remaining=10m \
 
 SUFFIX=$1
 
-if [[ "${SUFFIX}" != "dependencies" && "${SUFFIX}" != "bom" ]]; then
+if [[ "${SUFFIX}" != "dependencies" && "${SUFFIX}" != "bom" && "${SUFFIX}" != "lts" ]]; then
   DieUsage
 fi
 
@@ -77,6 +77,8 @@ fi
 
 if [[ "${SUFFIX}" = "bom" ]]; then
   cd boms/cloud-oss-bom
+elif [[ "${SUFFIX}" = "lts" ]]; then
+  cd boms/cloud-lts-bom
 fi
 
 # Updates the pom.xml with the version to release.
@@ -129,8 +131,10 @@ release_rapid_project() {
       --committish="${RELEASE_TAG}"
 }
 
-if [[ "${SUFFIX}" = bom ]]; then
+if [[ "${SUFFIX}" = "bom" ]]; then
   release_rapid_project bom-kokoro
+elif [[ "${SUFFIX}" = "lts" ]]; then
+  release_rapid_project lts-kokoro
 else
   # Run the Rapid projects concurrently
   release_rapid_project parent-kokoro &
