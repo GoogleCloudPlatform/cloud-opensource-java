@@ -18,12 +18,12 @@
     <dependency>
       <groupId>com.google.cloud.tools</groupId>
       <artifactId>dependencies</artifactId>
-      <version>1.5.9-SNAPSHOT</version>
+      <version>1.5.10-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.13.1</version>
+      <version>4.13.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

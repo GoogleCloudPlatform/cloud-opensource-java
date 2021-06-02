@@ -96,15 +96,18 @@ new release is available on Maven Central.
 * Manually edit and update any pom.xml files in https://github.com/GoogleCloudPlatform/java-docs-samples that dependabot missed
 * In google3 run:
     * `$ g4d -f bom`
-    * `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version>oldVersion&lt;/version>" "&lt;version>newVersion&lt;/version>"`
-    * `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version&gt;oldVersion&lt;/version&gt;" "&lt;version>newVersion&lt;/version>"`
+    * `$ OLD=19.0.0; NEW=19.1.0`
+      (Adjust the old and new versions)
+    * `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version>${OLD}&lt;/version>" "&lt;version>${NEW}&lt;/version>"`
+    * `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version&gt;${OLD}&lt;/version&gt;" "&lt;version>${NEW}&lt;/version>"`
+    * `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version&gt;${OLD}&lt;/version>" "&lt;version>${NEW}&lt;/version>"`
     * Sanity check the cl and send it for review.
     * Submit on approval
 * Search for libraries-bom in google3 to find any internal references (typically cloudsite and devsite) that still need to be updated.
 
 ## Retrying a failed release
 
-If the Github steps succeed--PR created, version tagged, etc.--but the Rapid release fails, you can
+If the Github steps succeed—PR created, version tagged, etc.—but the Rapid release fails, you can
 run this command from a g4 client to retry the Rapid build without going all the way
 back to the beginning:
 
