@@ -20,6 +20,7 @@ import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHi
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -42,6 +43,7 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.classfile.Utility;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /** A tool to find linkage errors in a class path. */
@@ -109,6 +111,15 @@ public class LinkageChecker {
     ClassPathResult classPathResult =
         classPathBuilder.resolve(managedDependencies, true, DependencyMediation.MAVEN);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
+
+    ImmutableList<UnresolvableArtifactProblem> artifactProblems = classPathResult
+        .getArtifactProblems();
+    if (!artifactProblems.isEmpty()) {
+      for (UnresolvableArtifactProblem artifactProblem : artifactProblems) {
+        logger.warning(artifactProblem.toString());
+      }
+      throw new IOException("Could not resolve dependencies");
+    }
 
     // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
     List<ClassPathEntry> artifactsInBom = classpath.subList(0, managedDependencies.size());
