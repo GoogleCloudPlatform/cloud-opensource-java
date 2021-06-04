@@ -1250,4 +1250,12 @@ public class LinkageCheckerTest {
 
     Truth.assertThat(problemsOnMethodHandle).isEmpty();
   }
+
+  @Test
+  public void testCloudSqlBom() throws Exception {
+    Path path = Paths.get("/Users/suztomo/cloud-sql-jdbc-socket-factory/cloud-sql-connector-bom/pom.xml");
+    Bom bom = Bom.readBom(path);
+    LinkageChecker linkageChecker = LinkageChecker.create(bom);
+    assertNotNull(linkageChecker);
+  }
 }
