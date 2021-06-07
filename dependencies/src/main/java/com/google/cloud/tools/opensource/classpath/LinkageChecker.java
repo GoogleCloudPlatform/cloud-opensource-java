@@ -43,7 +43,6 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.classfile.Utility;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /** A tool to find linkage errors in a class path. */
@@ -112,13 +111,18 @@ public class LinkageChecker {
         classPathBuilder.resolve(managedDependencies, true, DependencyMediation.MAVEN);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
-    ImmutableList<UnresolvableArtifactProblem> artifactProblems = classPathResult
-        .getArtifactProblems();
+    ImmutableList<UnresolvableArtifactProblem> artifactProblems =
+        classPathResult.getArtifactProblems();
     if (!artifactProblems.isEmpty()) {
       for (UnresolvableArtifactProblem artifactProblem : artifactProblems) {
-        logger.warning(artifactProblem.toString());
+        logger.severe(artifactProblem.toString());
       }
-      throw new IOException("Could not resolve dependencies");
+      throw new IOException(
+          "Could not resolve "
+              + (artifactProblems.size() == 1
+                  ? "1 dependency"
+                  : (artifactProblems.size() + " dependencies"))
+              + ". See the message above for details.");
     }
 
     // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM

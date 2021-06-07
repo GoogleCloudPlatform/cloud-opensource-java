@@ -39,8 +39,6 @@ import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -1252,10 +1250,25 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testCloudSqlBom() throws Exception {
-    Path path = Paths.get("/Users/suztomo/cloud-sql-jdbc-socket-factory/cloud-sql-connector-bom/pom.xml");
-    Bom bom = Bom.readBom(path);
-    LinkageChecker linkageChecker = LinkageChecker.create(bom);
-    assertNotNull(linkageChecker);
+  public void testBomResolutionWithMissingTransitiveDependency() throws Exception {
+    DefaultArtifact artifact = new DefaultArtifact("cglib:cglib-nodep:jar:2.2");
+    // cglib-nodep has a transitive dependency of xml-apis, which does not exist in Maven Central
+    // cglib:cglib-nodep:jar:2.2
+    //   - ant:ant:jar:1.6.2 (compile?)
+    //     - xml-apis:xml-apis:jar:2.6.2 (compile?)
+    //     - xerces:xerces-impl:jar:2.6.2 (compile?)
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2097
+    Bom bomWithMissingTransitiveDependency =
+        new Bom(
+            "com.google.cloud:bom-with-missing-transitive-dependency:0.1",
+            ImmutableList.of(artifact));
+    try {
+      LinkageChecker linkageChecker = LinkageChecker.create(bomWithMissingTransitiveDependency);
+      fail("Linkage Checker should throw IOException");
+    } catch (IOException expected) {
+      assertEquals(
+          "Could not resolve 2 dependencies. See the message above for details.",
+          expected.getMessage());
+    }
   }
 }
