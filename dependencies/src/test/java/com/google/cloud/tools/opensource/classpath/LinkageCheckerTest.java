@@ -1252,7 +1252,7 @@ public class LinkageCheckerTest {
   @Test
   public void testBomResolutionWithMissingTransitiveDependency() throws Exception {
     DefaultArtifact artifact = new DefaultArtifact("cglib:cglib-nodep:jar:2.2");
-    // cglib-nodep has a transitive dependency of xml-apis, which does not exist in Maven Central
+    // cglib-nodep has 2 transitive dependencies, which do not exist in Maven Central
     // cglib:cglib-nodep:jar:2.2
     //   - ant:ant:jar:1.6.2 (compile?)
     //     - xml-apis:xml-apis:jar:2.6.2 (compile?)
