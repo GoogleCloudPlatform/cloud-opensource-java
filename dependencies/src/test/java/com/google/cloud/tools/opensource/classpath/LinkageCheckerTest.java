@@ -1251,7 +1251,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testBomResolutionWithMissingTransitiveDependency() throws Exception {
-    DefaultArtifact artifact = new DefaultArtifact("cglib:cglib-nodep:jar:2.2");
+    DefaultArtifact cglib = new DefaultArtifact("cglib:cglib-nodep:jar:2.2");
     // cglib-nodep has 2 transitive dependencies, which do not exist in Maven Central
     // cglib:cglib-nodep:jar:2.2
     //   - ant:ant:jar:1.6.2 (compile?)
@@ -1261,9 +1261,9 @@ public class LinkageCheckerTest {
     Bom bomWithMissingTransitiveDependency =
         new Bom(
             "com.google.cloud:bom-with-missing-transitive-dependency:0.1",
-            ImmutableList.of(artifact));
+            ImmutableList.of(cglib));
     try {
-      LinkageChecker linkageChecker = LinkageChecker.create(bomWithMissingTransitiveDependency);
+      LinkageChecker.create(bomWithMissingTransitiveDependency);
       fail("Linkage Checker should throw IOException");
     } catch (IOException expected) {
       assertEquals(
