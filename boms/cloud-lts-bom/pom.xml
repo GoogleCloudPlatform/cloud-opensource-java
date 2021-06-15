@@ -11,7 +11,7 @@
   <packaging>pom</packaging>
 
   <name>Google Cloud Long Term Support BOM</name>
-  <!-- TODO: Add the description element before the release -->
+  <description>Google Cloud Long Term Support BOM</description>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java</url>
   <organization>
     <name>Google LLC</name>
@@ -50,9 +50,8 @@
 
     <!-- interrim placeholder versions -->
     <!-- TODO: For each library, update the versions to the LTS version -->
-    <beam.version>2.30.0-SNAPSHOT</beam.version>
-
-    <!-- finalized versions -->    
+    <beam.version>2.30.0</beam.version>
+    <!-- finalized versions -->
     <!-- JRE for Java 8. Beam's dependency (gcsio) uses JRE flavor -->
     <guava.version>30.1.1-jre</guava.version>
     <google.autovalue.version>1.8.1</google.autovalue.version>
