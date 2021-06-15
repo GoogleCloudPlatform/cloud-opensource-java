@@ -47,11 +47,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-    <!-- interrim placeholder versions -->
-    <!-- TODO: For each library, update the versions to the LTS version -->
     <beam.version>2.30.0</beam.version>
-    <!-- finalized versions -->
     <!-- JRE for Java 8. Beam's dependency (gcsio) uses JRE flavor -->
     <guava.version>30.1.1-jre</guava.version>
     <google.autovalue.version>1.8.1</google.autovalue.version>
