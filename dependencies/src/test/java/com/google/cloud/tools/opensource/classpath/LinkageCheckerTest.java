@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -1246,5 +1247,28 @@ public class LinkageCheckerTest {
             .collect(toImmutableList());
 
     Truth.assertThat(problemsOnMethodHandle).isEmpty();
+  }
+
+  @Test
+  public void testBomResolutionWithMissingTransitiveDependency() throws Exception {
+    DefaultArtifact cglib = new DefaultArtifact("cglib:cglib-nodep:jar:2.2");
+    // cglib-nodep has 2 transitive dependencies, which do not exist in Maven Central
+    // cglib:cglib-nodep:jar:2.2
+    //   - ant:ant:jar:1.6.2 (compile?)
+    //     - xml-apis:xml-apis:jar:2.6.2 (compile?)
+    //     - xerces:xerces-impl:jar:2.6.2 (compile?)
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2097
+    Bom bomWithMissingTransitiveDependency =
+        new Bom(
+            "com.google.cloud:bom-with-missing-transitive-dependency:0.1",
+            ImmutableList.of(cglib));
+    try {
+      LinkageChecker.create(bomWithMissingTransitiveDependency);
+      fail("Linkage Checker should throw IOException");
+    } catch (IOException expected) {
+      assertEquals(
+          "Could not resolve 2 dependencies. See the message above for details.",
+          expected.getMessage());
+    }
   }
 }
