@@ -226,13 +226,31 @@
       </dependency>
       <dependency>
         <groupId>com.google.api</groupId>
+        <artifactId>gax</artifactId>
+        <version>${gax.version}</version>
+        <classifier>testlib</classifier>
+      </dependency>
+      <dependency>
+        <groupId>com.google.api</groupId>
         <artifactId>gax-grpc</artifactId>
         <version>${gax.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.api</groupId>
+        <artifactId>gax-grpc</artifactId>
+        <version>${gax.version}</version>
+        <classifier>testlib</classifier>
+      </dependency>
+      <dependency>
+        <groupId>com.google.api</groupId>
         <artifactId>gax-httpjson</artifactId>
         <version>${gax.httpjson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.api</groupId>
+        <artifactId>gax-httpjson</artifactId>
+        <version>${gax.httpjson.version}</version>
+        <classifier>testlib</classifier>
       </dependency>
       <dependency>
         <groupId>com.google.auth</groupId>
