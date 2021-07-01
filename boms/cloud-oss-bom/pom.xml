@@ -205,7 +205,7 @@
         <version>${io.grpc.version}</version>
       </dependency>
 
-      <!-- google-cloud-java from https://github.com/googleapis/google-cloud-java -->
+      <!-- google-cloud-java from https://github.com/googleapis/java-cloud-bom-->
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bom</artifactId>
