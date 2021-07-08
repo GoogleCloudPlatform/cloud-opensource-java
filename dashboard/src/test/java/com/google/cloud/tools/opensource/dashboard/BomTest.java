@@ -48,6 +48,10 @@ public class BomTest {
   private void checkBom(Path bomPath) throws MavenRepositoryException, IOException {
     List<Artifact> artifacts = Bom.readBom(bomPath).getManagedDependencies();
     for (Artifact artifact : artifacts) {
+      if (artifact.getVersion().contains("SNAPSHOT")) {
+        // LTS BOM draft may have artifacts that haven't been published to Maven Central yet.
+        continue;
+      }
       assertReachable(buildMavenCentralUrl(artifact));
     }
   }

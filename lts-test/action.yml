@@ -1,0 +1,52 @@
+name: 'LTS Library Test'
+description: 'Checks the compatibility of the libraries in the LTS BOM'
+inputs:
+  repository:
+    description: 'The repository to test in this run. Use matrix to specify the values'
+    required: true
+  version_override_key:
+    description: >
+      The property name in the LTS BOM to test a certain version of a library. Use this input
+      when you check the compatibility of a library against other libraries in the LTS BOM.
+    required: false
+    default: 'unspecified'
+  version_override_value:
+    description: >
+      The version to test its compatibility with other libraries in the LTS BOM. The value must be
+      unavailable in Maven Central because Gradle might not read local Maven repository first.
+    required: false
+    default: '0.1.0-SNAPSHOT'
+runs:
+  using: "composite"
+  steps:
+    - name: Modify a version of a library in the LTS BOM if version override is specified
+      run: |
+        if [[ "${{ inputs.version_override_key }}" == "unspecified" ]]; then
+          echo "inputs.version_override_key is unspecified. Skipping this step."
+          exit
+        fi
+        cd ..
+        sudo apt-get install libxml2-utils
+        xmllint --shell boms/cloud-lts-bom/pom.xml  << EOF
+        setns x=http://maven.apache.org/POM/4.0.0
+        cd x:project/x:properties/x:${{ inputs.version_override_key }}
+        set ${{ inputs.version_override_value }}
+        save
+        EOF
+      shell: bash
+      working-directory: ${{ github.action_path }}
+    - name: Install the snapshot LTS BOM (${{ github.action_path }}) to local Maven repository
+      run: |
+        cd ..
+        mvn -B -ntp -pl boms/cloud-lts-bom install
+      shell: bash
+      working-directory: ${{ github.action_path }}
+    - name: Run the unit tests for ${{ inputs.repository }} using repositories.yaml
+      run: |
+        cd ..
+        mvn -B -ntp -pl dependencies,lts-test test \
+          -Dtest=com.google.cloud.tools.opensource.lts.LtsBomCompatibilityTest \
+          -Dlts.test.repository=${{ inputs.repository }} \
+          -DfailIfNoTests=false
+      shell: bash
+      working-directory: ${{ github.action_path }}

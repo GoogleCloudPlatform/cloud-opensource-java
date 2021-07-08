@@ -59,6 +59,7 @@
     <module>dashboard</module>
     <module>enforcer-rules</module>
     <module>linkage-monitor</module>
+    <module>lts-test</module>
   </modules>
 
   <dependencyManagement>
@@ -111,6 +112,12 @@
         <version>1.4</version>
       </dependency>
       <dependency>
+        <groupId>xom</groupId>
+        <artifactId>xom</artifactId>
+        <version>1.3.7</version>
+      </dependency>
+
+      <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>4.13.2</version>
@@ -159,7 +166,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.22.2</version>
+          <version>3.0.0-M5</version>
           <configuration>
             <!-- To avoid ForkedBooter loading issue -->
             <useSystemClassLoader>false</useSystemClassLoader>

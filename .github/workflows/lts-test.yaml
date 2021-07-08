@@ -1,0 +1,38 @@
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/lts-test.yaml'
+      - 'boms/cloud-lts-bom/pom.xml'
+      - 'lts-test/**'
+      - 'src/test/resources/repositories.yaml'
+name: LTS Library Test
+jobs:
+  lts-library-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        repository:
+          - beam
+          - google-api-java-client
+          - google-auth-library-java
+          - google-http-java-client
+          - google-maps-services-java
+          - google-oauth-java-client
+          - grpc-java
+          - java-bigquery
+          - java-bigtable-hbase
+          - java-datastore
+          - java-monitoring
+          - java-pubsub
+          - java-spanner
+          - java-storage
+          - java-trace
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 8
+      - uses: ./lts-test
+        with:
+          repository: ${{ matrix.repository }}
