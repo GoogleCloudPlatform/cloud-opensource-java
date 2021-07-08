@@ -82,7 +82,6 @@ import org.xml.sax.helpers.XMLReaderFactory;
  *   <li>A FieldMatcher matches field symbol specified by className and name attribute.
  * </ul>
  */
-@SuppressWarnings("deprecation")
 class ExclusionFiles {
   private static final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
 
