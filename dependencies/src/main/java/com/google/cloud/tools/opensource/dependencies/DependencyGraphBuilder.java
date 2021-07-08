@@ -205,6 +205,7 @@ public final class DependencyGraphBuilder {
       DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, session);
       return DependencyGraph.from(node);
     } catch (DependencyResolutionException ex) {
+      System.err.println(ex.getMessage());
       DependencyResult result = ex.getResult();
       DependencyGraph graph = DependencyGraph.from(result.getRoot());
 
