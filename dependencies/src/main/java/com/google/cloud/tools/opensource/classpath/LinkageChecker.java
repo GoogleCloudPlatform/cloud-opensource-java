@@ -20,6 +20,7 @@ import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHi
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -109,6 +110,20 @@ public class LinkageChecker {
     ClassPathResult classPathResult =
         classPathBuilder.resolve(managedDependencies, true, DependencyMediation.MAVEN);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
+
+    ImmutableList<UnresolvableArtifactProblem> artifactProblems =
+        classPathResult.getArtifactProblems();
+    if (!artifactProblems.isEmpty()) {
+      for (UnresolvableArtifactProblem artifactProblem : artifactProblems) {
+        logger.severe(artifactProblem.toString());
+      }
+      throw new IOException(
+          "Could not resolve "
+              + (artifactProblems.size() == 1
+                  ? "1 dependency"
+                  : (artifactProblems.size() + " dependencies"))
+              + ". See the message above for details.");
+    }
 
     // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
     List<ClassPathEntry> artifactsInBom = classpath.subList(0, managedDependencies.size());
