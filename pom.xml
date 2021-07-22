@@ -169,7 +169,7 @@
         <plugin>
           <groupId>com.mycila</groupId>
           <artifactId>license-maven-plugin</artifactId>
-          <version>3.0</version>
+          <version>4.1</version>
           <configuration>
             <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>
             <skipExistingHeaders>true</skipExistingHeaders>
