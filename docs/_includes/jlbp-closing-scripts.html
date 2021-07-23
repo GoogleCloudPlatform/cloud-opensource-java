@@ -1,0 +1,10 @@
+<!-- Includes to make Glue work, per https://glue-docs.appspot.com/get-started/cdn/ -->
+<script src="//www.gstatic.com/external_hosted/hammerjs/v2_0_2/hammer.min.js"></script>
+<script src="//www.gstatic.com/glue/v22_1/glue-vanilla.min.js"></script>
+<!-- Necessary to make the header bar work on mobile -->
+<script type="text/javascript">
+  const headerElement = document.querySelector('.glue-header');
+  if (headerElement) {
+    new window.glue.ui.header.Header(headerElement);
+  }
+</script>

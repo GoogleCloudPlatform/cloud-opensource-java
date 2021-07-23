@@ -1,0 +1,24 @@
+<nav id="jlbp-nav" class="docs-component-nav">
+  <ul class="nav-list">
+    <li class="nav-item nav-item-header">Best Practices</li>
+    {% for p in site.pages %}{% if p.jlbp -%}
+    <li class="nav-item{% if p.url == page.url %} nav-item-active{% endif %}">
+      <a href="{{ p.url | relative_url }}">
+        <span class="jlbp-number">{{ p.jlbp.id }}</span> {{ p.title }}
+      </a>
+    </li>
+    {% endif %}{% endfor -%}
+    <li class="nav-item nav-item-header">Concepts</li>
+    {% for p in site.pages %}{% if p.concepts -%}
+    <li class="nav-item{% if p.url == page.url %} nav-item-active{% endif %}">
+      <a href="{{ p.url | relative_url }}">
+        {{ p.title }}
+      </a>
+    </li>
+    {% endif %}{% endfor -%}
+    <li class="nav-item nav-item-header">Reference</li>
+    <li class="nav-item{% if page.url == '/glossary' %} nav-item-active{% endif %}">
+      <a href="/glossary">Glossary</a>
+    </li>
+  </ul>
+</nav>
