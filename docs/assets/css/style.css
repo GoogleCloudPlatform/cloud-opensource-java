@@ -1,13 +1,13 @@
 body {
   font-family: Roboto, sans-serif;
   line-height: 1.15;
-  font-size: 16;
+  font-size: 16pt;
 }
 
 h1 {
   font-family: Roboto, sans-serif;
-  font-weight: light;
-  font-size: 96;
+  font-weight: lighter;
+  font-size: 96pt;
   margin-bottom: 1ex;
 }
 
