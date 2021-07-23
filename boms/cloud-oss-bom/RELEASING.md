@@ -74,7 +74,7 @@ site](https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/re
 ## OSSRH
 
 [Instructions for releasing from OSSRH are on the internal team 
-site](https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#verify-and-release).
+site](https://g3doc.corp.google.com/company/teams/cloud-java/internal/g3doc/tools/releasing.md?cl=head).
 
 ## Update the docs
 
