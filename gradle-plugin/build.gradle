@@ -15,7 +15,7 @@
  */
 
 plugins {
-  id 'com.gradle.plugin-publish' version "0.12.0"
+  id 'com.gradle.plugin-publish' version "0.15.0"
   id 'groovy'
   id 'java-gradle-plugin'
   id 'net.researchgate.release' version '2.8.1'
