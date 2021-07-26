@@ -95,8 +95,8 @@ new release is available on Maven Central.
     * `$ repo --title .*v16.4.0 tag automerge`
 * Manually edit and update any pom.xml files in https://github.com/GoogleCloudPlatform/java-docs-samples that dependabot missed
 * In google3 run:
-    * `$ scripts/update_doc.sh <old version> <new version>`
-      * For example, `$ scripts/update_doc.sh 16.3.0 16.4.0`
+    * `$ scripts/update_docs.sh <old version> <new version>`
+      * For example, `$ scripts/update_docs.sh 16.3.0 16.4.0`
       * When asked whether to add changes to the first CL, answer yes.
     * Sanity check the CL and send it for review.
     * Submit on approval
