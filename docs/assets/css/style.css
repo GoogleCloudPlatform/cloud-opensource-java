@@ -1,17 +1,17 @@
 body {
   font-family: Roboto, sans-serif;
   line-height: 1.15;
-  font-size: 16;
+  font-size: 16pt;
 }
 
 h1 {
   font-family: Roboto, sans-serif;
-  font-weight: light;
-  font-size: 96;
+  font-weight: lighter;
+  font-size: 96pt;
   margin-bottom: 1ex;
 }
 
-div.cloud-logo {
+.cloud-logo {
   height: 22px;
   margin-top: 20px;
   margin-bottom: 10px;
@@ -31,7 +31,7 @@ li {
   margin-bottom: 0.5ex;
 }
 
-@media only screen and (min-device-width : 1024px) {
+@media only screen and (min-width : 1024px) {
   body {
     margin-left: 8em;
   }
