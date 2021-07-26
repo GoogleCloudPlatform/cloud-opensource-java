@@ -31,7 +31,7 @@ li {
   margin-bottom: 0.5ex;
 }
 
-@media only screen and (min-device-width : 1024px) {
+@media only screen and (min-width : 1024px) {
   body {
     margin-left: 8em;
   }
