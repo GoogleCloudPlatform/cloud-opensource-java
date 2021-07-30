@@ -207,12 +207,6 @@
       </dependency>
       <dependency>
         <groupId>com.google.api-client</groupId>
-        <artifactId>google-api-client-assembly</artifactId>
-        <version>${google.api-client.version}</version><!-- {x-version-update:google-api-client:current} -->
-        <type>pom</type>
-      </dependency>
-      <dependency>
-        <groupId>com.google.api-client</groupId>
         <artifactId>google-api-client-gson</artifactId>
         <version>${google.api-client.version}</version><!-- {x-version-update:google-api-client:current} -->
       </dependency>
