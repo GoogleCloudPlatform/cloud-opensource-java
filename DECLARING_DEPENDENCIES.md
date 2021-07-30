@@ -43,7 +43,7 @@ You can add `requireUpperBoundDeps` to your build like this:
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.0.0-M2</version>
+        <version>3.0.0-M3</version>
         <executions>
           <execution>
             <id>enforce</id>
@@ -151,27 +151,7 @@ process to follow for each library that has BOM support:
    you see multiple versions of the library's artifacts
 
 Note that there will not necessarily be a BOM available at the version
-you need. See the BOM reference section below for the first
-available version of each BOM.
-
-## BOM reference
-
-None of the GCP open source Java libraries were initially released
-with BOMs - they were added later to provide better consistency for
-users. The following table shows the first version that each library
-published a BOM for, and the BOM artifact name.
-
-| library | BOM artifact | First available version |
-| --- | --- | --- |
-| guava | com.google.guava:guava-bom | 27.1-jre/27.1-android (08-Mar-2019) |
-| protobuf | com.google.protobuf:protobuf-bom | 3.7.0 (06-Mar-2019) |
-| grpc-java | io.grpc:grpc-bom | 1.19.0 (27-Feb-2019) |
-| gax-java | com.google.api:gax-bom | 1.34.0 (19-Oct-2018) |
-| google-http-java-client | com.google.http-client:google-http-client-bom | 1.27.0 (09-Nov-2018) |
-| google-oauth-java-client | com.google.oauth-client:google-oauth-client-bom | 1.27.0 (10-Nov-2018) |
-| google-api-java-client | com.google.api-client:google-api-client-bom | 1.27.0 (12-Nov-2018) |
-| google-cloud-java | com.google.cloud:google-cloud-bom | 0.32.0-alpha (11-Dec-2017)  |
-| beam | org.apache.beam:beam-sdks-java-bom | 2.10.0 (06-Feb-2019) |
+you need.
 
 ## Intrinsic conflicts
 
