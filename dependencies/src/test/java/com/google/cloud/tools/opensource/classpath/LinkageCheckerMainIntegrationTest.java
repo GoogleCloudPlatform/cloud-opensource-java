@@ -97,7 +97,8 @@ public class LinkageCheckerMainIntegrationTest {
           new String[] {"-a", "com.google.http-client:google-http-client-appengine:1.39.2"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 562 linkage errors", expected.getMessage());
+      int expectedErrorCount = System.getProperty("java.version").startsWith("1.8.") ? 562 : 584;
+      assertEquals("Found " + expectedErrorCount + " linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();
