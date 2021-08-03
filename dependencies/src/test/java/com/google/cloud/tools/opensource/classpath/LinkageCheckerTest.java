@@ -1108,6 +1108,22 @@ public class LinkageCheckerTest {
   }
 
   @Test
+  public void testFindLinkageProblems_unusedClassesFromCommonsLogging() throws Exception {
+    // The commons-logging has references to unused classes in optional dependencies.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1871
+    // As we know they are not harmful, the exclusion file skips them.
+    ClassPathResult classPathResult =
+        classPathBuilder.resolve(
+            ImmutableList.of(new DefaultArtifact("commons-logging:commons-logging:1.2")),
+            false,
+            DependencyMediation.MAVEN);
+    LinkageChecker linkageChecker = LinkageChecker.create(classPathResult.getClassPath());
+
+    ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
+    Truth.assertThat(problems).isEmpty();
+  }
+
+  @Test
   public void testFindLinkageProblems_ensureNoSelfReferencingSymbolProblem()
       throws IOException, URISyntaxException {
     // This JAR file contains com.google.firestore.v1beta1.FirestoreGrpc under BOOT-INF/classes.
