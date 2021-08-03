@@ -84,8 +84,8 @@ class ExclusionFileFunctionalTest extends Specification {
     result.output.contains("Task :linkageCheck")
     result.output.contains("BUILD FAILED")
     // Ensure it outputs the linkage errors
-    result.output.contains("Class org.apache.avalon.framework.logger.Logger is not found")
-
+    result.output.contains(
+        "io.grpc.internal.GrpcAttributes's field ATTR_LB_ADDR_AUTHORITY is not found")
     // BaseDnsNameResolverProvider is referenced by SecretGrpclbNameResolverProvider, which we
     // suppress via the exclusion file.
     !result.output.contains("io.grpc.internal.BaseDnsNameResolverProvider")
@@ -141,8 +141,8 @@ class ExclusionFileFunctionalTest extends Specification {
     result.output.contains("Task :linkageCheck")
     result.output.contains("BUILD FAILED")
     // Ensure it outputs the linkage errors
-    result.output.contains("Class org.apache.avalon.framework.logger.Logger is not found")
-
+    result.output.contains(
+        "io.grpc.internal.GrpcAttributes's field ATTR_LB_ADDR_AUTHORITY is not found")
     // BaseDnsNameResolverProvider is referenced by SecretGrpclbNameResolverProvider, which we
     // suppress via the exclusion file.
     !result.output.contains("io.grpc.internal.BaseDnsNameResolverProvider")
