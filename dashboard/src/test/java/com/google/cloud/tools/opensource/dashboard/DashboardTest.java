@@ -228,19 +228,6 @@ public class DashboardTest {
     Assert.assertEquals(
         "The following paths contain com.google.guava:guava:27.1-android:",
         trimAndCollapseWhiteSpace(dependencyPathMessageOnSource.getValue()));
-
-    Nodes nodesWithPathsSummary = details.query("//p[@class='linkage-check-dependency-paths']");
-    Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
-        .that(nodesWithPathsSummary)
-        .comparingElementsUsing(
-            Correspondence.<Node, String>transforming(
-                node -> trimAndCollapseWhiteSpace(node.getValue()), "has text"))
-        .contains("Dependency path 'org.apache.httpcomponents:httpclient >"
-                + " commons-logging:commons-logging' exists"
-                + " in all 57 dependency paths. Example path:"
-                + " com.google.http-client:google-http-client:1.29.1 (compile) /"
-                + " org.apache.httpcomponents:httpclient:4.5.5 (compile) /"
-                + " commons-logging:commons-logging:1.2 (compile)");
   }
 
   @Test
@@ -304,11 +291,9 @@ public class DashboardTest {
     Document document = parseOutputFile(
         "com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
-    Assert.assertEquals(2, reports.size());
+    Assert.assertEquals(1, reports.size());
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo("100 target classes causing linkage errors referenced from 540 source classes.");
-    Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(1).getValue()))
-        .isEqualTo("3 target classes causing linkage errors referenced from 3 source classes.");
 
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
     Truth.assertWithMessage(
@@ -328,20 +313,17 @@ public class DashboardTest {
     Assume.assumeTrue(javaMajorVersion >= 11);
 
     // The version used in libraries-bom 1.0.0. The google-http-client-appengine has been known to
-    // have linkage errors in its dependencies ("commons-logging:commons-logging:1.2" and
-    // "com.google.appengine:appengine-api-1.0-sdk:1.9.71").
-    Document document = parseOutputFile(
-        "com.google.http-client_google-http-client-appengine_1.29.1.html");
+    // have linkage errors in its dependency appengine-api-1.0-sdk:1.9.71.
+    Document document =
+        parseOutputFile("com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
-    Assert.assertEquals(2, reports.size());
+    Assert.assertEquals(1, reports.size());
 
     // This number of linkage errors differs between Java 8 and Java 11 for the javax.activation
     // package removal (JEP 320: Remove the Java EE and CORBA Modules). For the detail, see
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1849.
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo("105 target classes causing linkage errors referenced from 562 source classes.");
-    Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(1).getValue()))
-        .isEqualTo("3 target classes causing linkage errors referenced from 3 source classes.");
 
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
     Truth.assertWithMessage(
