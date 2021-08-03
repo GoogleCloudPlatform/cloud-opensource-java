@@ -1108,10 +1108,10 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_unusedClassesFromCommonsLogging() throws Exception {
-    // The commons-logging has references to unused classes in optional dependencies.
+  public void testFindLinkageProblems_unusedAvalonClassesFromCommonsLogging() throws Exception {
+    // The commons-logging has references to Avalon classes in optional dependencies.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1871
-    // As we know they are not harmful, the exclusion file skips them.
+    // As we know they are not harmful, the default exclusion file skips them.
     ClassPathResult classPathResult =
         classPathBuilder.resolve(
             ImmutableList.of(new DefaultArtifact("commons-logging:commons-logging:1.2")),

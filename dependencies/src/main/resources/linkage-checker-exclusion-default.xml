@@ -376,4 +376,32 @@
       https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2045
     </Reason>
   </LinkageError>
+  <LinkageError>
+    <Target>
+      <Class name="org.apache.avalon.framework.logger.Logger" />
+    </Target>
+    <Source>
+      <Class name="org.apache.commons.logging.impl.AvalonLogger" />
+    </Source>
+    <Reason>
+      The AvalonLogger is used only when commons-logging users want to use Apache Avalon, which
+      has been closed since 2004. For those who don't use Apache Avalon, the class references does
+      not cause a problem.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1871
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="org.apache.log" />
+    </Target>
+    <Source>
+      <Class name="org.apache.commons.logging.impl.LogKitLogger" />
+    </Source>
+    <Reason>
+      The LogKitLogger is used only when commons-logging users want to use Apache Avalon, which
+      has been closed since 2004. For those who don't use Apache Avalon, the class references does
+      not cause a problem.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1871
+    </Reason>
+  </LinkageError>
 </LinkageCheckerFilter>
