@@ -92,27 +92,28 @@ public class LinkageCheckerMainIntegrationTest {
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
     try {
       LinkageCheckerMain.main(
-          // protobuf-java:3.13.0 in
-          new String[] {"-a", "com.google.cloud:google-cloud-firestore:1.35.2"});
+          // google-http-client-appengine depends on appengien-api-1.0-sdk which shades its
+          // dependencies, resulting in many linkage errors.
+          new String[] {"-a", "com.google.http-client:google-http-client-appengine:1.39.2"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 3 linkage errors", expected.getMessage());
+      assertEquals("Found 562 linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();
     Truth.assertThat(output)
         .contains(
-            "Class org.apache.avalon.framework.logger.Logger is not found;\n"
-                + "  referenced by 1 class file\n"
-                + "    org.apache.commons.logging.impl.AvalonLogger"
-                + " (commons-logging:commons-logging:1.2)");
+            "Class com.google.net.rpc3.client.RpcStubDescriptor is not found;\n"
+                + "  referenced by 21 class files\n"
+                + "    com.google.appengine.api.appidentity.AppIdentityServicePb"
+                + " (com.google.appengine:appengine-api-1.0-sdk:1.9.71)");
 
     // Show the dependency path to the problematic artifact
     Truth.assertThat(output)
         .contains(
-            "commons-logging:commons-logging:1.2 is at:\n"
-                + "  com.google.cloud:google-cloud-firestore:jar:1.35.2 /"
-                + " commons-logging:commons-logging:1.2 (compile)\n");
+            "com.google.appengine:appengine-api-1.0-sdk:1.9.71 is at:\n"
+                + "  com.google.http-client:google-http-client-appengine:jar:1.39.2 /"
+                + " com.google.appengine:appengine-api-1.0-sdk:1.9.71 (provided)\n");
   }
 
   @Test
@@ -136,7 +137,7 @@ public class LinkageCheckerMainIntegrationTest {
       LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 634 linkage errors", expected.getMessage());
+      assertEquals("Found 631 linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();
@@ -170,7 +171,7 @@ public class LinkageCheckerMainIntegrationTest {
       LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 656 linkage errors", expected.getMessage());
+      assertEquals("Found 653 linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();
