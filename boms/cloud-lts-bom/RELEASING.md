@@ -51,3 +51,4 @@ For example, when you run the release script with argument `./scripts/release.sh
 it creates a release branch `2.0.4-lts` from the LTS release branch `2.0.0-lts`,
 (not from `2.0.3-lts`).
 
+
