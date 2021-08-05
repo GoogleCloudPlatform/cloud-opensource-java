@@ -60,8 +60,18 @@ if [[ $(git status -uno --porcelain) ]]; then
   Die 'There are uncommitted changes.'
 fi
 
-# Make sure client is up to date with the latest changes.
-git checkout master
+if [[ "${SUFFIX}" = "lts" && "${VERSION}" != *.*.0 ]]; then
+  # LTS patch release is based on N.0.0-lts branch, where N is the major release number.
+  BASE_VERSION=$(echo $VERSION | sed 's/\([0-9][0-9]*\.[0-9][0-9]*\)\.[0-9][0-9]*/\1.0/')
+  # For example, LTS BOM patch release 5.0.3 would create "5.0.3-lts" branch based on the base
+  # branch "5.0.0-lts". For the details of a patch release, see boms/cloud-lts-bom/RELEASING.md.
+  BASE_BRANCH=${BASE_VERSION}-lts
+else
+  # Make sure client is up to date with the latest changes.
+  BASE_BRANCH=master
+fi
+echo "BASE_BRANCH: ${BASE_BRANCH}"
+git checkout ${BASE_BRANCH}
 git pull
 
 # Checks out a new branch for this version release (eg. 1.5.7).
@@ -105,10 +115,15 @@ git commit -am "${NEXT_SNAPSHOT}"
 
 # Pushes the tag and release branch to Github.
 git push origin "${RELEASE_TAG}"
+
+# If the suffix is "lts", then the branch is protected. In that case any subsequent modification is
+# blocked without an approved pull request.
 git push --set-upstream origin ${VERSION}-${SUFFIX}
 
 # Create the PR
-gh pr create -t "Release ${VERSION}-${SUFFIX}" -b "Release ${VERSION}-${SUFFIX}"
+gh pr create --title "Release ${VERSION}-${SUFFIX}" \
+    --body "Release ${VERSION}-${SUFFIX}" \
+    --base ${BASE_BRANCH}
 
 # File a PR on Github for the new branch. Have someone LGTM it, which gives you permission to continue.
 EchoGreen 'Ask someone to approve this PR.'
