@@ -63,8 +63,8 @@ fi
 if [[ "${SUFFIX}" = "lts" ]]; then
   # LTS releases are based on N.0.x-lts branch, where N is the major release number.
   # (Note that the minor version part of this BOM is always zero)
-  BASE_BRANCH=$(echo $VERSION | sed 's/\([0-9]\+\).0\.[0-9]\+/\1.0.x-lts/')
-  if [[ "${BASE_BRANCH}" != *0.x-lts ]]; then
+  BASE_BRANCH=$(echo $VERSION | sed 's/\([0-9]\+\)\.0\.[0-9]\+/\1.0.x-lts/')
+  if [[ "${BASE_BRANCH}" != *.0.x-lts ]]; then
     Die 'The LTS release version did not match expected format. The minor version is always 0.'
   fi
   # For example, LTS BOM patch release 5.0.3 would create "5.0.3-lts" branch based on the base
