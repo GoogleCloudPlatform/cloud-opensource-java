@@ -60,13 +60,12 @@ if [[ $(git status -uno --porcelain) ]]; then
   Die 'There are uncommitted changes.'
 fi
 
-if [[ "${SUFFIX}" = "lts" && "${VERSION}" != *.*.0 ]]; then
-  # LTS patch release (the patch version is non-zero) is based on N.0.0-lts branch, where N is the
-  # major release number. (Note that the minor version part of this BOM is always zero)
-  BASE_VERSION=$(echo $VERSION | sed 's/\([0-9]\+\.[0-9]\+\)\.[0-9]\+/\1.0/')
+if [[ "${SUFFIX}" = "lts" ]]; then
+  # LTS releases are based on N.0.x-lts branch, where N is the major release number.
+  # (Note that the minor version part of this BOM is always zero)
+  BASE_BRANCH=$(echo $VERSION | sed 's/\([0-9]\+\.[0-9]\+\)\.[0-9]\+/\1.x-lts/')
   # For example, LTS BOM patch release 5.0.3 would create "5.0.3-lts" branch based on the base
-  # branch "5.0.0-lts". For the details of a patch release, see boms/cloud-lts-bom/RELEASING.md.
-  BASE_BRANCH=${BASE_VERSION}-lts
+  # branch "5.0.x-lts". For the details of a patch release, see boms/cloud-lts-bom/RELEASING.md.
 else
   # Make sure client is up to date with the latest changes.
   BASE_BRANCH=master
