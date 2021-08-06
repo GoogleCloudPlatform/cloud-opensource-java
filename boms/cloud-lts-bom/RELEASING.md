@@ -38,13 +38,16 @@ We maintain multiple branches for the LTS BOM releases.
 Let's call the branches _LTS release branches_.
 An LTS release branch has a name "N.0.0-lts", where N is the major release version number,
 such as `1.0.0-lts` and `2.0.0-lts`.
-In this GitHub repository, the branches are configured as protected,
-so that we do not accidentally push changes to them.
+In this GitHub repository, the branches are [configured as protected](
+https://github.com/GoogleCloudPlatform/cloud-opensource-java/settings/branches),
+so that we do not accidentally push changes into them.
 
-Any change for a patch release to the LTS BOM should be merged to one of the LTS release branches.
-This practice enables us to release multiple versions of the BOM at the same time.
+Any changes for a patch release to the LTS BOM should be merged to one of the LTS release branches.
+This practice enables us to release a patch version of one of the old versions of the BOM,
+without using the master branch (or _HEAD_).
+
 Note that even when you prepare a patch release with higher patch number than 1,
-you commit changes to `N.0.0-lts` branch (the patch part is `0`).
+you commit changes to `N.0.0-lts` branch (the patch part is "0").
 For example, when you make changes for LTS BOM release 5.0.3, your pull request would merge
 the changes into `5.0.0-lts` branch.
 The branch includes all the changes between 5.0.0 and 5.0.2 releases.
@@ -69,3 +72,5 @@ has non-zero patch part.
 For example, when you run the release script with argument `./scripts/release.sh lts 5.0.3`,
 it creates a release branch `5.0.3-lts` based on the LTS release branch `5.0.0-lts`.
 
+For LTS patch releases, the release script creates a pull request that bumps the patch version of the LTS release branch
+(not the master branch).
