@@ -19,6 +19,8 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.COORDINATES;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.classPathEntryOfResource;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -35,7 +37,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.truth.Correspondence;
-import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -100,19 +101,19 @@ public class LinkageCheckerTest {
     // These example symbols below are picked up through javap command. For example
     // javap -classpath src/test/resources/testdata/guava-23.5-jre.jar \
     //   -v com/google/common/util/concurrent/Monitor
-    Truth.assertThat(symbolReferences.getClassSymbols(
-        new ClassFile(guavaJar, "com.google.common.util.concurrent.Service")))
-        .contains(
-            new ClassSymbol("java.util.concurrent.TimeoutException"));
+    assertThat(
+            symbolReferences.getClassSymbols(
+                new ClassFile(guavaJar, "com.google.common.util.concurrent.Service")))
+        .contains(new ClassSymbol("java.util.concurrent.TimeoutException"));
     ClassFile monitor = new ClassFile(guavaJar, "com.google.common.util.concurrent.Monitor");
-    Truth.assertThat(symbolReferences.getMethodSymbols(monitor))
+    assertThat(symbolReferences.getMethodSymbols(monitor))
         .contains(
             new MethodSymbol(
                 "com.google.common.base.Preconditions",
                 "checkNotNull",
                 "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
                 false));
-    Truth.assertThat(symbolReferences.getFieldSymbols(monitor))
+    assertThat(symbolReferences.getFieldSymbols(monitor))
         .contains(
             new FieldSymbol("com.google.common.util.concurrent.Monitor$Guard", "waiterCount", "I"));
   }
@@ -147,7 +148,7 @@ public class LinkageCheckerTest {
     ImmutableSet<LinkageProblem> problems =
         linkageChecker.cloneWith(builder.build()).findLinkageProblems();
 
-    Truth.assertThat(problems).isEmpty();
+    assertThat(problems).isEmpty();
   }
 
   @Test
@@ -554,7 +555,7 @@ public class LinkageCheckerTest {
     ImmutableSet<LinkageProblem> problems =
         linkageChecker.cloneWith(builder.build()).findLinkageProblems();
 
-    Truth.assertThat(problems).isEmpty();
+    assertThat(problems).isEmpty();
   }
 
   @Test
@@ -582,7 +583,7 @@ public class LinkageCheckerTest {
             .filter(problem -> problem.getSymbol() instanceof ClassSymbol)
             .collect(toImmutableList());
 
-    Truth.assertThat(inaccessibleClassProblems).hasSize(1);
+    assertThat(inaccessibleClassProblems).hasSize(1);
     LinkageProblem firstProblem = inaccessibleClassProblems.get(0);
 
     assertEquals(
@@ -608,7 +609,7 @@ public class LinkageCheckerTest {
     // classes in the dependencies. As we do not provide the dependencies in the class path, it
     // should report the linkage errors. The source class of the error should not be reported as
     // an inner class.
-    Truth.assertThat(problems).isNotEmpty();
+    assertThat(problems).isNotEmpty();
     long innerClassCount =
         problems.stream()
             .map(LinkageProblem::getSourceClass)
@@ -631,10 +632,10 @@ public class LinkageCheckerTest {
             .resolve(parsedArguments.getArtifacts(), true, DependencyMediation.MAVEN)
             .getClassPath();
 
-    Truth.assertThat(inputClasspath).isNotEmpty();
+    assertThat(inputClasspath).isNotEmpty();
 
     // The first artifacts
-    Truth.assertThat(inputClasspath)
+    assertThat(inputClasspath)
         .comparingElementsUsing(COORDINATES)
         .containsAtLeast(
             "com.google.api:api-common:1.7.0",
@@ -661,15 +662,14 @@ public class LinkageCheckerTest {
             .resolve(parsedArguments.getArtifacts(), true, DependencyMediation.MAVEN)
             .getClassPath();
 
-    Truth.assertWithMessage(
-            "The first 2 items in the classpath should be the 2 artifacts in the input")
+    assertWithMessage("The first 2 items in the classpath should be the 2 artifacts in the input")
         .that(inputClasspath.subList(0, 2))
         .comparingElementsUsing(COORDINATES)
         .containsExactly(
             "com.google.cloud:google-cloud-compute:0.67.0-alpha",
             "com.google.cloud:google-cloud-bigtable:0.66.0-alpha")
         .inOrder();
-    Truth.assertWithMessage("The dependencies of the 2 artifacts should also be included")
+    assertWithMessage("The dependencies of the 2 artifacts should also be included")
         .that(inputClasspath.subList(2, inputClasspath.size()))
         .isNotEmpty();
   }
@@ -694,7 +694,7 @@ public class LinkageCheckerTest {
             .resolve(parsedArguments.getArtifacts(), true, DependencyMediation.MAVEN)
             .getClassPath();
 
-    Truth.assertThat(inputClasspath)
+    assertThat(inputClasspath)
         .comparingElementsUsing(COORDINATES)
         .contains("org.mortbay.jasper:apache-jsp:8.0.9.M3");
   }
@@ -713,7 +713,7 @@ public class LinkageCheckerTest {
         classPathBuilder
             .resolve(parsedArguments.getArtifacts(), true, DependencyMediation.MAVEN)
             .getArtifactProblems();
-    Truth.assertThat(artifactProblems)
+    assertThat(artifactProblems)
         .comparingElementsUsing(
             Correspondence.transforming(
                 (UnresolvableArtifactProblem problem) -> problem.getArtifact().toString(),
@@ -763,11 +763,11 @@ public class LinkageCheckerTest {
             false));
     ImmutableSet<LinkageProblem> linkageProblems65First =
         linkageChecker65First.cloneWith(builder.build()).findLinkageProblems();
-    Truth.assertThat(linkageProblems65First).hasSize(1);
+    assertThat(linkageProblems65First).hasSize(1);
 
     ImmutableSet<LinkageProblem> linkageProblems66First =
         linkageChecker66First.cloneWith(builder.build()).findLinkageProblems();
-    Truth.assertThat(linkageProblems66First).isEmpty();
+    assertThat(linkageProblems66First).isEmpty();
   }
 
   @Test
@@ -781,7 +781,7 @@ public class LinkageCheckerTest {
 
     ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
 
-    Truth.assertThat(problems).isEmpty();
+    assertThat(problems).isEmpty();
   }
 
   @Test
@@ -831,8 +831,7 @@ public class LinkageCheckerTest {
 
     ImmutableList<ClassFile> sourcesOfInvalidReferences =
         problems.stream().map(LinkageProblem::getSourceClass).collect(toImmutableList());
-    Truth.assertThat(sourcesOfInvalidReferences)
-        .doesNotContain(new ClassFile(slf4jJar, "org.slf4j.MDC"));
+    assertThat(sourcesOfInvalidReferences).doesNotContain(new ClassFile(slf4jJar, "org.slf4j.MDC"));
   }
 
   @Test
@@ -890,7 +889,7 @@ public class LinkageCheckerTest {
 
     ImmutableList<ClassFile> sourceClasses =
         problems.stream().map(LinkageProblem::getSourceClass).collect(toImmutableList());
-    Truth.assertThat(sourceClasses)
+    assertThat(sourceClasses)
         .doesNotContain(new ClassFile(jars.get(0), "reactor.core.publisher.Traces"));
   }
 
@@ -938,7 +937,7 @@ public class LinkageCheckerTest {
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
 
     ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
-    Truth.assertWithMessage("Missing classes from jdk.vm.ci should not be reported")
+    assertWithMessage("Missing classes from jdk.vm.ci should not be reported")
         .that(linkageProblems)
         .isEmpty();
   }
@@ -996,8 +995,8 @@ public class LinkageCheckerTest {
                 "(Lcom/google/auth/Credentials;)Lcom/google/api/gax/rpc/TransportChannelProvider;",
                 false), transportChannelProvider
         );
-    Truth.assertThat(problems).contains(expectedProblemOnNeedsCredentials);
-    Truth.assertThat(problems).contains(expectedProblemOnWithCredentials);
+    assertThat(problems).contains(expectedProblemOnNeedsCredentials);
+    assertThat(problems).contains(expectedProblemOnWithCredentials);
   }
 
   @Test
@@ -1013,7 +1012,7 @@ public class LinkageCheckerTest {
     // CContext$Directives interface. But this should not be reported as an error because the
     // interface has default implementation for the methods.
     String unexpectedClass = "com.oracle.svm.core.LibCHelperDirectives";
-    Truth.assertThat(problems)
+    assertThat(problems)
         .comparingElementsUsing(HAS_SYMBOL_IN_CLASS)
         .doesNotContain(unexpectedClass);
   }
@@ -1047,7 +1046,7 @@ public class LinkageCheckerTest {
             "(Ljava/util/concurrent/Executor;[Ljava/lang/Object;)Lio/netty/util/concurrent/EventExecutor;",
             false);
 
-    Truth.assertThat(problems)
+    assertThat(problems)
         .comparingElementsUsing(
             Correspondence.transforming(LinkageProblem::getSymbol, "has symbol"))
         .contains(expectedMethodSymbol);
@@ -1066,7 +1065,7 @@ public class LinkageCheckerTest {
     // com.oracle.svm.core.heap.PinnedAllocator. The superclass has native methods, such as
     // "newInstance". These native methods should not be reported as unimplemented methods.
     String unexpectedClass = "com.oracle.svm.core.genscavenge.PinnedAllocatorImpl";
-    Truth.assertThat(problems)
+    assertThat(problems)
         .comparingElementsUsing(HAS_SYMBOL_IN_CLASS)
         .doesNotContain(unexpectedClass);
   }
@@ -1098,7 +1097,7 @@ public class LinkageCheckerTest {
             "reactor.blockhound.shaded.net.bytebuddy.agent.VirtualMachine");
 
     for (String unexpectedSourceClass : unexpectedClasses) {
-      Truth.assertThat(problems)
+      assertThat(problems)
           .comparingElementsUsing(
               Correspondence.transforming(
                   (LinkageProblem problem) -> problem.getSourceClass().getBinaryName(),
@@ -1120,7 +1119,7 @@ public class LinkageCheckerTest {
     LinkageChecker linkageChecker = LinkageChecker.create(classPathResult.getClassPath());
 
     ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
-    Truth.assertThat(problems).isEmpty();
+    assertThat(problems).isEmpty();
   }
 
   @Test
@@ -1160,7 +1159,7 @@ public class LinkageCheckerTest {
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
     ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
 
-    Truth.assertThat(problems)
+    assertThat(problems)
         .comparingElementsUsing(
             Correspondence.transforming(
                 (LinkageProblem problem) -> problem.getSourceClass().getBinaryName(),
@@ -1191,7 +1190,7 @@ public class LinkageCheckerTest {
             methodSymbol,
             "java.nio.Buffer");
 
-    Truth.assertThat(linkageProblems).contains(expectedProblem);
+    assertThat(linkageProblems).contains(expectedProblem);
   }
 
   @Test
@@ -1216,8 +1215,7 @@ public class LinkageCheckerTest {
     SymbolReferences symbolReferences = classDumper.findSymbolReferences();
     ImmutableSet<ClassSymbol> classSymbols =
         symbolReferences.getClassSymbols(new ClassFile(classPath.get(0), wsgenOptionsClassName));
-    Truth.assertThat(classSymbols)
-        .contains(new ClassSymbol("com.sun.xml.ws.api.BindingID$SOAPHTTPImpl"));
+    assertThat(classSymbols).contains(new ClassSymbol("com.sun.xml.ws.api.BindingID$SOAPHTTPImpl"));
 
     LinkageChecker linkageChecker = LinkageChecker.create(classPath);
 
@@ -1262,7 +1260,7 @@ public class LinkageCheckerTest {
                         .equals("java.lang.invoke.MethodHandle"))
             .collect(toImmutableList());
 
-    Truth.assertThat(problemsOnMethodHandle).isEmpty();
+    assertThat(problemsOnMethodHandle).isEmpty();
   }
 
   @Test

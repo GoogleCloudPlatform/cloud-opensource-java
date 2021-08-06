@@ -17,6 +17,8 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.cloud.tools.opensource.dashboard.DashboardArguments.DependencyMediationAlgorithm;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -27,7 +29,6 @@ import com.google.common.collect.Streams;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Correspondence;
-import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
@@ -120,7 +121,7 @@ public class DashboardTest {
   @Test
   public void testHeader() {
     Nodes h1 = dashboard.query("//h1");
-    Assert.assertEquals(1, h1.size());
+    assertThat(h1).hasSize(1);
     Assert.assertEquals("com.google.cloud:libraries-bom:1.0.0 Dependency Status",
         h1.get(0).getValue());
   }
@@ -129,7 +130,7 @@ public class DashboardTest {
   public void testSvg() {
     XPathContext context = new XPathContext("svg", "http://www.w3.org/2000/svg");
     Nodes svg = dashboard.query("//svg:svg", context);
-    Assert.assertEquals(4, svg.size());
+    assertThat(svg).hasSize(4);
   }
 
   @Test
@@ -193,10 +194,11 @@ public class DashboardTest {
 
   private static void assertValidCellValue(Element cellElement) {
     String cellValue = cellElement.getValue().replaceAll("\\s", "");
-    Truth.assertThat(cellValue).containsMatch("PASS|\\d+FAILURES?");
-    Truth.assertWithMessage("It should not use plural for 1 item").that(cellValue)
+    assertThat(cellValue).containsMatch("PASS|\\d+FAILURES?");
+    assertWithMessage("It should not use plural for 1 item")
+        .that(cellValue)
         .doesNotContainMatch("1 FAILURES");
-    Truth.assertThat(cellElement.getAttributeValue("class")).isAnyOf("pass", "fail");
+    assertThat(cellElement.getAttributeValue("class")).isAnyOf("pass", "fail");
   }
 
   @Test
@@ -214,9 +216,8 @@ public class DashboardTest {
   public void testLinkageReports() {
     Nodes reports = details.query("//p[@class='jar-linkage-report']");
     // appengine-api-sdk, shown as first item in linkage errors, has these errors
-    Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-        .isEqualTo(
-            "4 target classes causing linkage errors referenced from 4 source classes.");
+    assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
+        .isEqualTo("4 target classes causing linkage errors referenced from 4 source classes.");
 
     Nodes dependencyPaths = details.query("//p[@class='linkage-check-dependency-paths']");
     Node dependencyPathMessageOnProblem = dependencyPaths.get(dependencyPaths.size() - 1);
@@ -274,7 +275,7 @@ public class DashboardTest {
 
     // This element appears only when every dependency becomes stable
     Nodes stable = dashboard.query("//p[@id='stable-notice']");
-    Assert.assertEquals(0, stable.size());
+    assertThat(stable).isEmpty();
   }
 
   @Test
@@ -291,12 +292,12 @@ public class DashboardTest {
     Document document = parseOutputFile(
         "com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
-    Assert.assertEquals(1, reports.size());
-    Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
+    assertThat(reports).hasSize(1);
+    assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo("100 target classes causing linkage errors referenced from 540 source classes.");
 
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
-    Truth.assertWithMessage(
+    assertWithMessage(
             "google-http-client-appengine should show linkage errors for RpcStubDescriptor")
         .that(causes)
         .comparingElementsUsing(NODE_VALUES)
@@ -317,17 +318,17 @@ public class DashboardTest {
     Document document =
         parseOutputFile("com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
-    Assert.assertEquals(1, reports.size());
+    assertThat(reports).hasSize(1);
 
     // This number of linkage errors differs between Java 8 and Java 11 for the javax.activation
     // package removal (JEP 320: Remove the Java EE and CORBA Modules). For the detail, see
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1849.
-    Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
+    assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo("105 target classes causing linkage errors referenced from 562 source classes.");
 
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
-    Truth.assertWithMessage(
-        "google-http-client-appengine should show linkage errors for RpcStubDescriptor")
+    assertWithMessage(
+            "google-http-client-appengine should show linkage errors for RpcStubDescriptor")
         .that(causes)
         .comparingElementsUsing(NODE_VALUES)
         .contains(
@@ -344,7 +345,7 @@ public class DashboardTest {
     Nodes presDependencyMediation =
         document.query("//pre[@class='suggested-dependency-mediation']");
     // There's a pre tag for dependency
-    Assert.assertEquals(1, presDependencyMediation.size());
+    assertThat(presDependencyMediation).hasSize(1);
 
     Nodes presDependencyTree = document.query("//p[@class='dependency-tree-node']");
     Assert.assertTrue(
@@ -358,11 +359,11 @@ public class DashboardTest {
 
     // com.google.api.grpc:grpc-google-common-protos:1.14.0 has no green section
     Nodes greens = document.query("//h3[@style='color: green']");
-    Assert.assertEquals(0, greens.size());
+    assertThat(greens).isEmpty();
 
     // "Global Upper Bounds Fixes", "Upper Bounds Fixes", and "Suggested Dependency Updates" are red
     Nodes reds = document.query("//h3[@style='color: red']");
-    Assert.assertEquals(3, reds.size());
+    assertThat(reds).hasSize(3);
     Nodes presDependencyMediation =
         document.query("//pre[@class='suggested-dependency-mediation']");
     Assert.assertTrue(
@@ -380,8 +381,8 @@ public class DashboardTest {
     Document document = parseOutputFile(
         "com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes linkageCheckMessages = document.query("//ul[@class='jar-linkage-report-cause']/li");
-    Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
-    Truth.assertThat(linkageCheckMessages.get(0).getValue())
+    assertThat(linkageCheckMessages.size()).isGreaterThan(0);
+    assertThat(linkageCheckMessages.get(0).getValue())
         .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
   }
 
@@ -390,7 +391,7 @@ public class DashboardTest {
     Document document =
         parseOutputFile("com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes linkageCheckMessages = document.query("//p[@class='jar-linkage-report-cause']");
-    Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
+    assertThat(linkageCheckMessages.size()).isGreaterThan(0);
 
     List<String> messages = new ArrayList<>();
     for (int i = 0; i < linkageCheckMessages.size(); ++i) {
@@ -398,7 +399,7 @@ public class DashboardTest {
     }
 
     // When uniqueness of SymbolProblem and Symbol classes are incorrect, dashboard has duplicates.
-    Truth.assertThat(messages).containsNoDuplicates();
+    assertThat(messages).containsNoDuplicates();
   }
 
   @Test
@@ -406,9 +407,8 @@ public class DashboardTest {
     // grpc-auth does not have a linkage error, and it should show zero in the section
     Document document = parseOutputFile("io.grpc_grpc-auth_1.20.0.html");
     Nodes linkageErrorsTotal = document.query("//p[@id='linkage-errors-total']");
-    Truth.assertThat(linkageErrorsTotal.size()).isEqualTo(1);
-    Truth.assertThat(linkageErrorsTotal.get(0).getValue())
-        .contains("0 linkage error(s)");
+    assertThat(linkageErrorsTotal).hasSize(1);
+    assertThat(linkageErrorsTotal.get(0).getValue()).contains("0 linkage error(s)");
   }
 
   @Test
@@ -417,10 +417,11 @@ public class DashboardTest {
     Document document = parseOutputFile("com.google.protobuf_protobuf-java-util_3.6.1.html");
     Nodes globalUpperBoundBomUpgradeNodes =
         document.query("//li[@class='global-upper-bound-bom-upgrade']");
-    Truth.assertThat(globalUpperBoundBomUpgradeNodes.size()).isEqualTo(1);
+    assertThat(globalUpperBoundBomUpgradeNodes).hasSize(1);
     String bomUpgradeMessage = globalUpperBoundBomUpgradeNodes.get(0).getValue();
-    Truth.assertThat(bomUpgradeMessage).contains(
-        "Upgrade com.google.protobuf:protobuf-java-util:jar:3.6.1 in the BOM to version \"3.7.1\"");
+    assertThat(bomUpgradeMessage)
+        .contains(
+            "Upgrade com.google.protobuf:protobuf-java-util:jar:3.6.1 in the BOM to version \"3.7.1\"");
 
     // Case 2: Dependency needs to be updated
     Nodes globalUpperBoundDependencyUpgradeNodes =
@@ -429,17 +430,17 @@ public class DashboardTest {
     // The artifact report should contain the following 6 global upper bound dependency upgrades:
     //   Upgrade com.google.guava:guava:jar:19.0 to version "27.1-android"
     //   Upgrade com.google.protobuf:protobuf-java:jar:3.6.1 to version "3.7.1"
-    Truth.assertThat(globalUpperBoundDependencyUpgradeNodes.size()).isEqualTo(2);
+    assertThat(globalUpperBoundDependencyUpgradeNodes.size()).isEqualTo(2);
     String dependencyUpgradeMessage = globalUpperBoundDependencyUpgradeNodes.get(0).getValue();
-    Truth.assertThat(dependencyUpgradeMessage).contains(
-        "Upgrade com.google.guava:guava:jar:19.0 to version \"27.1-android\"");
+    assertThat(dependencyUpgradeMessage)
+        .contains("Upgrade com.google.guava:guava:jar:19.0 to version \"27.1-android\"");
   }
 
   @Test
   public void testBomCoordinatesInComponent() throws IOException, ParsingException {
     Document document = parseOutputFile("com.google.protobuf_protobuf-java-util_3.6.1.html");
     Nodes bomCoordinatesNodes = document.query("//p[@class='bom-coordinates']");
-    Assert.assertEquals(1, bomCoordinatesNodes.size());
+    assertThat(bomCoordinatesNodes).hasSize(1);
     Assert.assertEquals(
         "BOM: com.google.cloud:libraries-bom:1.0.0", bomCoordinatesNodes.get(0).getValue());
   }
@@ -448,7 +449,7 @@ public class DashboardTest {
   public void testBomCoordinatesInArtifactDetails() throws IOException, ParsingException {
     Document document = parseOutputFile("artifact_details.html");
     Nodes bomCoordinatesNodes = document.query("//p[@class='bom-coordinates']");
-    Assert.assertEquals(1, bomCoordinatesNodes.size());
+    assertThat(bomCoordinatesNodes).hasSize(1);
     Assert.assertEquals(
         "BOM: com.google.cloud:libraries-bom:1.0.0", bomCoordinatesNodes.get(0).getValue());
   }
@@ -457,7 +458,7 @@ public class DashboardTest {
   public void testBomCoordinatesInUnstableArtifacts() throws IOException, ParsingException {
     Document document = parseOutputFile("unstable_artifacts.html");
     Nodes bomCoordinatesNodes = document.query("//p[@class='bom-coordinates']");
-    Assert.assertEquals(1, bomCoordinatesNodes.size());
+    assertThat(bomCoordinatesNodes).hasSize(1);
     Assert.assertEquals(
         "BOM: com.google.cloud:libraries-bom:1.0.0", bomCoordinatesNodes.get(0).getValue());
   }
@@ -468,7 +469,7 @@ public class DashboardTest {
     Nodes dependencyTreeParagraph = document.query("//p[@class='dependency-tree-node']");
 
     // characterization test
-    Assert.assertEquals(38391, dependencyTreeParagraph.size());
+    assertThat(dependencyTreeParagraph).hasSize(38391);
     Assert.assertEquals(
         "com.google.protobuf:protobuf-java:jar:3.6.1", dependencyTreeParagraph.get(0).getValue());
   }
