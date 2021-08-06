@@ -1,5 +1,5 @@
 #!/bin/bash -
-# Usage: ./release.sh <dependencies|bom> <release version>
+# Usage: ./release.sh <dependencies|bom|lts> <release version>
 
 set -e
 
@@ -27,9 +27,9 @@ CheckVersion() {
 # Usage: IncrementVersion <version>
 IncrementVersion() {
   local version=$1
-  local minorVersion=$(echo $version | sed 's/[0-9][0-9]*\.[0-9][0-9]*\.\([0-9][0-9]\)*/\1/')
+  local minorVersion=$(echo $version | sed 's/[0-9]\+\.[0-9]\+\.\([0-9]\+\)*/\1/')
   local nextMinorVersion=$((minorVersion+1))
-  echo $version | sed "s/\([0-9][0-9]*\.[0-9][0-9]*\)\.[0-9][0-9]*/\1.$nextMinorVersion/"
+  echo $version | sed "s/\([0-9]\+\.[0-9]\+\)\.[0-9]\+/\1.$nextMinorVersion/"
 }
 
 [ $# -ne 2 ] && [ $# -ne 3 ] && DieUsage
@@ -61,8 +61,9 @@ if [[ $(git status -uno --porcelain) ]]; then
 fi
 
 if [[ "${SUFFIX}" = "lts" && "${VERSION}" != *.*.0 ]]; then
-  # LTS patch release is based on N.0.0-lts branch, where N is the major release number.
-  BASE_VERSION=$(echo $VERSION | sed 's/\([0-9][0-9]*\.[0-9][0-9]*\)\.[0-9][0-9]*/\1.0/')
+  # LTS patch release (the patch version is non-zero) is based on N.0.0-lts branch, where N is the
+  # major release number. (Note that the minor version part of this BOM is always zero)
+  BASE_VERSION=$(echo $VERSION | sed 's/\([0-9]\+\.[0-9]\+\)\.[0-9]\+/\1.0/')
   # For example, LTS BOM patch release 5.0.3 would create "5.0.3-lts" branch based on the base
   # branch "5.0.0-lts". For the details of a patch release, see boms/cloud-lts-bom/RELEASING.md.
   BASE_BRANCH=${BASE_VERSION}-lts
