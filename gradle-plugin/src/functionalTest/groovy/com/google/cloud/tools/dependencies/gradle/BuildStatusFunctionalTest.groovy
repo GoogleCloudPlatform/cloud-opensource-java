@@ -113,4 +113,74 @@ class BuildStatusFunctionalTest extends Specification {
         |""".stripMargin())
     result.task(":linkageCheck").outcome == TaskOutcome.FAILED
   }
+
+  def "can handle artifacts with classifiers "() {
+    buildFile << """
+        repositories {
+          mavenCentral()
+        }
+        
+        dependencies {
+          // The tests-classifier artifacts should not stop Linkage Checker
+          compile 'com.google.cloud:google-cloud-core:1.95.4'
+          compile 'com.google.cloud:google-cloud-core:1.95.4:tests'
+        }
+        
+        linkageChecker {
+          configurations = ['compile']
+        }
+        """
+
+    when:
+    def result = GradleRunner.create()
+        .withProjectDir(testProjectDir.root)
+        .withArguments('linkageCheck', '--stacktrace')
+        .withPluginClasspath()
+        .buildAndFail()
+
+    then:
+    result.output.contains("Task :linkageCheck")
+    result.output.contains("Linkage Checker rule found 72 errors:")
+    result.output.contains("""Class org.junit.Assert is not found;
+        |  referenced by 26 class files
+        |    com.google.cloud.ServiceOptionsTest (com.google.cloud:google-cloud-core:jar:tests:1.95.4)
+        |    com.google.cloud.BatchResultTest (com.google.cloud:google-cloud-core:jar:tests:1.95.4)
+        |  """.stripMargin())
+    result.task(":linkageCheck").outcome == TaskOutcome.FAILED
+  }
+
+  def "can handle artifacts with classifiers with transitive dependencies"() {
+    buildFile << """
+        repositories {
+          mavenCentral()
+        }
+        
+        dependencies {
+          // google-cloud-bigquery depends on google-cloud-core (no classifier)
+          compile 'com.google.cloud:google-cloud-bigquery:1.137.1'
+          compile 'com.google.cloud:google-cloud-core:1.95.4:tests'
+        }
+        
+        linkageChecker {
+          configurations = ['compile']
+        }
+        """
+
+    when:
+    def result = GradleRunner.create()
+        .withProjectDir(testProjectDir.root)
+        .withArguments('linkageCheck', '--stacktrace')
+        .withPluginClasspath()
+        .buildAndFail()
+
+    then:
+    result.output.contains("Task :linkageCheck")
+    result.output.contains("Linkage Checker rule found 93 errors")
+    result.output.contains("""Class org.junit.Assert is not found;
+        |  referenced by 26 class files
+        |    com.google.cloud.ServiceOptionsTest (com.google.cloud:google-cloud-core:jar:tests:1.95.4)
+        |    com.google.cloud.BatchResultTest (com.google.cloud:google-cloud-core:jar:tests:1.95.4)
+        |  """.stripMargin())
+    result.task(":linkageCheck").outcome == TaskOutcome.FAILED
+  }
 }
