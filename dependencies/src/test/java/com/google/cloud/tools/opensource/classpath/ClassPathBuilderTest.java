@@ -25,6 +25,7 @@ import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
@@ -281,5 +282,20 @@ public class ClassPathBuilderTest {
         classPathBuilder.resolve(
             ImmutableList.of(beamZetaSqlExtensions), true, DependencyMediation.MAVEN);
     assertNotNull(result);
+  }
+
+  @Test
+  public void testArtifactsWithClassifiers() throws Exception {
+    String pomFile = "bom-with-classifier-artifacts.pom";
+    Bom bom = Bom.readBom(TestHelper.absolutePathOfResource(pomFile));
+    ClassPathResult classPathResult =
+        classPathBuilder.resolve(bom.getManagedDependencies(), true, DependencyMediation.MAVEN);
+
+    Truth.assertThat(classPathResult.getClassPath())
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (ClassPathEntry entry) -> entry.getArtifact().toString(),
+                "has artifact coordinates"))
+        .contains("com.google.cloud:google-cloud-core:jar:tests:1.96.0");
   }
 }

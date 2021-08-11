@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.truth.Correspondence;
+import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -1284,5 +1285,37 @@ public class LinkageCheckerTest {
           "Could not resolve 2 dependencies. See the message above for details.",
           expected.getMessage());
     }
+  }
+
+  @Test
+  public void testBomHavingClassifierArtifacts() throws Exception {
+    String pomFile = "bom-with-classifier-artifacts.pom";
+    Bom bom = Bom.readBom(TestHelper.absolutePathOfResource(pomFile));
+
+    LinkageChecker linkageChecker = LinkageChecker.create(bom);
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+
+    // bom-with-classifier-artifacts contains com.google.cloud:goole-cloud-core:jar:tests:1.96.0.
+    // This tests-classifier artifact requires Truth and JUnit dependencies to work, but it's not
+    // declared in its pom.xml (The user of the class needs to declare them because the tests-
+    // classifier artifacts are intended to be used in tests.) Therefore the linkage errors to the
+    // classes in the missing dependencies are expected.
+    Truth.assertThat(linkageProblems)
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (LinkageProblem problem) -> problem.getSymbol().getClassBinaryName(),
+                "has missing symbol"))
+        .containsAtLeast(
+            "com.google.common.testing.EqualsTester",
+            "com.google.common.truth.Truth",
+            "org.junit.Assert");
+
+    Truth.assertThat(linkageProblems)
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (LinkageProblem problem) ->
+                    problem.getSourceClass().getClassPathEntry().getArtifact().toString(),
+                "has source class belonging to artifact"))
+        .contains("com.google.cloud:google-cloud-core:jar:tests:1.96.0");
   }
 }
