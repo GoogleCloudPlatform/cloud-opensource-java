@@ -184,4 +184,33 @@ class BuildStatusFunctionalTest extends Specification {
     !result.output.contains("StackOverflowError")
     result.task(":linkageCheck").outcome == TaskOutcome.FAILED
   }
+
+  def "can suppress duplicate outputs on circular dependencies"() {
+    buildFile << """
+        repositories {
+          mavenCentral()
+        }
+        
+        dependencies {
+          compile 'org.apache.beam:beam-runners-direct-java:2.30.0'
+        }
+        
+        linkageChecker {
+          configurations = ['compile']
+        }
+        """
+
+    when:
+    def result = GradleRunner.create()
+        .withProjectDir(testProjectDir.root)
+        .withArguments('linkageCheck', '--stacktrace')
+        .withPluginClasspath()
+        .buildAndFail()
+
+    then:
+    result.output.contains("Task :linkageCheck")
+    result.output.count("Circular dependency for: com.fasterxml.jackson.core:jackson-core:2.12.1") == 1
+    result.output.count("Circular dependency for: com.fasterxml.jackson:jackson-bom:2.12.1") == 1
+    result.task(":linkageCheck").outcome == TaskOutcome.FAILED
+  }
 }

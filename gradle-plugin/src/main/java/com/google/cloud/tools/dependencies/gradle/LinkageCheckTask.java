@@ -199,7 +199,8 @@ public class LinkageCheckTask extends DefaultTask {
   private void recordDependencyPaths(
       ImmutableListMultimap.Builder<String, String> output,
       ArrayDeque<ResolvedComponentResult> stack,
-      ImmutableSet<String> targetCoordinates) {
+      ImmutableSet<String> targetCoordinates,
+      Set<ResolvedComponentResult> checkedCircularDependency) {
     ResolvedComponentResult item = stack.getLast();
     ModuleVersionIdentifier identifier = item.getModuleVersion();
     String coordinates =
@@ -219,14 +220,17 @@ public class LinkageCheckTask extends DefaultTask {
 
         if (stack.contains(child)) {
           // Circular dependency check
-          getLogger()
-              .error(
-                  "Circular dependency for: "
-                      + resolvedDependencyResult
-                      + "\n The stack is: " + stack);
+          if (checkedCircularDependency.add(child)) {
+            getLogger()
+                .error(
+                    "Circular dependency for: "
+                        + resolvedDependencyResult
+                        + "\n The stack is: "
+                        + stack);
+          }
         } else {
           stack.add(child);
-          recordDependencyPaths(output, stack, targetCoordinates);
+          recordDependencyPaths(output, stack, targetCoordinates, checkedCircularDependency);
         }
       } else if (dependencyResult instanceof UnresolvedDependencyResult) {
         UnresolvedDependencyResult unresolvedResult = (UnresolvedDependencyResult) dependencyResult;
@@ -259,7 +263,7 @@ public class LinkageCheckTask extends DefaultTask {
     ImmutableListMultimap.Builder<String, String> coordinatesToDependencyPaths =
         ImmutableListMultimap.builder();
 
-    recordDependencyPaths(coordinatesToDependencyPaths, stack, targetCoordinates);
+    recordDependencyPaths(coordinatesToDependencyPaths, stack, targetCoordinates, new HashSet<>());
 
     ImmutableListMultimap<String, String> dependencyPaths = coordinatesToDependencyPaths.build();
     for (String coordinates : dependencyPaths.keySet()) {
@@ -323,11 +327,13 @@ public class LinkageCheckTask extends DefaultTask {
 
       Set<ResolvedArtifact> moduleArtifacts = node.getModuleArtifacts();
       if (moduleArtifacts.isEmpty()) {
+        // Maven's dependency tree, Gradle's dependency tree includes such nodes that don't have
+        // associated artifacts. A BOM, such as com.fasterxml.jackson:jackson-bom:2.12.3, fall in
+        // this category.
+        // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2174#issuecomment-897174898
         getLogger()
             .warn(
-                "The dependency node "
-                    + node.getName()
-                    + " should have at least one resolved artifacts");
+                "The dependency node " + node.getName() + " does not have any artifact. Skipping.");
         continue;
       }
 
