@@ -83,12 +83,13 @@ public final class ClassPathEntry {
   @Override
   public String toString() {
     if (artifact != null) {
-      if (!artifact.getClassifier().isEmpty()) {
-        return artifact.toString();
-      } else {
+      if (artifact.getClassifier().isEmpty()) {
         // If classifier is empty, this shows the shorter format of Maven coordinates without "jar"
         // extension
         return Artifacts.toCoordinates(artifact);
+      } else {
+        // This includes classifier
+        return artifact.toString();
       }
     } else {
       return jar.toString();

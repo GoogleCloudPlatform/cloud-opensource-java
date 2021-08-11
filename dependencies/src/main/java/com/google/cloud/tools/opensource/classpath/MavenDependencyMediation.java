@@ -46,7 +46,8 @@ class MavenDependencyMediation implements DependencyMediation {
 
       File file = artifact.getFile();
       if (file != null && file.getName().endsWith(".jar")) {
-        String versionlessCoordinates = Artifacts.makeKey(artifact) + artifact.getClassifier();
+        String versionlessCoordinates =
+            Artifacts.makeKey(artifact) + ":" + artifact.getClassifier();
         if (alreadyFound.add(versionlessCoordinates)) {
           // Adds to artifacts when versionlessCoordinates are new.
           artifacts.add(artifact);

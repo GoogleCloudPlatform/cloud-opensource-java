@@ -1295,7 +1295,7 @@ public class LinkageCheckerTest {
     LinkageChecker linkageChecker = LinkageChecker.create(bom);
     ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
-    // bom-with-classifier-artifacts contains com.google.cloud:goole-cloud-core:jar:tests:1.96.0.
+    // bom-with-classifier-artifacts contains com.google.cloud:google-cloud-core:jar:tests:1.96.0.
     // This tests-classifier artifact requires Truth and JUnit dependencies to work, but it's not
     // declared in its pom.xml (The user of the class needs to declare them because the tests-
     // classifier artifacts are intended to be used in tests.) Therefore the linkage errors to the

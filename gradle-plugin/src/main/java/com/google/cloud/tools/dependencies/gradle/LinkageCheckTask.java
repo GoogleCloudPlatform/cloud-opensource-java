@@ -30,11 +30,9 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.PathToNode;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -285,7 +283,7 @@ public class LinkageCheckTask extends DefaultTask {
     return new Dependency(artifact, "compile");
   }
 
-  private static DependencyGraph createDependencyGraph(ResolvedConfiguration configuration) {
+  private DependencyGraph createDependencyGraph(ResolvedConfiguration configuration) {
     // Why this method is not part of the DependencyGraph? Because the dependencies module
     // which the DependencyGraph belongs to is a Maven project, and Gradle does not provide good
     // Maven artifacts to develop code with Gradle-related classes.
@@ -311,6 +309,14 @@ public class LinkageCheckTask extends DefaultTask {
 
       DependencyPath path = null;
 
+      if (node.getModuleArtifacts().isEmpty()) {
+        getLogger()
+            .warn(
+                "The dependency node "
+                    + node.getName()
+                    + " should have at least one resolved artifacts");
+        continue;
+      }
       // For artifacts with classifiers, there can be multiple resolved artifacts for one node
       for (ResolvedArtifact artifact : node.getModuleArtifacts()) {
         // parentPath is null for the first item
@@ -321,8 +327,6 @@ public class LinkageCheckTask extends DefaultTask {
         graph.addPath(path);
       }
 
-      Verify.verify(
-          path != null, "The dependency node should have at least one resolved artifacts");
       for (ResolvedDependency child : node.getChildren()) {
         if (visited.add(child)) {
           queue.add(new PathToNode<>(child, path));
@@ -333,7 +337,7 @@ public class LinkageCheckTask extends DefaultTask {
     return graph;
   }
 
-  private static ClassPathResult createClassPathResult(ResolvedConfiguration configuration) {
+  private ClassPathResult createClassPathResult(ResolvedConfiguration configuration) {
     DependencyGraph dependencyGraph = createDependencyGraph(configuration);
     AnnotatedClassPath annotatedClassPath = new AnnotatedClassPath();
 
