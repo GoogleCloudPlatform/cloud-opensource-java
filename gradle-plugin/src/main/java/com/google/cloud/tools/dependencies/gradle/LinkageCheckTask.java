@@ -30,6 +30,7 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.PathToNode;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -120,8 +121,8 @@ public class LinkageCheckTask extends DefaultTask {
           new DefaultArtifact(
               moduleVersionId.getGroup(),
               moduleVersionId.getName(),
-              null,
-              null,
+              resolvedArtifact.getClassifier(),
+              resolvedArtifact.getExtension(),
               moduleVersionId.getVersion(),
               null,
               resolvedArtifact.getFile());
@@ -263,6 +264,21 @@ public class LinkageCheckTask extends DefaultTask {
     return output.toString();
   }
 
+  private static Artifact artifactFrom(
+      ResolvedDependency resolvedDependency, ResolvedArtifact resolvedArtifact) {
+    ModuleVersionIdentifier moduleVersionId = resolvedDependency.getModule().getId();
+    DefaultArtifact artifact =
+        new DefaultArtifact(
+            moduleVersionId.getGroup(),
+            moduleVersionId.getName(),
+            resolvedArtifact.getClassifier(),
+            resolvedArtifact.getExtension(),
+            moduleVersionId.getVersion(),
+            null,
+            resolvedArtifact.getFile());
+    return artifact;
+  }
+
   private static Artifact artifactFrom(ResolvedDependency resolvedDependency) {
     ModuleVersionIdentifier moduleVersionId = resolvedDependency.getModule().getId();
     File file = resolvedDependency.getModuleArtifacts().iterator().next().getFile();
@@ -278,8 +294,9 @@ public class LinkageCheckTask extends DefaultTask {
     return artifact;
   }
 
-  private static Dependency dependencyFrom(ResolvedDependency resolvedDependency) {
-    Artifact artifact = artifactFrom(resolvedDependency);
+  private static Dependency dependencyFrom(
+      ResolvedDependency resolvedDependency, ResolvedArtifact resolvedArtifact) {
+    Artifact artifact = artifactFrom(resolvedDependency, resolvedArtifact);
     return new Dependency(artifact, "compile");
   }
 
@@ -307,14 +324,20 @@ public class LinkageCheckTask extends DefaultTask {
 
       DependencyPath parentPath = item.getParentPath();
 
-      // parentPath is null for the first item
-      DependencyPath path =
-          parentPath == null
-              ? new DependencyPath(artifactFrom(node))
-              : parentPath.append(dependencyFrom(node));
+      DependencyPath path = null;
 
-      graph.addPath(path);
+      // When there are artifacts with classifiers, there are multiple resolved artifacts
+      for (ResolvedArtifact artifact : node.getModuleArtifacts()) {
+        // parentPath is null for the first item
+        path =
+            parentPath == null
+                ? new DependencyPath(artifactFrom(node, artifact))
+                : parentPath.append(dependencyFrom(node, artifact));
+        graph.addPath(path);
+      }
 
+      Verify.verify(
+          path != null, "The dependency node should have at least one resolved artifacts");
       for (ResolvedDependency child : node.getChildren()) {
         if (visited.add(child)) {
           queue.add(new PathToNode<>(child, path));
@@ -324,6 +347,7 @@ public class LinkageCheckTask extends DefaultTask {
 
     return graph;
   }
+
 
   private static ClassPathResult createClassPathResult(ResolvedConfiguration configuration) {
     DependencyGraph dependencyGraph = createDependencyGraph(configuration);

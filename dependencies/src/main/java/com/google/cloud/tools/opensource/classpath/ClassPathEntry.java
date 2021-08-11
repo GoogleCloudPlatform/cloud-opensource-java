@@ -83,9 +83,13 @@ public final class ClassPathEntry {
   @Override
   public String toString() {
     if (artifact != null) {
-      // Group ID, artifact ID and version. No extension such as "jar" or "tar.gz", because Linkage
-      // Checker uses only JAR artifacts.
-      return Artifacts.toCoordinates(artifact);
+      if (!artifact.getClassifier().isEmpty()) {
+        return artifact.toString();
+      } else {
+        // If classifier is empty, this shows the shorter format of Maven coordinates without "jar"
+        // extension
+        return Artifacts.toCoordinates(artifact);
+      }
     } else {
       return jar.toString();
     }
