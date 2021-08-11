@@ -181,6 +181,7 @@ class BuildStatusFunctionalTest extends Specification {
         |    com.google.cloud.ServiceOptionsTest (com.google.cloud:google-cloud-core:jar:tests:1.95.4)
         |    com.google.cloud.BatchResultTest (com.google.cloud:google-cloud-core:jar:tests:1.95.4)
         |  """.stripMargin())
+    !result.output.contains("StackOverflowError")
     result.task(":linkageCheck").outcome == TaskOutcome.FAILED
   }
 }
