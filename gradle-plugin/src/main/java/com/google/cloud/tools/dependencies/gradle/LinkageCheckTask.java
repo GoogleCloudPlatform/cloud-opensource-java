@@ -279,21 +279,6 @@ public class LinkageCheckTask extends DefaultTask {
     return artifact;
   }
 
-  private static Artifact artifactFrom(ResolvedDependency resolvedDependency) {
-    ModuleVersionIdentifier moduleVersionId = resolvedDependency.getModule().getId();
-    File file = resolvedDependency.getModuleArtifacts().iterator().next().getFile();
-    DefaultArtifact artifact =
-        new DefaultArtifact(
-            moduleVersionId.getGroup(),
-            moduleVersionId.getName(),
-            null,
-            null,
-            moduleVersionId.getVersion(),
-            null,
-            file);
-    return artifact;
-  }
-
   private static Dependency dependencyFrom(
       ResolvedDependency resolvedDependency, ResolvedArtifact resolvedArtifact) {
     Artifact artifact = artifactFrom(resolvedDependency, resolvedArtifact);
@@ -326,7 +311,7 @@ public class LinkageCheckTask extends DefaultTask {
 
       DependencyPath path = null;
 
-      // When there are artifacts with classifiers, there are multiple resolved artifacts
+      // For artifacts with classifiers, there can be multiple resolved artifacts for one node
       for (ResolvedArtifact artifact : node.getModuleArtifacts()) {
         // parentPath is null for the first item
         path =
@@ -347,7 +332,6 @@ public class LinkageCheckTask extends DefaultTask {
 
     return graph;
   }
-
 
   private static ClassPathResult createClassPathResult(ResolvedConfiguration configuration) {
     DependencyGraph dependencyGraph = createDependencyGraph(configuration);
