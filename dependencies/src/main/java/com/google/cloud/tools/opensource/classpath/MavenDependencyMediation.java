@@ -34,6 +34,8 @@ class MavenDependencyMediation implements DependencyMediation {
   @Override
   public AnnotatedClassPath mediate(DependencyGraph dependencyGraph) {
     Set<Artifact> artifacts = new HashSet<>();
+
+    // Versionless coordinates plus classifier, if any
     Set<String> alreadyFound = new HashSet<>();
 
     AnnotatedClassPath annotatedClassPath = new AnnotatedClassPath();
@@ -44,7 +46,8 @@ class MavenDependencyMediation implements DependencyMediation {
 
       File file = artifact.getFile();
       if (file != null && file.getName().endsWith(".jar")) {
-        String versionlessCoordinates = Artifacts.makeKey(artifact);
+        String versionlessCoordinates =
+            Artifacts.makeKey(artifact) + ":" + artifact.getClassifier();
         if (alreadyFound.add(versionlessCoordinates)) {
           // Adds to artifacts when versionlessCoordinates are new.
           artifacts.add(artifact);

@@ -33,7 +33,6 @@ import com.google.cloud.tools.opensource.dependencies.PathToNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -120,8 +119,8 @@ public class LinkageCheckTask extends DefaultTask {
           new DefaultArtifact(
               moduleVersionId.getGroup(),
               moduleVersionId.getName(),
-              null,
-              null,
+              resolvedArtifact.getClassifier(),
+              resolvedArtifact.getExtension(),
               moduleVersionId.getVersion(),
               null,
               resolvedArtifact.getFile());
@@ -273,27 +272,28 @@ public class LinkageCheckTask extends DefaultTask {
     return output.toString();
   }
 
-  private static Artifact artifactFrom(ResolvedDependency resolvedDependency) {
+  private static Artifact artifactFrom(
+      ResolvedDependency resolvedDependency, ResolvedArtifact resolvedArtifact) {
     ModuleVersionIdentifier moduleVersionId = resolvedDependency.getModule().getId();
-    File file = resolvedDependency.getModuleArtifacts().iterator().next().getFile();
     DefaultArtifact artifact =
         new DefaultArtifact(
             moduleVersionId.getGroup(),
             moduleVersionId.getName(),
-            null,
-            null,
+            resolvedArtifact.getClassifier(),
+            resolvedArtifact.getExtension(),
             moduleVersionId.getVersion(),
             null,
-            file);
+            resolvedArtifact.getFile());
     return artifact;
   }
 
-  private static Dependency dependencyFrom(ResolvedDependency resolvedDependency) {
-    Artifact artifact = artifactFrom(resolvedDependency);
+  private static Dependency dependencyFrom(
+      ResolvedDependency resolvedDependency, ResolvedArtifact resolvedArtifact) {
+    Artifact artifact = artifactFrom(resolvedDependency, resolvedArtifact);
     return new Dependency(artifact, "compile");
   }
 
-  private static DependencyGraph createDependencyGraph(ResolvedConfiguration configuration) {
+  private DependencyGraph createDependencyGraph(ResolvedConfiguration configuration) {
     // Why this method is not part of the DependencyGraph? Because the dependencies module
     // which the DependencyGraph belongs to is a Maven project, and Gradle does not provide good
     // Maven artifacts to develop code with Gradle-related classes.
@@ -317,13 +317,29 @@ public class LinkageCheckTask extends DefaultTask {
 
       DependencyPath parentPath = item.getParentPath();
 
-      // parentPath is null for the first item
-      DependencyPath path =
-          parentPath == null
-              ? new DependencyPath(artifactFrom(node))
-              : parentPath.append(dependencyFrom(node));
+      // If there are multiple artifacts (with different classifiers) in this node, then the path is
+      // the same, because these artifacts share the same dependencies with the same pom.xml.
+      DependencyPath path = null;
 
-      graph.addPath(path);
+      Set<ResolvedArtifact> moduleArtifacts = node.getModuleArtifacts();
+      if (moduleArtifacts.isEmpty()) {
+        getLogger()
+            .warn(
+                "The dependency node "
+                    + node.getName()
+                    + " should have at least one resolved artifacts");
+        continue;
+      }
+
+      // For artifacts with classifiers, there can be multiple resolved artifacts for one node
+      for (ResolvedArtifact artifact : moduleArtifacts) {
+        // parentPath is null for the first item
+        path =
+            parentPath == null
+                ? new DependencyPath(artifactFrom(node, artifact))
+                : parentPath.append(dependencyFrom(node, artifact));
+        graph.addPath(path);
+      }
 
       for (ResolvedDependency child : node.getChildren()) {
         if (visited.add(child)) {
@@ -335,7 +351,7 @@ public class LinkageCheckTask extends DefaultTask {
     return graph;
   }
 
-  private static ClassPathResult createClassPathResult(ResolvedConfiguration configuration) {
+  private ClassPathResult createClassPathResult(ResolvedConfiguration configuration) {
     DependencyGraph dependencyGraph = createDependencyGraph(configuration);
     AnnotatedClassPath annotatedClassPath = new AnnotatedClassPath();
 
