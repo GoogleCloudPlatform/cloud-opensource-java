@@ -224,8 +224,7 @@ public class LinkageCheckTask extends DefaultTask {
               .error(
                   "Circular dependency for: "
                       + resolvedDependencyResult
-                      + "\n The stack is: "
-                      + ImmutableList.copyOf(stack));
+                      + "\n The stack is: " + stack);
         } else {
           stack.add(child);
           recordDependencyPaths(output, stack, targetCoordinates);
