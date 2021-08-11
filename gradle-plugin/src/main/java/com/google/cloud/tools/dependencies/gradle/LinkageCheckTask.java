@@ -217,8 +217,19 @@ public class LinkageCheckTask extends DefaultTask {
         ResolvedDependencyResult resolvedDependencyResult =
             (ResolvedDependencyResult) dependencyResult;
         ResolvedComponentResult child = resolvedDependencyResult.getSelected();
-        stack.add(child);
-        recordDependencyPaths(output, stack, targetCoordinates);
+
+        if (stack.contains(child)) {
+          // Circular dependency check
+          getLogger()
+              .error(
+                  "Circular dependency for: "
+                      + resolvedDependencyResult
+                      + "\n The stack is: "
+                      + ImmutableList.copyOf(stack));
+        } else {
+          stack.add(child);
+          recordDependencyPaths(output, stack, targetCoordinates);
+        }
       } else if (dependencyResult instanceof UnresolvedDependencyResult) {
         UnresolvedDependencyResult unresolvedResult = (UnresolvedDependencyResult) dependencyResult;
         getLogger()
@@ -226,7 +237,7 @@ public class LinkageCheckTask extends DefaultTask {
                 "Could not resolve dependency: "
                     + unresolvedResult.getAttempted().getDisplayName());
       } else {
-        throw new IllegalStateException("Unexpected dependency result type: " + dependencyResult);
+        getLogger().error("Unexpected dependency result type: " + dependencyResult);
       }
     }
 
