@@ -307,9 +307,12 @@ public class LinkageCheckTask extends DefaultTask {
 
       DependencyPath parentPath = item.getParentPath();
 
+      // If there are multiple artifacts (with different classifiers) in this node, then the path is
+      // the same, because these artifacts share the same dependencies with the same pom.xml.
       DependencyPath path = null;
 
-      if (node.getModuleArtifacts().isEmpty()) {
+      Set<ResolvedArtifact> moduleArtifacts = node.getModuleArtifacts();
+      if (moduleArtifacts.isEmpty()) {
         getLogger()
             .warn(
                 "The dependency node "
@@ -317,8 +320,9 @@ public class LinkageCheckTask extends DefaultTask {
                     + " should have at least one resolved artifacts");
         continue;
       }
+
       // For artifacts with classifiers, there can be multiple resolved artifacts for one node
-      for (ResolvedArtifact artifact : node.getModuleArtifacts()) {
+      for (ResolvedArtifact artifact : moduleArtifacts) {
         // parentPath is null for the first item
         path =
             parentPath == null
