@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
@@ -113,21 +112,6 @@ public class ClassPathResultTest {
             + "  com.google:a:1 (compile)\n"
             + "  and 2 other dependency paths.\n",
         actual);
-  }
-
-  @Test
-  public void testFormatDependencyPaths_irrelevantJar() {
-    AnnotatedClassPath annotatedClassPath =
-        AnnotatedClassPath.fromMultimap(ImmutableListMultimap.of(jarA, dependencyPath_A));
-
-    ClassPathResult classPathResult = new ClassPathResult(annotatedClassPath, ImmutableSet.of());
-
-    try {
-      classPathResult.formatDependencyPaths(ImmutableList.of(jarB));
-      fail("The irrelevant JAR file should be invalidated.");
-    } catch (IllegalArgumentException expected) {
-      assertEquals("com.google:b:1 is not in the class path", expected.getMessage());
-    }
   }
 
   @Test
