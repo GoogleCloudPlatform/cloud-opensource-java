@@ -54,6 +54,6 @@ public class FieldSymbolTest {
   @Test
   public void testToString() {
     FieldSymbol fieldSymbol = new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I");
-    assertEquals("java.lang.Integer's field MAX_VALUE", fieldSymbol.toString());
+    assertEquals("java.lang.Integer's field \"int MAX_VALUE\"", fieldSymbol.toString());
   }
 }

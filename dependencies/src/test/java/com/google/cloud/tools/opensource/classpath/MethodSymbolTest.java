@@ -52,7 +52,7 @@ public class MethodSymbolTest {
         .addEqualityGroup(
             new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", true))
         .addEqualityGroup(new ClassSymbol("java.lang.Object"))
-        .addEqualityGroup(new FieldSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z"))
+        .addEqualityGroup(new FieldSymbol("java.lang.Object", "equals", "Ljava/lang/Object;"))
         .testEquals();
   }
 
@@ -65,7 +65,8 @@ public class MethodSymbolTest {
             "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
             false);
     assertEquals(
-        "io.grpc.protobuf.ProtoUtils's method marshaller(com.google.protobuf.Message)",
+        "io.grpc.protobuf.ProtoUtils's method \"io.grpc.MethodDescriptor$Marshaller "
+            + "marshaller(com.google.protobuf.Message)\"",
         symbol.toString());
   }
 
