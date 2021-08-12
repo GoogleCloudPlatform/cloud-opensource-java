@@ -1318,4 +1318,26 @@ public class LinkageCheckerTest {
                 "has source class belonging to artifact"))
         .contains("com.google.cloud:google-cloud-core:jar:tests:1.96.0");
   }
+
+  @Test
+  public void testProtectedMethodsOfObject() throws Exception {
+    Artifact groovy = new DefaultArtifact("org.codehaus.groovy:groovy-all:2.3.6");
+    ClassPathResult classPathResult =
+        new ClassPathBuilder().resolve(ImmutableList.of(groovy), false, DependencyMediation.MAVEN);
+
+    LinkageChecker linkageChecker = LinkageChecker.create(classPathResult.getClassPath());
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+
+    // Some class files in the Groovy library contains references to java.lang.Object's finalize()
+    // and clone() methods. Because these methods have protected accessor (accessible from
+    // subclasses) and all objects are subclasses of java.lang.Object, there should not be linkage
+    // errors on the references.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2177
+    Truth.assertThat(linkageProblems)
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (LinkageProblem problem) -> problem.getSymbol().getClassBinaryName(),
+                "has linkage errors that reference symbols on class"))
+        .doesNotContain("java.lang.Object");
+  }
 }
