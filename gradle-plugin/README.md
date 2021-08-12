@@ -1,6 +1,7 @@
 # Linkage Checker Gradle Plugin
 
-For usage of this plugin, see the documentation.
+For usage of this plugin, see [the plugin documentation](
+https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-with-Gradle).
 
 # Build Instruction
 
@@ -27,7 +28,27 @@ This command installs the Linkage Checker Gradle plugin in the local Maven repos
    linkage-checker-gradle-plugin-0.1.0-SNAPSHOT.jar
    linkage-checker-gradle-plugin-0.1.0-SNAPSHOT.pom
    ```
-    
+
+## Using the plugin in the local Maven repository
+
+To use the plugin that is installed in the local Maven repository, write the following code
+in your `settings.gradle`.
+
+```
+buildscript{
+  repositories {
+    mavenLocal()
+
+    dependencies{
+      classpath 'com.google.cloud.tools:linkage-checker-gradle-plugin:1.5.10-SNAPSHOT'
+    }
+  }
+}
+```
+
+If you do this, remove the version of the plugin in `build.gradle`; otherwise Gradle shows an error
+message to do so.
+
 # Debug
 
    ```
