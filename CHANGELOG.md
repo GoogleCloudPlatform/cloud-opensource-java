@@ -1,5 +1,17 @@
 # Linkage Checker Enforcer Rule and Linkage Monitor Change Log
 
+## 1.5.10
+* Fixed the bug that generated false positives on artifacts with classifiers ([#2173](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2173))
+* Fixed the incorrect handling of protected methods on `java.lang.Object` ([#2177](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2177))
+* The Gradle plugin shows partial results even if there are unexpected attributes of dependencies (
+  [#2178](https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/2178)).
+* The Gradle plugin checks circular dependencies when showing linkage errors ([#2174](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2174)).
+* The messages about linkage errors include the types of method and field symbols ([2179](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2179)).
+
 ## 1.5.9
 * Added an exclusion rule for invalid references in appengien-api-1.0-sdk ([#2045](
   https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2045))
