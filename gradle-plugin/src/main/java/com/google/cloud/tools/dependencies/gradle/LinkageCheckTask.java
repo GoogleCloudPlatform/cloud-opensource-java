@@ -327,9 +327,9 @@ public class LinkageCheckTask extends DefaultTask {
 
       Set<ResolvedArtifact> moduleArtifacts = node.getModuleArtifacts();
       if (moduleArtifacts.isEmpty()) {
-        // Maven's dependency tree, Gradle's dependency tree includes such nodes that don't have
-        // associated artifacts. A BOM, such as com.fasterxml.jackson:jackson-bom:2.12.3, fall in
-        // this category.
+        // Unlike Maven's dependency tree, Gradle's dependency tree may include nodes that do not
+        // have associated artifacts. BOMs, such as com.fasterxml.jackson:jackson-bom:2.12.3, fall
+        // in this category. For the detailed observation, see the issue below:
         // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2174#issuecomment-897174898
         getLogger()
             .warn(
