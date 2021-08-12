@@ -509,6 +509,11 @@ public class LinkageChecker {
       if (ClassDumper.classesInSamePackage(targetClass.getClassName(), sourceClassName)) {
         return true;
       }
+      if (Object.class.getName().equals(targetClass.getClassName())) {
+        // All objects are subclasses of java.lang.Object. Therefore the protected members are
+        // accessible to all objects.
+        return true;
+      }
       try {
         JavaClass sourceClass = classDumper.loadJavaClass(sourceClassName);
         if (ClassDumper.isClassSubClassOf(sourceClass, targetClass)) {

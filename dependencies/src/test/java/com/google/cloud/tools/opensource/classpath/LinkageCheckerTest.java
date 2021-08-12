@@ -1321,11 +1321,9 @@ public class LinkageCheckerTest {
 
   @Test
   public void testProtectedMethodsOfObject() throws Exception {
-    Artifact groovy =
-        new DefaultArtifact("org.codehaus.groovy:groovy-all:2.3.6");
+    Artifact groovy = new DefaultArtifact("org.codehaus.groovy:groovy-all:2.3.6");
     ClassPathResult classPathResult =
-        new ClassPathBuilder()
-            .resolve(ImmutableList.of(groovy), false, DependencyMediation.MAVEN);
+        new ClassPathBuilder().resolve(ImmutableList.of(groovy), false, DependencyMediation.MAVEN);
 
     LinkageChecker linkageChecker = LinkageChecker.create(classPathResult.getClassPath());
     ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
@@ -1340,7 +1338,6 @@ public class LinkageCheckerTest {
             Correspondence.transforming(
                 (LinkageProblem problem) -> problem.getSymbol().getClassBinaryName(),
                 "has linkage errors that reference symbols on class"))
-        .doesNotContain(
-            "java.lang.Object");
+        .doesNotContain("java.lang.Object");
   }
 }
