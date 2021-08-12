@@ -17,6 +17,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Objects;
+import org.apache.bcel.classfile.Utility;
 
 /** Symbol for a field of a class. */
 final class FieldSymbol extends Symbol {
@@ -65,6 +66,8 @@ final class FieldSymbol extends Symbol {
 
   @Override
   public String toString() {
-    return getClassBinaryName() + "'s field " + name;
+    String typeSignature = Utility.typeSignatureToString(descriptor, false);
+
+    return getClassBinaryName() + "'s field \"" + typeSignature + " " + name + "\"";
   }
 }

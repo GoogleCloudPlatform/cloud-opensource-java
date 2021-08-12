@@ -84,8 +84,8 @@ class ExclusionFileFunctionalTest extends Specification {
     result.output.contains("Task :linkageCheck")
     result.output.contains("BUILD FAILED")
     // Ensure it outputs the linkage errors
-    result.output.contains("Class org.apache.avalon.framework.logger.Logger is not found")
-
+    result.output.contains(
+        "io.grpc.internal.GrpcAttributes's field \"io.grpc.Attributes\$Key ATTR_LB_ADDR_AUTHORITY\" is not found")
     // BaseDnsNameResolverProvider is referenced by SecretGrpclbNameResolverProvider, which we
     // suppress via the exclusion file.
     !result.output.contains("io.grpc.internal.BaseDnsNameResolverProvider")
@@ -141,8 +141,8 @@ class ExclusionFileFunctionalTest extends Specification {
     result.output.contains("Task :linkageCheck")
     result.output.contains("BUILD FAILED")
     // Ensure it outputs the linkage errors
-    result.output.contains("Class org.apache.avalon.framework.logger.Logger is not found")
-
+    result.output.contains(
+        "io.grpc.internal.GrpcAttributes's field \"io.grpc.Attributes\$Key ATTR_LB_ADDR_AUTHORITY\" is not found")
     // BaseDnsNameResolverProvider is referenced by SecretGrpclbNameResolverProvider, which we
     // suppress via the exclusion file.
     !result.output.contains("io.grpc.internal.BaseDnsNameResolverProvider")
@@ -156,10 +156,9 @@ class ExclusionFileFunctionalTest extends Specification {
           mavenCentral()
         }
         
-        // These two have incompatible dependencies
-        // https://github.com/grpc/grpc-java/issues/7002
+        // This old version of gax-grpc has dependency conflicts.
         dependencies {
-          compile 'com.google.api:gax:1.57.0'
+          compile 'com.google.api:gax-grpc:1.42.0'
         }
         
         linkageChecker {
@@ -168,36 +167,27 @@ class ExclusionFileFunctionalTest extends Specification {
         }
         """
 
-    // When resolved by Gradle's dependency resolution logic, gax has the following linkage errors.
+    // When resolved by Gradle's dependency resolution logic, gax-grpc has the following errors.
     File exclusionFile = testProjectDir.newFile(exclusionFileName)
     exclusionFile << """
         <LinkageCheckerFilter>
           <LinkageError>
-            <Target>
-              <Class name="org.apache.avalon.framework.logger.Logger" />
-            </Target>
             <Source>
-              <Class name="org.apache.commons.logging.impl.AvalonLogger" />
+              <Package name="io.grpc.netty.shaded" />
             </Source>
-            <Reason>we do not use the logger</Reason>
+            <Reason>Netty's shading generates linkage errors</Reason>
           </LinkageError>
           <LinkageError>
-            <Target>
-              <Class name="org.apache.log.Hierarchy" />
-            </Target>
             <Source>
-              <Class name="org.apache.commons.logging.impl.LogKitLogger" />
+              <Package name="com.google.common" />
             </Source>
-            <Reason>we do not use the logger</Reason>
+            <Reason>guava-jdk5 is too old to work with new Guava</Reason>
           </LinkageError>
           <LinkageError>
-            <Target>
-              <Class name="org.apache.log.Logger" />
-            </Target>
             <Source>
-              <Class name="org.apache.commons.logging.impl.LogKitLogger" />
+              <Package name="com.google.api.client.testing" />
             </Source>
-            <Reason>we do not use the logger</Reason>
+            <Reason>dependency conflict on Apache HTTP Client</Reason>
           </LinkageError>
         </LinkageCheckerFilter>
         """

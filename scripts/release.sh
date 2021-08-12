@@ -1,5 +1,5 @@
 #!/bin/bash -
-# Usage: ./release.sh <dependencies|bom> <release version>
+# Usage: ./release.sh <dependencies|bom|lts> <release version>
 
 set -e
 
@@ -27,9 +27,9 @@ CheckVersion() {
 # Usage: IncrementVersion <version>
 IncrementVersion() {
   local version=$1
-  local minorVersion=$(echo $version | sed 's/[0-9][0-9]*\.[0-9][0-9]*\.\([0-9][0-9]\)*/\1/')
+  local minorVersion=$(echo $version | sed 's/[0-9]\+\.[0-9]\+\.\([0-9]\+\)*/\1/')
   local nextMinorVersion=$((minorVersion+1))
-  echo $version | sed "s/\([0-9][0-9]*\.[0-9][0-9]*\)\.[0-9][0-9]*/\1.$nextMinorVersion/"
+  echo $version | sed "s/\([0-9]\+\.[0-9]\+\)\.[0-9]\+/\1.$nextMinorVersion/"
 }
 
 [ $# -ne 2 ] && [ $# -ne 3 ] && DieUsage
@@ -60,8 +60,21 @@ if [[ $(git status -uno --porcelain) ]]; then
   Die 'There are uncommitted changes.'
 fi
 
-# Make sure client is up to date with the latest changes.
-git checkout master
+if [[ "${SUFFIX}" = "lts" ]]; then
+  # LTS releases are based on N.0.x-lts branch, where N is the major release number.
+  # (Note that the minor version part of this BOM is always zero)
+  BASE_BRANCH=$(echo $VERSION | sed 's/\([0-9]\+\)\.0\.[0-9]\+/\1.0.x-lts/')
+  if [[ "${BASE_BRANCH}" != *.0.x-lts ]]; then
+    Die 'The LTS release version did not match expected format. The minor version is always 0.'
+  fi
+  # For example, LTS BOM patch release 5.0.3 would create "5.0.3-lts" branch based on the base
+  # branch "5.0.x-lts". For the details of a patch release, see boms/cloud-lts-bom/RELEASING.md.
+else
+  # Make sure client is up to date with the latest changes.
+  BASE_BRANCH=master
+fi
+echo "BASE_BRANCH: ${BASE_BRANCH}"
+git checkout ${BASE_BRANCH}
 git pull
 
 # Checks out a new branch for this version release (eg. 1.5.7).
@@ -105,10 +118,15 @@ git commit -am "${NEXT_SNAPSHOT}"
 
 # Pushes the tag and release branch to Github.
 git push origin "${RELEASE_TAG}"
+
+# If the suffix is "lts", then the branch is protected. In that case any subsequent modification is
+# blocked without an approved pull request.
 git push --set-upstream origin ${VERSION}-${SUFFIX}
 
 # Create the PR
-gh pr create -t "Release ${VERSION}-${SUFFIX}" -b "Release ${VERSION}-${SUFFIX}"
+gh pr create --title "Release ${VERSION}-${SUFFIX}" \
+    --body "Release ${VERSION}-${SUFFIX}" \
+    --base ${BASE_BRANCH}
 
 # File a PR on Github for the new branch. Have someone LGTM it, which gives you permission to continue.
 EchoGreen 'Ask someone to approve this PR.'

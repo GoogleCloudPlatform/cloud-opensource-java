@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -24,10 +23,12 @@ import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProble
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.logging.Logger;
 import org.eclipse.aether.artifact.Artifact;
 
 /** Result of class path resolution with {@link UnresolvableArtifactProblem}s if any. */
 public final class ClassPathResult {
+  private static final Logger logger = Logger.getLogger(ClassPathResult.class.getName());
 
   private final ImmutableList<ClassPathEntry> classPath;
 
@@ -65,7 +66,11 @@ public final class ClassPathResult {
     StringBuilder message = new StringBuilder();
     for (ClassPathEntry entry : entries) {
       ImmutableList<DependencyPath> dependencyPaths = getDependencyPaths(entry);
-      checkArgument(dependencyPaths.size() >= 1, "%s is not in the class path", entry);
+
+      if (dependencyPaths.isEmpty()) {
+        logger.warning(entry + " is not in the class path");
+        continue;
+      }
 
       message.append(entry + " is at:\n");
 
