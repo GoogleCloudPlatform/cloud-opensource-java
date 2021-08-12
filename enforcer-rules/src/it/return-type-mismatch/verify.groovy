@@ -2,8 +2,9 @@ def buildLog = new File(basedir, "build.log").text.replaceAll("\\r\\n", "\n")
 
 // protobuf-java 3.12.4 has wrong reference to ByteBuffer's methods that are unavailable in Java 8.
 // In this message below, the expectation is wrong.
+println(buildLog)
 assert buildLog.contains('''\
-java.nio.ByteBuffer's method position(int) is expected to return java.nio.ByteBuffer\
+java.nio.ByteBuffer's method "java.nio.ByteBuffer position(int)" is expected to return java.nio.ByteBuffer\
  but instead returns java.nio.Buffer;
   referenced by 8 class files
     com.google.protobuf.AllocatedBuffer (com.google.protobuf:protobuf-java:3.12.4)

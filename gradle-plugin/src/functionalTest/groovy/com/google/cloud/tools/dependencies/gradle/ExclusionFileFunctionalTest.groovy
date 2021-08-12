@@ -85,7 +85,7 @@ class ExclusionFileFunctionalTest extends Specification {
     result.output.contains("BUILD FAILED")
     // Ensure it outputs the linkage errors
     result.output.contains(
-        "io.grpc.internal.GrpcAttributes's field ATTR_LB_ADDR_AUTHORITY is not found")
+        "io.grpc.internal.GrpcAttributes's field \"io.grpc.Attributes\$Key ATTR_LB_ADDR_AUTHORITY\" is not found")
     // BaseDnsNameResolverProvider is referenced by SecretGrpclbNameResolverProvider, which we
     // suppress via the exclusion file.
     !result.output.contains("io.grpc.internal.BaseDnsNameResolverProvider")
@@ -142,7 +142,7 @@ class ExclusionFileFunctionalTest extends Specification {
     result.output.contains("BUILD FAILED")
     // Ensure it outputs the linkage errors
     result.output.contains(
-        "io.grpc.internal.GrpcAttributes's field ATTR_LB_ADDR_AUTHORITY is not found")
+        "io.grpc.internal.GrpcAttributes's field \"io.grpc.Attributes\$Key ATTR_LB_ADDR_AUTHORITY\" is not found")
     // BaseDnsNameResolverProvider is referenced by SecretGrpclbNameResolverProvider, which we
     // suppress via the exclusion file.
     !result.output.contains("io.grpc.internal.BaseDnsNameResolverProvider")

@@ -114,7 +114,7 @@ public class LinkageProblemTest {
           source1,
           new ClassFile(new ClassPathEntry(path), "java.lang.Object"),
           new MethodSymbol(
-              "io.grpc.protobuf.ProtoUtils.marshaller",
+              "io.grpc.protobuf.ProtoUtils",
               "marshaller",
               "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
               false));
@@ -155,15 +155,16 @@ public class LinkageProblemTest {
         "("
             + path
             + ") "
-            + "io.grpc.protobuf.ProtoUtils.marshaller's method "
-            + "marshaller(com.google.protobuf.Message) is not found;\n"
+            + "io.grpc.protobuf.ProtoUtils's method "
+            + "\"io.grpc.MethodDescriptor$Marshaller marshaller(com.google.protobuf.Message)\""
+            + " is not found;\n"
             + "  referenced by 1 class file\n"
             + "    java.lang.Object (com.google:foo:0.0.1)\n"
             + "Class java.lang.Integer is not found;\n"
             + "  referenced by 2 class files\n"
             + "    java.lang.Object (com.google:foo:0.0.1)\n"
             + "    java.lang.Integer (com.google:bar:0.0.1)\n"
-            + "(com.google:ccc:1.2.3) java.lang.Integer's field MAX_VALUE is not found;\n"
+            + "(com.google:ccc:1.2.3) java.lang.Integer's field \"int MAX_VALUE\" is not found;\n"
             + "  referenced by 1 class file\n"
             + "    java.lang.Integer (com.google:bar:0.0.1)\n",
         LinkageProblem.formatLinkageProblems(linkageProblems, null));
