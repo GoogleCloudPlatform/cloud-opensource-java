@@ -70,12 +70,16 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- Not using Guava-bom because it includes guava-gwt, which has many invalid references -->
       <dependency>
         <groupId>com.google.guava</groupId>
-        <artifactId>guava-bom</artifactId>
+        <artifactId>guava</artifactId>
         <version>${guava.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava-testlib</artifactId>
+        <version>${guava.version}</version>
       </dependency>
 
       <!-- protobufs from https://github.com/protocolbuffers/protobuf/tree/master/java -->
