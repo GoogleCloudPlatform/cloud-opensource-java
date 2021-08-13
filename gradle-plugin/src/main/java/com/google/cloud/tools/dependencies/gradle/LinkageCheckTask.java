@@ -225,11 +225,9 @@ public class LinkageCheckTask extends DefaultTask {
     }
 
     public String pathFromRoot() {
-      ResolvedComponentResultNode iter = this;
       List<String> dependencyPathElementsReversed = new ArrayList<>();
-      while (iter != null) {
+      for (ResolvedComponentResultNode iter = this; iter != null; iter = iter.parent) {
         dependencyPathElementsReversed.add(formatComponentResult(iter.componentResult));
-        iter = iter.parent;
       }
       Collections.reverse(dependencyPathElementsReversed);
       String dependencyPath = Joiner.on(" / ").join(dependencyPathElementsReversed);
@@ -302,10 +300,8 @@ public class LinkageCheckTask extends DefaultTask {
           String dependencyPath = node.pathFromRoot();
           coordinatesToDependencyPaths.put(targetCoordinates, dependencyPath);
 
-          ResolvedComponentResultNode iter = node.parent;
-          while (iter != null) {
+          for (ResolvedComponentResultNode iter = node.parent; iter != null; iter = iter.parent) {
             nodesDependOnTarget.add(iter.componentResult);
-            iter = iter.parent;
           }
         }
 
@@ -316,10 +312,8 @@ public class LinkageCheckTask extends DefaultTask {
           String dependencyPath = node.pathFromRoot() + " (omitted for duplicate)";
           coordinatesToDependencyPaths.put(targetCoordinates, dependencyPath);
 
-          ResolvedComponentResultNode iter = node;
-          while (iter != null) {
+          for (ResolvedComponentResultNode iter = node; iter != null; iter = iter.parent) {
             nodesDependOnTarget.add(iter.componentResult);
-            iter = iter.parent;
           }
           continue;
         }
