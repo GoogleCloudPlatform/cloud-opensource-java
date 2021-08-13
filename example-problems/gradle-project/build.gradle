@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 plugins {
-  id "com.google.cloud.tools.linkagechecker" version "1.5.6"
   id "java"
+  id "com.google.cloud.tools.linkagechecker" version "1.5.10"
 }
 
 repositories {
@@ -31,3 +31,5 @@ linkageChecker {
   configurations = ['compile']
   reportOnlyReachable = true
 }
+linkageCheck.dependsOn('build')
+
