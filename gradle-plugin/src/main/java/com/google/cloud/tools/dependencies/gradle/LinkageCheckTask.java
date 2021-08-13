@@ -33,6 +33,8 @@ import com.google.cloud.tools.opensource.dependencies.PathToNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -200,7 +202,8 @@ public class LinkageCheckTask extends DefaultTask {
       ImmutableListMultimap.Builder<String, String> output,
       ArrayDeque<ResolvedComponentResult> stack,
       ImmutableSet<String> targetCoordinates,
-      Set<ResolvedComponentResult> checkedCircularDependency) {
+      Set<ResolvedComponentResult> checkedCircularDependency,
+      Multimap<ResolvedComponentResult, String> checkedCoordinates) {
     ResolvedComponentResult item = stack.getLast();
     ModuleVersionIdentifier identifier = item.getModuleVersion();
     String coordinates =
@@ -210,6 +213,12 @@ public class LinkageCheckTask extends DefaultTask {
       String dependencyPath =
           stack.stream().map(this::formatComponentResult).collect(Collectors.joining(" / "));
       output.put(coordinates, dependencyPath);
+      for (ResolvedComponentResult result : stack) {
+        if (result.equals(stack.peekLast())) {
+          continue;
+        }
+        checkedCoordinates.put(result, coordinates);
+      }
     }
 
     for (DependencyResult dependencyResult : item.getDependencies()) {
@@ -228,9 +237,23 @@ public class LinkageCheckTask extends DefaultTask {
                         + "\n The stack is: "
                         + stack);
           }
+        } else if (checkedCoordinates.containsKey(child)) {
+          for (String matchedCoordinates : checkedCoordinates.get(child)) {
+            if (matchedCoordinates.isEmpty()) {
+              continue;
+            }
+
+            stack.add(child);
+            String dependencyPath =
+                stack.stream().map(this::formatComponentResult).collect(Collectors.joining(" / "))
+                    + " (*)"; // (*) is to mark that this was already seen
+            stack.removeLast();
+            output.put(matchedCoordinates, dependencyPath);
+          }
         } else {
           stack.add(child);
-          recordDependencyPaths(output, stack, targetCoordinates, checkedCircularDependency);
+          recordDependencyPaths(
+              output, stack, targetCoordinates, checkedCircularDependency, checkedCoordinates);
         }
       } else if (dependencyResult instanceof UnresolvedDependencyResult) {
         UnresolvedDependencyResult unresolvedResult = (UnresolvedDependencyResult) dependencyResult;
@@ -243,6 +266,8 @@ public class LinkageCheckTask extends DefaultTask {
       }
     }
 
+    // Hacky approach to mark it as already checked even without a match
+    checkedCoordinates.put(stack.peekLast(), "");
     stack.removeLast();
   }
 
@@ -263,7 +288,12 @@ public class LinkageCheckTask extends DefaultTask {
     ImmutableListMultimap.Builder<String, String> coordinatesToDependencyPaths =
         ImmutableListMultimap.builder();
 
-    recordDependencyPaths(coordinatesToDependencyPaths, stack, targetCoordinates, new HashSet<>());
+    recordDependencyPaths(
+        coordinatesToDependencyPaths,
+        stack,
+        targetCoordinates,
+        new HashSet<>(),
+        MultimapBuilder.hashKeys().arrayListValues().build());
 
     ImmutableListMultimap<String, String> dependencyPaths = coordinatesToDependencyPaths.build();
     for (String coordinates : dependencyPaths.keySet()) {
