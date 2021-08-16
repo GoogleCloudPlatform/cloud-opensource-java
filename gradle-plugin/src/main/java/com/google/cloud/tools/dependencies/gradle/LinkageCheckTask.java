@@ -242,18 +242,15 @@ public class LinkageCheckTask extends DefaultTask {
           if (node.parent != null) {
             nodesDependOnTarget.addAll(node.parent.rootToNode());
           }
-        }
-
-        if (nodesDependOnTarget.contains(item)) {
+        } else if (nodesDependOnTarget.contains(item)) {
           // Omitting duplicate dependency paths by checking nodesDependOnTarget.
           String dependencyPath = node.pathFromRoot() + " (omitted for duplicate)";
           coordinatesToDependencyPaths.put(targetCoordinates, dependencyPath);
 
           nodesDependOnTarget.addAll(node.rootToNode());
-          continue;
+        } else {
+          queue.addAll(getDependencies(node));
         }
-
-        queue.addAll(getDependencies(node));
       }
     }
 
