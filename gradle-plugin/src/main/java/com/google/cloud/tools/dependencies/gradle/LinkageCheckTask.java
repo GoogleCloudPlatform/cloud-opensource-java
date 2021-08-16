@@ -30,8 +30,6 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.PathToNode;
-import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
@@ -41,10 +39,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -69,6 +65,9 @@ import org.gradle.api.tasks.TaskAction;
  */
 public class LinkageCheckTask extends DefaultTask {
   private LinkageCheckerPluginExtension extension;
+
+  // A set to avoid printing the same circular dependency multiple times
+  private Set<ResolvedComponentResult> checkedCircularDependency = new HashSet<>();
 
   @TaskAction
   public void run() throws IOException {
@@ -202,94 +201,34 @@ public class LinkageCheckTask extends DefaultTask {
     return identifier.toString();
   }
 
-  /** Dependency nodes to record dependency paths while traversing the dependency tree */
-  private static class ResolvedComponentResultNode {
-    ResolvedComponentResult componentResult;
-
-    ResolvedComponentResultNode parent;
-
-    ResolvedComponentResultNode(
-        ResolvedComponentResult componentResult, ResolvedComponentResultNode parent) {
-      this.componentResult = componentResult;
-      this.parent = parent;
-    }
-
-    boolean hasParent(ResolvedComponentResult other) {
-      if (componentResult.equals(other)) {
-        return true;
-      }
-      if (parent == null) {
-        return false;
-      }
-      return parent.hasParent(other);
-    }
-
-    public String pathFromRoot() {
-      List<String> dependencyPathElementsReversed = new ArrayList<>();
-      for (ResolvedComponentResultNode iter = this; iter != null; iter = iter.parent) {
-        dependencyPathElementsReversed.add(formatComponentResult(iter.componentResult));
-      }
-      Collections.reverse(dependencyPathElementsReversed);
-      String dependencyPath = Joiner.on(" / ").join(dependencyPathElementsReversed);
-      return dependencyPath;
-    }
-
-    @Override
-    public String toString() {
-      return MoreObjects.toStringHelper(this)
-          .add("componentResult", componentResult)
-          .add("parent", parent)
-          .toString();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      if (this == other) {
-        return true;
-      }
-      if (other == null || getClass() != other.getClass()) {
-        return false;
-      }
-      ResolvedComponentResultNode that = (ResolvedComponentResultNode) other;
-      return Objects.equals(componentResult, that.componentResult)
-          && Objects.equals(parent, that.parent);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(componentResult, parent);
-    }
-  }
-
   /**
    * Returns mapping from Maven coordinates to their dependency paths appearing in the dependency
-   * graph
+   * graph. The output do not have duplicate dependency paths.
    *
-   * @param componentResult The root project in the dependency graph
+   * @param rootProject The root project in the dependency graph
    * @param targetCoordinatesSet The Maven coordinates to check their dependency paths
    */
   private ListMultimap<String, String> groupCoordinatesToDependencyPaths(
-      ResolvedComponentResult componentResult, Set<String> targetCoordinatesSet) {
+      ResolvedComponentResult rootProject, Set<String> targetCoordinatesSet) {
 
     ListMultimap<String, String> coordinatesToDependencyPaths =
         MultimapBuilder.hashKeys().arrayListValues().build();
-    // No need to print the same circular dependency multiple times
-    Set<ResolvedComponentResult> checkedCircularDependency = new HashSet<>();
 
     for (String targetCoordinates : targetCoordinatesSet) {
-      // Queue of dependnecy nodes. Each node knows its parent.
-      ArrayDeque<ResolvedComponentResultNode> queue = new ArrayDeque<>();
-      ResolvedComponentResultNode firstItem =
-          new ResolvedComponentResultNode(componentResult, null);
+      // Queue of dependency nodes. Each node knows its parent.
+      ArrayDeque<DependencyNode> queue = new ArrayDeque<>();
+      DependencyNode firstItem =
+          new DependencyNode(rootProject, null);
       queue.add(firstItem);
 
-      // Mapping to omit duplicate dependency paths in the output. This is a mapping from Maven
-      // coordinates to dependency nodes that has the dependency of the coordinate in their direct
-      // or transitive dependencies.
+      // A set to omit duplicate dependency paths in the output. When a node is found to be in this
+      // set while traversing the graph, we do not need to check the children, because we know that
+      // the dependency paths from that node to the targetCoordinates are already added to
+      // coordinatesToDependencyPaths.
       Set<ResolvedComponentResult> nodesDependOnTarget = new HashSet<>();
 
       while (!queue.isEmpty()) {
-        ResolvedComponentResultNode node = queue.poll();
+        DependencyNode node = queue.poll();
         ResolvedComponentResult item = node.componentResult;
 
         ModuleVersionIdentifier identifier = item.getModuleVersion();
@@ -300,59 +239,63 @@ public class LinkageCheckTask extends DefaultTask {
           String dependencyPath = node.pathFromRoot();
           coordinatesToDependencyPaths.put(targetCoordinates, dependencyPath);
 
-          for (ResolvedComponentResultNode iter = node.parent; iter != null; iter = iter.parent) {
-            nodesDependOnTarget.add(iter.componentResult);
+          if (node.parent != null) {
+            nodesDependOnTarget.addAll(node.parent.rootToNode());
           }
         }
 
         if (nodesDependOnTarget.contains(item)) {
-          // Do not show duplicate dependency paths. If we know that this node contains dependency
-          // having targetCoordinates in its direct/transitive dependencies, there is no need to
-          // print the dependency paths again.
+          // Omitting duplicate dependency paths by checking nodesDependOnTarget.
           String dependencyPath = node.pathFromRoot() + " (omitted for duplicate)";
           coordinatesToDependencyPaths.put(targetCoordinates, dependencyPath);
 
-          for (ResolvedComponentResultNode iter = node; iter != null; iter = iter.parent) {
-            nodesDependOnTarget.add(iter.componentResult);
-          }
+          nodesDependOnTarget.addAll(node.rootToNode());
           continue;
         }
 
-        for (DependencyResult dependencyResult : item.getDependencies()) {
-          if (dependencyResult instanceof ResolvedDependencyResult) {
-            ResolvedDependencyResult resolvedDependencyResult =
-                (ResolvedDependencyResult) dependencyResult;
-            ResolvedComponentResult child = resolvedDependencyResult.getSelected();
-
-            if (node.hasParent(child)) {
-              // Circular dependency check
-              if (checkedCircularDependency.add(child)) {
-                getLogger()
-                    .error(
-                        "Circular dependency for: "
-                            + resolvedDependencyResult
-                            + "\n The stack is: "
-                            + node.pathFromRoot());
-              }
-            } else {
-              ResolvedComponentResultNode childNode = new ResolvedComponentResultNode(child, node);
-              queue.add(childNode);
-            }
-          } else if (dependencyResult instanceof UnresolvedDependencyResult) {
-            UnresolvedDependencyResult unresolvedResult =
-                (UnresolvedDependencyResult) dependencyResult;
-            getLogger()
-                .error(
-                    "Could not resolve dependency: "
-                        + unresolvedResult.getAttempted().getDisplayName());
-          } else {
-            getLogger().error("Unexpected dependency result type: " + dependencyResult);
-          }
-        }
+        queue.addAll(getDependencies(node));
       }
     }
 
     return coordinatesToDependencyPaths;
+  }
+
+  private List<DependencyNode> getDependencies(DependencyNode node) {
+    ResolvedComponentResult item = node.componentResult;
+
+    List<DependencyNode> childNodes = new ArrayList<>();
+    for (DependencyResult dependencyResult : item.getDependencies()) {
+      if (dependencyResult instanceof ResolvedDependencyResult) {
+        ResolvedDependencyResult resolvedDependencyResult =
+            (ResolvedDependencyResult) dependencyResult;
+        ResolvedComponentResult child = resolvedDependencyResult.getSelected();
+
+        if (node.isDescendantOf(child)) {
+          // The child appears in the descendants of the node. It's a circular dependency.
+          if (checkedCircularDependency.add(child)) {
+            // No need to print the circular dependency information multiple times.
+            getLogger()
+                .error(
+                    "Circular dependency for: "
+                        + resolvedDependencyResult
+                        + "\n The stack is: "
+                        + node.pathFromRoot());
+          }
+        } else {
+          childNodes.add(new DependencyNode(child, node));
+        }
+      } else if (dependencyResult instanceof UnresolvedDependencyResult) {
+        UnresolvedDependencyResult unresolvedResult =
+            (UnresolvedDependencyResult) dependencyResult;
+        getLogger()
+            .error(
+                "Could not resolve dependency: "
+                    + unresolvedResult.getAttempted().getDisplayName());
+      } else {
+        getLogger().error("Unexpected dependency result type: " + dependencyResult);
+      }
+    }
+    return childNodes;
   }
 
   private String dependencyPathToArtifacts(
