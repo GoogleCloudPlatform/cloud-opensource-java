@@ -44,17 +44,18 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <guava.version>30.1.1-android</guava.version>
-    <google.cloud.java.version>0.158.0</google.cloud.java.version>
-    <google.cloud.core.version>1.95.4</google.cloud.core.version>
+    <guava.version>30.1.1-jre</guava.version>
+    <google.cloud.java.version>0.159.0</google.cloud.java.version>
+    <google.cloud.core.version>2.0.5</google.cloud.core.version>
     <io.grpc.version>1.39.0</io.grpc.version>
     <http.version>1.39.2</http.version>
     <protobuf.version>3.17.3</protobuf.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
         When updating gax.version, update gax.httpjson.version too. -->
-    <gax.version>1.66.0</gax.version>
-    <gax.httpjson.version>0.83.0</gax.httpjson.version>
-    <auth.version>0.26.0</auth.version>
+    <gax.version>2.1.0</gax.version>
+    <gax.httpjson.version>0.86.0</gax.httpjson.version>
+    <auth.version>1.0.0</auth.version>
+    <api-common.version>2.0.1</api-common.version>
     <common.protos.version>2.3.2</common.protos.version>
     <iam.protos.version>1.0.14</iam.protos.version>
   </properties>
@@ -69,12 +70,16 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- Not using Guava-bom because it includes guava-gwt, which has many invalid references -->
       <dependency>
         <groupId>com.google.guava</groupId>
-        <artifactId>guava-bom</artifactId>
+        <artifactId>guava</artifactId>
         <version>${guava.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava-testlib</artifactId>
+        <version>${guava.version}</version>
       </dependency>
 
       <!-- protobufs from https://github.com/protocolbuffers/protobuf/tree/master/java -->
@@ -217,7 +222,7 @@
       <dependency>
         <groupId>com.google.api</groupId>
         <artifactId>api-common</artifactId>
-        <version>1.10.4</version>
+        <version>${api-common.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.api</groupId>
