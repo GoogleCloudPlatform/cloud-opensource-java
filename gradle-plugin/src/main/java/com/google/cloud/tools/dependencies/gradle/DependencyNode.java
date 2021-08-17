@@ -16,28 +16,25 @@
 
 package com.google.cloud.tools.dependencies.gradle;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayDeque;
-import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
 
 /** Dependency nodes to record dependency paths while traversing the dependency tree */
-class DependencyNode {
+final class DependencyNode {
   ResolvedComponentResult componentResult;
 
   DependencyNode parent;
 
-  DependencyNode(
-      ResolvedComponentResult componentResult, DependencyNode parent) {
+  DependencyNode(ResolvedComponentResult componentResult, DependencyNode parent) {
     this.componentResult = componentResult;
     this.parent = parent;
   }
 
-   boolean isDescendantOf(ResolvedComponentResult other) {
+  boolean isDescendantOf(ResolvedComponentResult other) {
     if (componentResult.equals(other)) {
       return true;
     }
@@ -47,12 +44,13 @@ class DependencyNode {
     return parent.isDescendantOf(other);
   }
 
-   String pathFromRoot() {
-     return rootToNode().stream().map(LinkageCheckTask::formatComponentResult)
-         .collect(Collectors.joining(" / "));
+  String pathFromRoot() {
+    return fromRootToNode().stream()
+        .map(LinkageCheckTask::formatComponentResult)
+        .collect(Collectors.joining(" / "));
   }
 
-  ImmutableList<ResolvedComponentResult> rootToNode() {
+  ImmutableList<ResolvedComponentResult> fromRootToNode() {
     ArrayDeque<ResolvedComponentResult> nodes = new ArrayDeque<>();
     for (DependencyNode iter = this; iter != null; iter = iter.parent) {
       nodes.addFirst(iter.componentResult);

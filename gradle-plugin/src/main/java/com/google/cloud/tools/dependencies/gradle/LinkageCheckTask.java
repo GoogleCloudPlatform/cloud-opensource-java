@@ -217,14 +217,10 @@ public class LinkageCheckTask extends DefaultTask {
     for (String targetCoordinates : targetCoordinatesSet) {
       // Queue of dependency nodes. Each node knows its parent.
       ArrayDeque<DependencyNode> queue = new ArrayDeque<>();
-      DependencyNode firstItem =
-          new DependencyNode(rootProject, null);
+      DependencyNode firstItem = new DependencyNode(rootProject, null);
       queue.add(firstItem);
 
-      // A set to omit duplicate dependency paths in the output. When a node is found to be in this
-      // set while traversing the graph, we do not need to check the children, because we know that
-      // the dependency paths from that node to the targetCoordinates are already added to
-      // coordinatesToDependencyPaths.
+      // A set of dependencies to omit duplicate dependency paths in the output.
       Set<ResolvedComponentResult> nodesDependOnTarget = new HashSet<>();
 
       while (!queue.isEmpty()) {
@@ -240,16 +236,17 @@ public class LinkageCheckTask extends DefaultTask {
           coordinatesToDependencyPaths.put(targetCoordinates, dependencyPath);
 
           if (node.parent != null) {
-            nodesDependOnTarget.addAll(node.parent.rootToNode());
+            nodesDependOnTarget.addAll(node.parent.fromRootToNode());
           }
         } else if (nodesDependOnTarget.contains(item)) {
-          // Omitting duplicate dependency paths by checking nodesDependOnTarget.
+          // Omitting duplicate dependency paths when we already know this item depends on
+          // targetCoordinates, directly or transitively.
           String dependencyPath = node.pathFromRoot() + " (omitted for duplicate)";
           coordinatesToDependencyPaths.put(targetCoordinates, dependencyPath);
 
-          nodesDependOnTarget.addAll(node.rootToNode());
+          nodesDependOnTarget.addAll(node.fromRootToNode());
         } else {
-          queue.addAll(getDependencies(node));
+          queue.addAll(findDependencies(node));
         }
       }
     }
@@ -257,7 +254,7 @@ public class LinkageCheckTask extends DefaultTask {
     return coordinatesToDependencyPaths;
   }
 
-  private List<DependencyNode> getDependencies(DependencyNode node) {
+  private List<DependencyNode> findDependencies(DependencyNode node) {
     ResolvedComponentResult item = node.componentResult;
 
     List<DependencyNode> childNodes = new ArrayList<>();
@@ -282,8 +279,7 @@ public class LinkageCheckTask extends DefaultTask {
           childNodes.add(new DependencyNode(child, node));
         }
       } else if (dependencyResult instanceof UnresolvedDependencyResult) {
-        UnresolvedDependencyResult unresolvedResult =
-            (UnresolvedDependencyResult) dependencyResult;
+        UnresolvedDependencyResult unresolvedResult = (UnresolvedDependencyResult) dependencyResult;
         getLogger()
             .error(
                 "Could not resolve dependency: "
