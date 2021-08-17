@@ -1,5 +1,9 @@
 # Linkage Checker Enforcer Rule and Linkage Monitor Change Log
 
+## 1.5.11
+* The Gradle plugin omits duplicate dependency paths when printing the locatin of problematic
+  artifacts ([#2188](https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/2188)).
+
 ## 1.5.10
 * Fixed the bug that generated false positives on artifacts with classifiers ([#2173](
   https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2173))
