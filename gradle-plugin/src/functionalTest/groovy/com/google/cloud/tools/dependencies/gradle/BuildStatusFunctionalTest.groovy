@@ -111,6 +111,17 @@ class BuildStatusFunctionalTest extends Specification {
         |io.grpc:grpc-grpclb:1.28.1 is at:
         |  g:test-123:0.1.0-SNAPSHOT / com.google.cloud:google-cloud-logging:1.101.1 / com.google.api:gax-grpc:1.56.0 / io.grpc:grpc-alts:1.28.1 / io.grpc:grpc-grpclb:1.28.1
         |""".stripMargin())
+
+    // "(omitted for duplicate)" should come after the non-omitted items
+    result.output.contains("""
+        |io.grpc:grpc-alts:1.28.1 is at:
+        |  g:test-123:0.1.0-SNAPSHOT / com.google.cloud:google-cloud-logging:1.101.1 / com.google.api:gax-grpc:1.56.0 / io.grpc:grpc-alts:1.28.1
+        |""".stripMargin())
+
+    // Ensure the node closest to the root is printed
+    result.output.contains("g:test-123:0.1.0-SNAPSHOT / io.grpc:grpc-core:1.29.0")
+    // Ensure that the relationship between grpc-netty-shaded to grpc-core is only printed once
+    result.output.count("io.grpc:grpc-netty-shaded:1.28.1 / io.grpc:grpc-core:1.29.0") == 1
     result.task(":linkageCheck").outcome == TaskOutcome.FAILED
   }
 
