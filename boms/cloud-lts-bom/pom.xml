@@ -66,11 +66,14 @@
     <google.cloud.monitoring.version>2.1.0-sp.1</google.cloud.monitoring.version>
     <google.cloud.trace.version>1.3.0-sp.1</google.cloud.trace.version>
     <google.cloud.pubsub.version>1.111.0-sp.1</google.cloud.pubsub.version>
+    <proto.google.cloud.pubsub.version.v1>1.93.0-sp.1</proto.google.cloud.pubsub.version.v1>
     <google.cloud.bigquery.version>1.127.12-sp.1</google.cloud.bigquery.version>
+    <google.api.services.bigquery>v2-rev20210410-1.31.0</google.api.services.bigquery>
     <google.cloud.bigtable.version>1.22.0-sp.1</google.cloud.bigtable.version>
     <bigtable-hbase-beam.version>1.20.0-sp.2</bigtable-hbase-beam.version>
     <google.cloud.storage.version>1.113.14-sp.1</google.cloud.storage.version>
     <datastore.v1.proto.client.version>1.6.4-sp.1</datastore.v1.proto.client.version>
+    <proto.google.cloud.datastore.v1>0.89.5-sp.1</proto.google.cloud.datastore.v1>
     <appengine.api.1.0.sdk.version>1.9.89</appengine.api.1.0.sdk.version>
     <androidpublisher.version>v3-rev20210429-1.31.0</androidpublisher.version>
   </properties>
@@ -109,6 +112,11 @@
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bigquery</artifactId>
         <version>${google.cloud.bigquery.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.apis</groupId>
+        <artifactId>google-api-services-bigquery</artifactId>
+        <version>${google.api.services.bigquery}</version>
       </dependency>
       <!-- Not using guava-bom as it includes guava-gwt -->
       <dependency>
@@ -239,6 +247,11 @@
         <version>${google.cloud.bigtable.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.google.api.grpc</groupId>
+        <artifactId>proto-google-cloud-bigtable-v2</artifactId>
+        <version>${google.cloud.bigtable.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.google.cloud.bigtable</groupId>
         <artifactId>bigtable-hbase-beam</artifactId>
         <version>${bigtable-hbase-beam.version}</version>
@@ -249,8 +262,18 @@
         <version>${google.cloud.trace.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.google.api.grpc</groupId>
+        <artifactId>proto-google-cloud-trace-v1</artifactId>
+        <version>${google.cloud.trace.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-monitoring</artifactId>
+        <version>${google.cloud.monitoring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.api.grpc</groupId>
+        <artifactId>proto-google-cloud-monitoring-v3</artifactId>
         <version>${google.cloud.monitoring.version}</version>
       </dependency>
       <dependency>
@@ -259,13 +282,28 @@
         <version>${google.cloud.pubsub.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.google.api.grpc</groupId>
+        <artifactId>proto-google-cloud-pubsub-v1</artifactId>
+        <version>${proto.google.cloud.pubsub.version.v1}</version>
+      </dependency>
+      <dependency>
         <groupId>com.google.cloud.datastore</groupId>
         <artifactId>datastore-v1-proto-client</artifactId>
         <version>${datastore.v1.proto.client.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.google.api.grpc</groupId>
+        <artifactId>proto-google-cloud-datastore-v1</artifactId>
+        <version>${proto.google.cloud.datastore.v1}</version>
+      </dependency>
+      <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-spanner</artifactId>
+        <version>${google.cloud.spanner.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.api.grpc</groupId>
+        <artifactId>proto-google-cloud-spanner-v1</artifactId>
         <version>${google.cloud.spanner.version}</version>
       </dependency>
       <dependency>
