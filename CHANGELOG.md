@@ -1,5 +1,9 @@
 # Linkage Checker Enforcer Rule and Linkage Monitor Change Log
 
+## 1.5.12
+* Fixed the bug in the Gradle plugin that affected artifacts with "pom" packaging ([#2196](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/2196))
+
 ## 1.5.11
 * The Gradle plugin omits duplicate dependency paths when printing the locatin of problematic
   artifacts ([#2188](https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/2188)).
