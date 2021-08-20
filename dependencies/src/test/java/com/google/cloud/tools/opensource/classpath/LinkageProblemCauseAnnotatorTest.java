@@ -198,4 +198,29 @@ public class LinkageProblemCauseAnnotatorTest {
         "org.reactivestreams:reactive-streams:1.0.3",
         Artifacts.toCoordinates(conflict.getPathToArtifactThruSource().getLeaf()));
   }
+
+  @Test
+  public void testAnnotate_missingArtifactInTree()
+      throws IOException, RepositoryException {
+    // The dependency tree of the google-api-client does not contain class "com.Foo"
+    ClassPathBuilder builder = new ClassPathBuilder();
+    ClassPathResult classPathResult =
+        builder.resolve(
+            ImmutableList.of(
+                new DefaultArtifact("com.google.api-client:google-api-client:1.27.0")),
+            false,
+            DependencyMediation.MAVEN);
+
+    ClassPathEntry googleApiClient = classPathResult.getClassPath().get(0);
+    ClassNotFoundProblem dummyProblem = new ClassNotFoundProblem(
+        new ClassFile(googleApiClient, "com.Foo"),
+        new ClassSymbol("com.Bar")
+    );
+
+    LinkageProblemCauseAnnotator.annotate(
+        classPathBuilder, classPathResult, ImmutableSet.of(dummyProblem));
+
+    LinkageProblemCause cause = dummyProblem.getCause();
+    assertTrue(cause instanceof UnknownCause);
+  }
 }
