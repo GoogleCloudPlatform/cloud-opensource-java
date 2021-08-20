@@ -28,7 +28,8 @@ import org.eclipse.aether.artifact.Artifact;
 
 /** Annotates {@link LinkageProblem}s with {@link LinkageProblemCause}s. */
 public final class LinkageProblemCauseAnnotator {
-  private static final Logger logger = Logger.getLogger(LinkageProblemCauseAnnotator.class.getName());
+  private static final Logger logger =
+      Logger.getLogger(LinkageProblemCauseAnnotator.class.getName());
 
   private LinkageProblemCauseAnnotator() {}
 
@@ -61,10 +62,12 @@ public final class LinkageProblemCauseAnnotator {
     }
   }
 
-  private static void annotateProblem(ClassPathBuilder classPathBuilder,
+  private static void annotateProblem(
+      ClassPathBuilder classPathBuilder,
       ClassPathResult rootResult,
       Map<Artifact, ClassPathResult> artifactResolutionCache,
-      LinkageProblem linkageProblem) throws IOException {
+      LinkageProblem linkageProblem)
+      throws IOException {
     ClassFile sourceClass = linkageProblem.getSourceClass();
     ClassPathEntry sourceEntry = sourceClass.getClassPathEntry();
 
@@ -83,7 +86,8 @@ public final class LinkageProblemCauseAnnotator {
       linkageProblem.setCause(UnknownCause.getInstance());
     } else {
       Artifact artifactInSubtree = entryInSubtree.getArtifact();
-      ImmutableList<DependencyPath> dependencyPathsToSource = rootResult.getDependencyPaths(sourceEntry);
+      ImmutableList<DependencyPath> dependencyPathsToSource =
+          rootResult.getDependencyPaths(sourceEntry);
       if (dependencyPathsToSource.isEmpty()) {
         // When an artifact is excluded, it's possible to have no dependency path to sourceEntry.
         linkageProblem.setCause(UnknownCause.getInstance());
@@ -102,17 +106,15 @@ public final class LinkageProblemCauseAnnotator {
         Artifact selectedArtifact = selectedEntry.getArtifact();
         if (!selectedArtifact.getVersion().equals(artifactInSubtree.getVersion())) {
           // Different version of that artifact is selected in rootResult
-          ImmutableList<DependencyPath> pathToSelectedArtifact = rootResult
-              .getDependencyPaths(selectedEntry);
+          ImmutableList<DependencyPath> pathToSelectedArtifact =
+              rootResult.getDependencyPaths(selectedEntry);
           if (pathToSelectedArtifact.isEmpty()) {
             linkageProblem.setCause(UnknownCause.getInstance());
             return;
           }
           linkageProblem.setCause(
               new DependencyConflict(
-                  linkageProblem,
-                  pathToSelectedArtifact.get(0),
-                  pathToUnselectedEntry));
+                  linkageProblem, pathToSelectedArtifact.get(0), pathToUnselectedEntry));
         } else {
           // A linkage error was already there when sourceArtifact was built.
           linkageProblem.setCause(UnknownCause.getInstance());
@@ -125,8 +127,7 @@ public final class LinkageProblemCauseAnnotator {
             pathToSourceEntry.findExclusion(
                 artifactInSubtree.getGroupId(), artifactInSubtree.getArtifactId());
         if (excludingArtifact != null) {
-          linkageProblem.setCause(
-              new ExcludedDependency(pathToUnselectedEntry, excludingArtifact));
+          linkageProblem.setCause(new ExcludedDependency(pathToUnselectedEntry, excludingArtifact));
         } else {
           linkageProblem.setCause(new MissingDependency(pathToUnselectedEntry));
         }
