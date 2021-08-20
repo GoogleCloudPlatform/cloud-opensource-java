@@ -51,7 +51,7 @@ public final class LinkageProblemCauseAnnotator {
     Map<Artifact, ClassPathResult> artifactResolutionCache = new HashMap<>();
     for (LinkageProblem linkageProblem : linkageProblems) {
       // Annotating linkage errors is a nice-to-have feature for Linkage Checker plugins. Let's not
-      // fail the entire process when there are problems, such as classPathBuilder unable to resolve
+      // fail the entire process if there are problems, such as classPathBuilder unable to resolve
       // one artifact or to return correct dependency tree.
       try {
         annotateProblem(classPathBuilder, rootResult, artifactResolutionCache, linkageProblem);
@@ -84,53 +84,53 @@ public final class LinkageProblemCauseAnnotator {
     ClassPathEntry entryInSubtree = subtreeResult.findEntryBySymbol(symbol);
     if (entryInSubtree == null) {
       linkageProblem.setCause(UnknownCause.getInstance());
-    } else {
-      Artifact artifactInSubtree = entryInSubtree.getArtifact();
-      ImmutableList<DependencyPath> dependencyPathsToSource =
-          rootResult.getDependencyPaths(sourceEntry);
-      if (dependencyPathsToSource.isEmpty()) {
-        // When an artifact is excluded, it's possible to have no dependency path to sourceEntry.
-        linkageProblem.setCause(UnknownCause.getInstance());
-        return;
-      }
-      DependencyPath pathToSourceEntry = dependencyPathsToSource.get(0);
-      DependencyPath pathFromSourceEntryToUnselectedEntry =
-          subtreeResult.getDependencyPaths(entryInSubtree).get(0);
-      DependencyPath pathToUnselectedEntry =
-          pathToSourceEntry.concat(pathFromSourceEntryToUnselectedEntry);
+      return;
+    }
+    Artifact artifactInSubtree = entryInSubtree.getArtifact();
+    ImmutableList<DependencyPath> dependencyPathsToSource =
+        rootResult.getDependencyPaths(sourceEntry);
+    if (dependencyPathsToSource.isEmpty()) {
+      // When an artifact is excluded, it's possible to have no dependency path to sourceEntry.
+      linkageProblem.setCause(UnknownCause.getInstance());
+      return;
+    }
+    DependencyPath pathToSourceEntry = dependencyPathsToSource.get(0);
+    DependencyPath pathFromSourceEntryToUnselectedEntry =
+        subtreeResult.getDependencyPaths(entryInSubtree).get(0);
+    DependencyPath pathToUnselectedEntry =
+        pathToSourceEntry.concat(pathFromSourceEntryToUnselectedEntry);
 
-      ClassPathEntry selectedEntry =
-          rootResult.findEntryById(
-              artifactInSubtree.getGroupId(), artifactInSubtree.getArtifactId());
-      if (selectedEntry != null) {
-        Artifact selectedArtifact = selectedEntry.getArtifact();
-        if (!selectedArtifact.getVersion().equals(artifactInSubtree.getVersion())) {
-          // Different version of that artifact is selected in rootResult
-          ImmutableList<DependencyPath> pathToSelectedArtifact =
-              rootResult.getDependencyPaths(selectedEntry);
-          if (pathToSelectedArtifact.isEmpty()) {
-            linkageProblem.setCause(UnknownCause.getInstance());
-            return;
-          }
-          linkageProblem.setCause(
-              new DependencyConflict(
-                  linkageProblem, pathToSelectedArtifact.get(0), pathToUnselectedEntry));
-        } else {
-          // A linkage error was already there when sourceArtifact was built.
+    ClassPathEntry selectedEntry =
+        rootResult.findEntryById(
+            artifactInSubtree.getGroupId(), artifactInSubtree.getArtifactId());
+    if (selectedEntry != null) {
+      Artifact selectedArtifact = selectedEntry.getArtifact();
+      if (!selectedArtifact.getVersion().equals(artifactInSubtree.getVersion())) {
+        // Different version of that artifact is selected in rootResult
+        ImmutableList<DependencyPath> pathToSelectedArtifact =
+            rootResult.getDependencyPaths(selectedEntry);
+        if (pathToSelectedArtifact.isEmpty()) {
           linkageProblem.setCause(UnknownCause.getInstance());
+          return;
         }
+        linkageProblem.setCause(
+            new DependencyConflict(
+                linkageProblem, pathToSelectedArtifact.get(0), pathToUnselectedEntry));
       } else {
-        // No artifact that matches groupId and artifactId in rootResult.
+        // A linkage error was already there when sourceArtifact was built.
+        linkageProblem.setCause(UnknownCause.getInstance());
+      }
+    } else {
+      // No artifact that matches groupId and artifactId in rootResult.
 
-        // Checking exclusion elements in the dependency path
-        Artifact excludingArtifact =
-            pathToSourceEntry.findExclusion(
-                artifactInSubtree.getGroupId(), artifactInSubtree.getArtifactId());
-        if (excludingArtifact != null) {
-          linkageProblem.setCause(new ExcludedDependency(pathToUnselectedEntry, excludingArtifact));
-        } else {
-          linkageProblem.setCause(new MissingDependency(pathToUnselectedEntry));
-        }
+      // Checking exclusion elements in the dependency path
+      Artifact excludingArtifact =
+          pathToSourceEntry.findExclusion(
+              artifactInSubtree.getGroupId(), artifactInSubtree.getArtifactId());
+      if (excludingArtifact != null) {
+        linkageProblem.setCause(new ExcludedDependency(pathToUnselectedEntry, excludingArtifact));
+      } else {
+        linkageProblem.setCause(new MissingDependency(pathToUnselectedEntry));
       }
     }
   }
