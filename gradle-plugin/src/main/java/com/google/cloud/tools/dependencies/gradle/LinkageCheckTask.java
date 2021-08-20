@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -314,6 +315,20 @@ public class LinkageCheckTask extends DefaultTask {
     return output.toString();
   }
 
+  private static Artifact artifactWithPomFrom(ResolvedDependency resolvedDependency) {
+    ModuleVersionIdentifier moduleVersionId = resolvedDependency.getModule().getId();
+    DefaultArtifact artifact =
+        new DefaultArtifact(
+            moduleVersionId.getGroup(),
+            moduleVersionId.getName(),
+            null,
+            "pom",
+            moduleVersionId.getVersion(),
+            null,
+            (File) null); // no JAR file
+    return artifact;
+  }
+
   private static Artifact artifactFrom(
       ResolvedDependency resolvedDependency, ResolvedArtifact resolvedArtifact) {
     ModuleVersionIdentifier moduleVersionId = resolvedDependency.getModule().getId();
@@ -357,6 +372,7 @@ public class LinkageCheckTask extends DefaultTask {
       PathToNode<ResolvedDependency> item = queue.poll();
       ResolvedDependency node = item.getNode();
 
+      // Never null
       DependencyPath parentPath = item.getParentPath();
 
       // If there are multiple artifacts (with different classifiers) in this node, then the path is
@@ -372,18 +388,15 @@ public class LinkageCheckTask extends DefaultTask {
         getLogger()
             .warn(
                 "The dependency node " + node.getName() + " does not have any artifact. Skipping.");
-        continue;
+        path = parentPath.append(new Dependency(artifactWithPomFrom(node), "compile"));
+      } else {
+        // For artifacts with classifiers, there can be multiple resolved artifacts for one node
+        for (ResolvedArtifact artifact : moduleArtifacts) {
+          path = parentPath.append(dependencyFrom(node, artifact));
+          graph.addPath(path);
+        }
       }
 
-      // For artifacts with classifiers, there can be multiple resolved artifacts for one node
-      for (ResolvedArtifact artifact : moduleArtifacts) {
-        // parentPath is null for the first item
-        path =
-            parentPath == null
-                ? new DependencyPath(artifactFrom(node, artifact))
-                : parentPath.append(dependencyFrom(node, artifact));
-        graph.addPath(path);
-      }
 
       for (ResolvedDependency child : node.getChildren()) {
         if (visited.add(child)) {

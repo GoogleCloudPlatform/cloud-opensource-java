@@ -224,4 +224,38 @@ class BuildStatusFunctionalTest extends Specification {
     result.output.count("Circular dependency for: com.fasterxml.jackson:jackson-bom:2.12.1") == 1
     result.task(":linkageCheck").outcome == TaskOutcome.FAILED
   }
+
+  def "can handle artifacts with pom packaging"() {
+    buildFile << """
+        repositories {
+          mavenCentral()
+        }
+        
+        dependencies {
+          // This artifact is pom-packaging and does not have JAR artifacts
+          compile 'org.eclipse.jetty.aggregate:jetty-all:9.4.7.v20170914'
+        }
+        
+        linkageChecker {
+          configurations = ['compile']
+        }
+        """
+
+    when:
+    def result = GradleRunner.create()
+        .withProjectDir(testProjectDir.root)
+        .withArguments('linkageCheck', '--stacktrace')
+        .withPluginClasspath()
+        .buildAndFail()
+
+    then:
+    result.output.contains("Task :linkageCheck")
+    result.output.contains(
+        "The valid symbol is in org.eclipse.jetty.alpn:alpn-api:jar:1.1.3.v20160715 at "+
+            "org.eclipse.jetty.aggregate:jetty-all:9.4.7.v20170914 (compile) / "+
+            "org.eclipse.jetty:jetty-alpn-client:9.4.7.v20170914 (compile) / "+
+            "org.eclipse.jetty.alpn:alpn-api:1.1.3.v20160715 (provided) but it was not selected "+
+            "because the path contains a provided-scope dependency")
+    result.task(":linkageCheck").outcome == TaskOutcome.FAILED
+  }
 }
