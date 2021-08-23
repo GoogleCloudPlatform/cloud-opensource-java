@@ -88,16 +88,19 @@ new release is available on Maven Central.
     * https://github.com/googleapis/google-cloud-java/blob/master/TROUBLESHOOTING.md
 * Ask a code owner for java-docs-samples to merge the dependabot PR
   that updates libraries-bom in https://github.com/GoogleCloudPlatform/java-docs-samples/pulls
-* Use the repo tool to approve renovatebot updates for libraries-bom in the individual clients:
-    * `$ repo list --title .*v16.4.0`
+* Use the repo tool to approve Renovate Bot updates for libraries-bom in the individual clients:
+    * `$ repo --title '.*libraries-bom to v16.4.0' list`
+      (for a major version bump, the pattern would be abbreviated. For example, use pattern `'.*libraries-bom to v17'` for 17.0.0 release)
     * Verify that the listed PRs look correct and don't include anything you're not ready to merge. 
-    * `$ repo approve --title .*v16.4.0`
-    * `$ repo --title .*v16.4.0 tag automerge`
+    * `$ repo --title '.*libraries-bom to v16.4.0' approve`
+    * `$ repo --title '.*libraries-bom to v16.4.0' tag automerge`
+  
+  In case when the "Owlbot" check fails, use 'owlbot:run' label to rerun the checks.
 * Manually edit and update any pom.xml files in https://github.com/GoogleCloudPlatform/java-docs-samples that dependabot missed
 * In google3 run:
     * `$ scripts/update_docs.sh <old version> <new version>`
       * For example, `$ scripts/update_docs.sh 16.3.0 16.4.0`
-      * When asked whether to add changes to the first CL, answer yes.
+      * When asked whether to add changes to the first CL, answer "y".
     * Sanity check the CL and send it for review.
     * Submit on approval
 * Search for libraries-bom in google3 to find any internal references (typically cloudsite and devsite) that still need to be updated.
