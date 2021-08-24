@@ -34,7 +34,7 @@ function printUsage() {
   echo "You need to specify repository name. E.g., $0 java-firestore"
 }
 
-if [ -z "${CLIENT}"]; then
+if [ -z "${CLIENT}" ]; then
   printUsage
   exit 1
 fi
@@ -54,6 +54,8 @@ git checkout -b ${BRANCH} origin/master
 gh repo fork --remote "googleapis/${CLIENT}" --remote-name ${GITHUB_USER_NAME}
 git remote add ${GITHUB_USER_NAME} "https://github.com/${GITHUB_USER_NAME}/${CLIENT}"
 
+echo "Sleeping 3 seconds to wait for the fork to be ready"
+sleep 3
 # This is sed syntax for Mac OS
 sed -i '' '/linkage-monitor/d' .github/sync-repo-settings.yaml
 
