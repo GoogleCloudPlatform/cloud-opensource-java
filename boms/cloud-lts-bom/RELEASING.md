@@ -53,7 +53,7 @@ $ git push --set-upstream origin 2.0.x-lts
 
 ### 4. Run `release.sh` with `lts` argument
 
-Checkout the master branch of this repository.
+Checkout the **master** branch of this repository.
 
 In the `cloud-opensource-java` directory, run `release.sh`:
 
