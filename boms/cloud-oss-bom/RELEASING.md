@@ -3,16 +3,19 @@
 
 ## Prerequisites 
 
-(Do not need to be repeated for each release.)
+(You do not need to repeat this section for each release.)
 
-* Install the [`gh`](https://github.com/cli/cli)
-tool if you not previously done so.
+* Install [Maven](https://maven.apache.org/install.html) version 3.6 or later.
+
+* Install the [`gh`](https://github.com/cli/cli#linux--bsd) tool.
 
     * Run `gh auth login` to register your desktop with github.
 
 * Clone this repository onto your corp desktop, Ubiquity instance, or CloudTop. Do not use a laptop or personal machine as the release requires google3 access.
 
 * Install and configure the [repo tool](https://github.com/googleapis/github-repo-automation).
+
+* Ensure you have `p4` and `blaze` commands.
 
 ## Decide the release version
 
