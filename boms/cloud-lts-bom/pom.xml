@@ -334,6 +334,11 @@
         <version>${gax.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.google.api</groupId>
+        <artifactId>gax-httpjson</artifactId>
+        <version>${gax.httpjson.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client</artifactId>
         <version>${http.version}</version>
