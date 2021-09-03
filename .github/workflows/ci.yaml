@@ -24,6 +24,11 @@ jobs:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-unified-${{ steps.date.outputs.date }}
     - run: java -version
-    - run: ./mvnw -B -e -ntp install
+    # The http connection settings avoid Maven's HTTP connection reset in GitHub Actions
+    # https://github.com/actions/virtual-environments/issues/1499#issuecomment-689467080
+    - run: |
+        ./mvnw -B -e -ntp install \
+            -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false \
+            -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
     - run: cd gradle-plugin && ./gradlew build publishToMavenLocal
 
