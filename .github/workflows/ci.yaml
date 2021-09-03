@@ -16,7 +16,7 @@ jobs:
       with:
         java-version: ${{matrix.java}}
     - run: java -version
-    # Avoid Maven's HTTP connection reset in GitHub Actions
+    # The http connection settings avoid Maven's HTTP connection reset in GitHub Actions
     # https://github.com/actions/virtual-environments/issues/1499#issuecomment-689467080
     - run: |
         ./mvnw -B -e -ntp install \
