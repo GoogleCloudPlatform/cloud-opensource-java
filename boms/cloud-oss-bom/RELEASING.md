@@ -86,13 +86,6 @@ Ask a teammate to review and approve the PR.
 If you want the script to stop asking your username and password for every invocation,
 run `git config credential.helper store`.
 
-### (Deprecated) Build the release binary with Rapid (Legacy web UI)
-
-(The automation via `release.sh` takes care of Rapid. No need to touch the Rapid web UI.)
-
-The [instructions for the Rapid build are on the internal team 
-site](https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#run-the-rapid-workflow).
-
 ## OSSRH
 
 [Instructions for releasing from OSSRH are on the internal team 
