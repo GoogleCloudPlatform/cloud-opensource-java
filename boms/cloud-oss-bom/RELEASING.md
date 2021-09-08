@@ -101,22 +101,29 @@ new release is available on Maven Central.
       (no PR required)
     * https://github.com/googleapis/google-http-java-client/blob/master/docs/setup.md
     * https://github.com/googleapis/google-cloud-java/blob/master/TROUBLESHOOTING.md
-* Ask a code owner for java-docs-samples to merge the dependabot PR
-  that updates libraries-bom in https://github.com/GoogleCloudPlatform/java-docs-samples/pulls
-* Use the repo tool to approve Renovate Bot updates for libraries-bom in the individual clients:
-    * `$ repo --title '.*libraries-bom to v16.4.0' list`
-      (for a major version bump, the pattern would be abbreviated. For example, use pattern `'.*libraries-bom to v17'` for 17.0.0 release)
-    * Verify that the listed PRs look correct and don't include anything you're not ready to merge. 
-    * `$ repo --title '.*libraries-bom to v16.4.0' approve`
-    * `$ repo --title '.*libraries-bom to v16.4.0' tag automerge`
-  
-  In case when the "Owlbot" check fails, use 'owlbot:run' label to rerun the checks.
 * In google3 run:
     * `$ scripts/update_docs.sh <old version> <new version>`
       * For example, `$ scripts/update_docs.sh 16.3.0 16.4.0`
       * When asked whether to add changes to the first CL, answer "y".
     * Sanity check the CL and send it for review. Use "Suggest reviewers" to pick a reviewer.
     * Submit on approval
+
+### Document updates on the next day
+
+Few hours after the artifact becomes available in Maven Central, RenovateBot creates pull requests
+to update the Libraries BOM version in the code samples.
+
+* Ask a code owner for java-docs-samples to merge the dependabot PR
+  that updates libraries-bom in https://github.com/GoogleCloudPlatform/java-docs-samples/pulls
+* Use the repo tool to approve Renovate Bot updates for libraries-bom in
+  the individual clients:
+    * `$ repo --title '.*libraries-bom to v16.4.0' list`
+      (for a major version bump, the pattern would be abbreviated. For example, use pattern `'.*libraries-bom to v17'` for 17.0.0 release)
+    * Verify that the listed PRs look correct and don't include anything you're not ready to merge.
+    * `$ repo --title '.*libraries-bom to v16.4.0' approve`
+    * `$ repo --title '.*libraries-bom to v16.4.0' tag automerge`
+
+  In case when the "Owlbot" check fails, use 'owlbot:run' label to rerun the checks.
 
 ## Retrying a failed release
 
