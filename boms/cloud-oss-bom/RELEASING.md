@@ -86,7 +86,7 @@ Ask a teammate to review and approve the PR.
 If you want the script to stop asking your username and password for every invocation,
 run `git config credential.helper store`.
 
-### Build the release binary with Rapid (Legacy web UI)
+### (Deprecated) Build the release binary with Rapid (Legacy web UI)
 
 (The automation via `release.sh` takes care of Rapid. No need to touch the Rapid web UI.)
 
