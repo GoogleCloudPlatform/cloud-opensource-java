@@ -5,21 +5,31 @@
 
 (You do not need to repeat this section for each release.)
 
+Install the following tools into a corp desktop where you have `p4` and `blaze` commands.
+
 * Install [Maven](https://maven.apache.org/install.html) version 3.6 or later.
 
-* Install the [`gh`](https://github.com/cli/cli#linux--bsd) tool.
+* Install the [`gh`](https://github.com/cli/cli/releases) tool. The automation creates a pull
+  request via this command. From its release page, choose a binary that ends with
+  "_linux_amd64.tar.gz". Place the `gh` executable somewhere in the `PATH` environment variable.
 
     * Run `gh auth login` to register your desktop with github.
 
 * Clone this repository onto your corp desktop, Ubiquity instance, or CloudTop. Do not use a laptop or personal machine as the release requires google3 access.
 
 * Install and configure the [repo tool](https://github.com/googleapis/github-repo-automation).
-
-* Ensure you have `p4` and `blaze` commands.
+  This updates code samples across ~100 repositories. You need `config.yaml` when you run it:
+  ```
+  config.yaml
+  ---
+  githubToken: <fill your github token to manage pull requests>
+  repoSearch: org:googleapis language:java is:public archived:false
+  ```
 
 ## Decide the release version
 
-To decide the release version, check the changes since the last release.
+To decide the release version, check the changes since [the last release](
+https://search.maven.org/artifact/com.google.cloud/libraries-bom).
 (This step ensures that you do not miss expected libraries upgrades.)
 For example, if the last BOM release was version 16.4.0, then run the following command
 to see the difference.
@@ -28,8 +38,15 @@ to see the difference.
 git diff v16.4.0-bom -- boms/cloud-oss-bom/pom.xml
 ```
 
-If the difference includes the google-cloud-bom version, then check the change in the release note
-at https://github.com/googleapis/java-cloud-bom/releases as well.
+If the difference includes the google-cloud-bom version (`google.cloud.bom.version`),
+then check the change in the release note
+at https://github.com/googleapis/java-cloud-bom/releases as well. Here is how to read
+the release note:
+
+- If there's a note that only mentions a major version bump, for example
+  "*to v2*", then it's a major version bump.
+- If there's a note that mentions a minor version bump, for example "*to v2.1.0*",
+  then it's a minor version bump.
 
 From these changes in the content of the Libraries BOM,
 determine the release version by the following logic:
@@ -52,7 +69,7 @@ All on your corp desktop:
 the `cloud-opensource-java` directory:
 
 ```
-$ ./scripts/release.sh bom <release version> <post-release-version>
+$ sh ./scripts/release.sh bom <release version>
 ```
 
 You might see this message:
@@ -69,15 +86,10 @@ Ask a teammate to review and approve the PR.
 If you want the script to stop asking your username and password for every invocation,
 run `git config credential.helper store`.
 
-### Build the release binary with Rapid (Legacy web UI)
-
-The [instructions for the Rapid build are on the internal team 
-site](https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#run-the-rapid-workflow).
-
 ## OSSRH
 
 [Instructions for releasing from OSSRH are on the internal team 
-site](https://g3doc.corp.google.com/company/teams/cloud-java/internal/g3doc/tools/releasing.md?cl=head).
+site](https://g3doc.corp.google.com/company/teams/cloud-java/internal/g3doc/tools/releasing.md#verify-and-release).
 
 ## Update the docs
 
@@ -89,24 +101,29 @@ new release is available on Maven Central.
       (no PR required)
     * https://github.com/googleapis/google-http-java-client/blob/master/docs/setup.md
     * https://github.com/googleapis/google-cloud-java/blob/master/TROUBLESHOOTING.md
-* Ask a code owner for java-docs-samples to merge the dependabot PR
-  that updates libraries-bom in https://github.com/GoogleCloudPlatform/java-docs-samples/pulls
-* Use the repo tool to approve Renovate Bot updates for libraries-bom in the individual clients:
-    * `$ repo --title '.*libraries-bom to v16.4.0' list`
-      (for a major version bump, the pattern would be abbreviated. For example, use pattern `'.*libraries-bom to v17'` for 17.0.0 release)
-    * Verify that the listed PRs look correct and don't include anything you're not ready to merge. 
-    * `$ repo --title '.*libraries-bom to v16.4.0' approve`
-    * `$ repo --title '.*libraries-bom to v16.4.0' tag automerge`
-  
-  In case when the "Owlbot" check fails, use 'owlbot:run' label to rerun the checks.
-* Manually edit and update any pom.xml files in https://github.com/GoogleCloudPlatform/java-docs-samples that dependabot missed
 * In google3 run:
     * `$ scripts/update_docs.sh <old version> <new version>`
       * For example, `$ scripts/update_docs.sh 16.3.0 16.4.0`
       * When asked whether to add changes to the first CL, answer "y".
-    * Sanity check the CL and send it for review.
+    * Sanity check the CL and send it for review. Use "Suggest reviewers" to pick a reviewer.
     * Submit on approval
-* Search for libraries-bom in google3 to find any internal references (typically cloudsite and devsite) that still need to be updated.
+
+### Document updates on the next day
+
+Few hours after the artifact becomes available in Maven Central, RenovateBot creates pull requests
+to update the Libraries BOM version in the code samples.
+
+* Ask a code owner for java-docs-samples to merge the dependabot PR
+  that updates libraries-bom in https://github.com/GoogleCloudPlatform/java-docs-samples/pulls
+* Use the repo tool to approve Renovate Bot updates for libraries-bom in
+  the individual clients:
+    * `$ repo --title '.*libraries-bom to v16.4.0' list`
+      (for a major version bump, the pattern would be abbreviated. For example, use pattern `'.*libraries-bom to v17'` for 17.0.0 release)
+    * Verify that the listed PRs look correct and don't include anything you're not ready to merge.
+    * `$ repo --title '.*libraries-bom to v16.4.0' approve`
+    * `$ repo --title '.*libraries-bom to v16.4.0' tag automerge`
+
+  In case when the "Owlbot" check fails, use 'owlbot:run' label to rerun the checks.
 
 ## Retrying a failed release
 
