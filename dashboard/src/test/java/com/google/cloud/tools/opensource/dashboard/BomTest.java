@@ -16,40 +16,46 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
+import com.google.cloud.tools.opensource.classpath.ClassPathResult;
+import com.google.cloud.tools.opensource.classpath.DependencyMediation;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.junit.Assert;
 import org.junit.Test;
 import com.google.cloud.tools.opensource.dependencies.Bom;
-import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 
 public class BomTest {
   
   @Test
-  public void testLtsBom()
-      throws IOException, MavenRepositoryException {
+  public void testLtsBom() throws Exception {
     Path bomPath = Paths.get("..", "boms", "cloud-lts-bom", "pom.xml").toAbsolutePath();  
     checkBom(bomPath);
   }
   
   @Test
-  public void testLibrariesBom()
-      throws IOException, MavenRepositoryException {
+  public void testLibrariesBom() throws Exception {
     Path bomPath = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();  
     checkBom(bomPath);
   }
 
-  private void checkBom(Path bomPath) throws MavenRepositoryException, IOException {
+  private void checkBom(Path bomPath) throws Exception {
     List<Artifact> artifacts = Bom.readBom(bomPath).getManagedDependencies();
     for (Artifact artifact : artifacts) {
       assertReachable(buildMavenCentralUrl(artifact));
     }
+    assertUniqueClasses(artifacts);
   }
 
   private static String buildMavenCentralUrl(Artifact artifact) {
@@ -60,6 +66,42 @@ public class BomTest {
         + "/"
         + artifact.getVersion()
         + "/";
+  }
+
+  private static void assertUniqueClasses(List<Artifact> allArtifacts)
+      throws InvalidVersionSpecificationException, IOException {
+    ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+    ClassPathResult result =
+        classPathBuilder.resolve(allArtifacts, true, DependencyMediation.MAVEN);
+
+    // A Map of every class name to its artifact ID.
+    HashMap<String, String> fullClasspathMap = new HashMap<>();
+
+    for (ClassPathEntry classPathEntry : result.getClassPath()) {
+      String currArtifact = Artifacts.toCoordinates(classPathEntry.getArtifact());
+
+      for (String fullyQualifiedClassName : classPathEntry.getFileNames()) {
+        if (fullyQualifiedClassName.contains("$")) {
+          // Ignore nested classes because if nested classes are duplicated then the
+          // parent class must also be duplicated.
+          continue;
+        }
+
+        String previousArtifact = fullClasspathMap.get(fullyQualifiedClassName);
+
+        if (previousArtifact != null) {
+          String msg = String.format(
+              "Duplicate class %s found in classpath. Found in artifacts %s and %s.",
+              fullyQualifiedClassName,
+              previousArtifact,
+              currArtifact);
+          System.out.println(msg);
+          // Assert.fail(msg);
+        } else {
+          fullClasspathMap.put(fullyQualifiedClassName, currArtifact);
+        }
+      }
+    }
   }
 
   private static void assertReachable(String url) throws IOException {
