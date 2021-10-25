@@ -78,9 +78,24 @@ public class BomTest {
     HashMap<String, String> fullClasspathMap = new HashMap<>();
 
     for (ClassPathEntry classPathEntry : result.getClassPath()) {
-      String currArtifact = Artifacts.toCoordinates(classPathEntry.getArtifact());
+      Artifact currentArtifact = classPathEntry.getArtifact();
+
+      if (!currentArtifact.getGroupId().contains("google")
+          || currentArtifact.getGroupId().contains("com.google.android")
+          || currentArtifact.getArtifactId().startsWith("proto-")
+          || currentArtifact.getArtifactId().equals("protobuf-javalite")) {
+        // Skip libraries that produce false positives.
+        continue;
+      }
+
+      String artifactCoordinates = Artifacts.toCoordinates(currentArtifact);
 
       for (String fullyQualifiedClassName : classPathEntry.getFileNames()) {
+        if (fullyQualifiedClassName.contains("javax.annotation")) {
+          // Ignore Java annotation classes.
+          continue;
+        }
+
         if (fullyQualifiedClassName.contains("$")) {
           // Ignore nested classes because if nested classes are duplicated then the
           // parent class must also be duplicated.
@@ -94,11 +109,11 @@ public class BomTest {
               "Duplicate class %s found in classpath. Found in artifacts %s and %s.",
               fullyQualifiedClassName,
               previousArtifact,
-              currArtifact);
+              artifactCoordinates);
           System.out.println(msg);
           // Assert.fail(msg);
         } else {
-          fullClasspathMap.put(fullyQualifiedClassName, currArtifact);
+          fullClasspathMap.put(fullyQualifiedClassName, artifactCoordinates);
         }
       }
     }
