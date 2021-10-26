@@ -17,6 +17,7 @@
 
 package com.google.cloud;
 
+import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
@@ -25,12 +26,15 @@ import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -54,7 +58,14 @@ public class MaximumLinkageErrorsTest {
 
     // This only tests for newly missing methods, not new invocations of
     // previously missing methods.
-    SetView<LinkageProblem> newProblems = Sets.difference(currentProblems, oldProblems);
+    Set<LinkageProblem> newProblems = Sets.difference(currentProblems, oldProblems);
+
+    // Appengine-api-1.0-sdk is known to contain linkage errors because it shades dependencies
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/441
+    newProblems =
+        newProblems.stream()
+            .filter(problem -> !hasLinkageProblemFromArtifactId(problem, "appengine-api-1.0-sdk"))
+            .collect(Collectors.toSet());
 
     // Check that no new linkage errors have been introduced since the baseline
     StringBuilder message = new StringBuilder("Baseline BOM: " + baselineCoordinates + "\n");
@@ -63,6 +74,12 @@ public class MaximumLinkageErrorsTest {
       message.append(LinkageProblem.formatLinkageProblems(newProblems, null));
       Assert.fail(message.toString());
     }
+  }
+
+  private boolean hasLinkageProblemFromArtifactId(LinkageProblem problem, String artifactId) {
+    ClassPathEntry sourceClassPathEntry = problem.getSourceClass().getClassPathEntry();
+    Artifact sourceArtifact = sourceClassPathEntry.getArtifact();
+    return artifactId.equals(sourceArtifact.getArtifactId());
   }
 
   private String findLatestNonSnapshotVersion() throws MavenRepositoryException {
