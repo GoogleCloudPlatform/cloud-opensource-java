@@ -70,6 +70,9 @@ public class BomTest {
 
   private static void assertUniqueClasses(List<Artifact> allArtifacts)
       throws InvalidVersionSpecificationException, IOException {
+
+    boolean duplicatesDetected = false;
+
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
     ClassPathResult result =
         classPathBuilder.resolve(allArtifacts, false, DependencyMediation.MAVEN);
@@ -85,6 +88,7 @@ public class BomTest {
           || currentArtifact.getArtifactId().startsWith("proto-")
           || currentArtifact.getArtifactId().equals("protobuf-javalite")) {
         // Skip libraries that produce false positives.
+        // See: https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2226
         continue;
       }
 
@@ -111,11 +115,15 @@ public class BomTest {
               previousArtifact,
               artifactCoordinates);
           System.out.println(msg);
-          // Assert.fail(msg);
+          duplicatesDetected = true;
         } else {
           fullClasspathMap.put(fullyQualifiedClassName, artifactCoordinates);
         }
       }
+    }
+
+    if (duplicatesDetected) {
+      Assert.fail("Failing test due to duplicate classes found on classpath.");
     }
   }
 
