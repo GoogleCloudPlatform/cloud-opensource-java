@@ -72,7 +72,7 @@ public class BomTest {
       throws InvalidVersionSpecificationException, IOException {
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
     ClassPathResult result =
-        classPathBuilder.resolve(allArtifacts, true, DependencyMediation.MAVEN);
+        classPathBuilder.resolve(allArtifacts, false, DependencyMediation.MAVEN);
 
     // A Map of every class name to its artifact ID.
     HashMap<String, String> fullClasspathMap = new HashMap<>();
