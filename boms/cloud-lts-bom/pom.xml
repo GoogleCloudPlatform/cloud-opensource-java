@@ -47,39 +47,51 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!-- Layer 1 -->
+
+    <!-- Layer 1: Core -->
     <guava.version>31.0.1-jre</guava.version>
     <autovalue.version>1.8.2</autovalue.version>
     <protobuf.version>3.18.1</protobuf.version>
-    <google.http.client.version>1.40.1</google.http.client.version>
-    <api.common.version>2.0.5</api.common.version>
-    <google.oauth.client.version>1.32.1</google.oauth.client.version>
-    <google.auth.library.version>1.2.1</google.auth.library.version>
+    <google-http-client.version>1.40.1</google-http-client.version>
+    <api-common.version>2.0.5</api-common.version>
+    <google-oauth-client.version>1.32.1</google-oauth-client.version>
+    <google-auth-library.version>1.2.1</google-auth-library.version>
     <io.grpc.version>1.41.1</io.grpc.version>
-    <google.api.client.version>1.32.2</google.api.client.version>
-    <proto.google.common.protos.version>2.6.0</proto.google.common.protos.version>
+    <google-api-client.version>1.32.2</google-api-client.version>
+    <proto-google-common-protos.version>2.6.0</proto-google-common-protos.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
         When updating gax.version, update gax.httpjson.version too. -->
     <gax.version>2.6.1</gax.version>
-    <gax.httpjson.version>0.92.0</gax.httpjson.version>
-    <google.cloud.core.version>2.2.0</google.cloud.core.version>
+    <gax-httpjson.version>0.92.0</gax-httpjson.version>
+    <google-cloud-core.version>2.2.0</google-cloud-core.version>
 
-    <!-- Layer 2 -->
-    <google.cloud.spanner.version>6.4.4-sp.3</google.cloud.spanner.version>
-    <google.cloud.monitoring.version>2.1.0-sp.1</google.cloud.monitoring.version>
-    <google.cloud.trace.version>1.3.0-sp.1</google.cloud.trace.version>
-    <google.cloud.pubsub.version>1.111.0-sp.1</google.cloud.pubsub.version>
-    <proto.google.cloud.pubsub.version.v1>1.93.0-sp.1</proto.google.cloud.pubsub.version.v1>
-    <google.cloud.bigquery.version>1.127.12-sp.1</google.cloud.bigquery.version>
-    <google.api.services.bigquery>v2-rev20210410-1.31.0</google.api.services.bigquery>
-    <google.cloud.bigtable.version>1.22.0-sp.2</google.cloud.bigtable.version>
-    <bigtable-hbase-beam.version>1.20.0-sp.3</bigtable-hbase-beam.version>
-    <google.cloud.storage.version>1.113.14-sp.2</google.cloud.storage.version>
-    <datastore.v1.proto.client.version>1.6.4-sp.1</datastore.v1.proto.client.version>
-    <proto.google.cloud.datastore.v1>0.89.5-sp.1</proto.google.cloud.datastore.v1>
-    <appengine.api.1.0.sdk.version>1.9.89</appengine.api.1.0.sdk.version>
-    <androidpublisher.version>v3-rev20210429-1.31.0</androidpublisher.version>
-    <beam.version>2.30.0</beam.version>
+    <!-- Layer 2: Cloud -->
+    <appengine-api-1.0-sdk.version>1.9.91</appengine-api-1.0-sdk.version>
+    <google-iam-admin.version>1.0.0</google-iam-admin.version>
+    <google-api-services-androidpublisher.version>v3-rev20211021-1.32.1</google-api-services-androidpublisher.version>
+    <google-cloud-bigquery.version>2.3.3</google-cloud-bigquery.version>
+    <google-api-services-bigquery.version>v2-rev20211017-1.32.1</google-api-services-bigquery.version>
+    <google-cloud-bigquerystorage.version>2.4.2</google-cloud-bigquerystorage.version>
+    <google-cloud-storage.version>2.1.9</google-cloud-storage.version>
+    <google-cloud-trace.version>2.0.6</google-cloud-trace.version>
+    <google-cloud-monitoring.version>3.1.0</google-cloud-monitoring.version>
+    <google-cloud-spanner.version>6.14.0</google-cloud-spanner.version>
+    <google-cloud-tasks.version>2.0.6</google-cloud-tasks.version>
+    <bigtable-hbase-beam.version>1.25.2-sp.1</bigtable-hbase-beam.version>
+    <google-cloud-bigtable.version>2.2.0</google-cloud-bigtable.version>
+    <google-cloud-pubsub.version>1.114.7</google-cloud-pubsub.version>
+    <proto-google-cloud-pubsub-v1.version>1.93.0-sp.1</proto-google-cloud-pubsub-v1.version>
+    <datastore-v1-proto-client.version>2.1.3</datastore-v1-proto-client.version>
+    <proto-google-cloud-datastore-v1.version>0.92.3</proto-google-cloud-datastore-v1.version>
+    <google-cloud-service-usage.version>2.1.3</google-cloud-service-usage.version>
+    <google-cloud-container.version>2.2.1</google-cloud-container.version>
+    <google-cloud-orchestration-airflow.version>1.0.0</google-cloud-orchestration-airflow.version>
+    <google-cloud-resourcemanager.version>1.1.4</google-cloud-resourcemanager.version>
+    <google-cloud-redis.version>2.0.6</google-cloud-redis.version>
+    <gcs-connector.version>2.2.3</gcs-connector.version>
+
+    <!-- Layer 3: Beam -->
+    <beam.version>2.35.0</beam.version>
   </properties>
 
   <distributionManagement>
@@ -118,22 +130,22 @@
       <dependency>
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client</artifactId>
-        <version>${google.http.client.version}</version>
+        <version>${google-http-client.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.api</groupId>
         <artifactId>api-common</artifactId>
-        <version>${api.common.version}</version>
+        <version>${api-common.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.oauth-client</groupId>
         <artifactId>google-oauth-client</artifactId>
-        <version>${google.oauth.client.version}</version>
+        <version>${google-oauth-client.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.auth</groupId>
         <artifactId>google-auth-library-oauth2-http</artifactId>
-        <version>${google.auth.library.version}</version>
+        <version>${google-auth-library.version}</version>
       </dependency>
       <!-- Not using grpc-bom as it includes artifacts that are not intended for users
         https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1074 -->
@@ -210,17 +222,17 @@
       <dependency>
         <groupId>com.google.api-client</groupId>
         <artifactId>google-api-client</artifactId>
-        <version>${google.api.client.version}</version>
+        <version>${google-api-client.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.api-client</groupId>
         <artifactId>google-api-client-appengine</artifactId>
-        <version>${google.api.client.version}</version>
+        <version>${google-api-client.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.api.grpc</groupId>
         <artifactId>proto-google-common-protos</artifactId>
-        <version>${proto.google.common.protos.version}</version>
+        <version>${proto-google-common-protos.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.api</groupId>
@@ -235,44 +247,88 @@
       <dependency>
         <groupId>com.google.api</groupId>
         <artifactId>gax-httpjson</artifactId>
-        <version>${gax.httpjson.version}</version>
+        <version>${gax-httpjson.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-core</artifactId>
-        <version>${google.cloud.core.version}</version>
+        <version>${google-cloud-core.version}</version>
       </dependency>
 
       <!-- Layer 2: Cloud -->
       <dependency>
+        <groupId>com.google.appengine</groupId>
+        <artifactId>appengine-api-1.0-sdk</artifactId>
+        <version>${appengine-api-1.0-sdk.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.appengine</groupId>
+        <artifactId>appengine-testing</artifactId>
+        <version>${appengine-api-1.0-sdk.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-iam-admin</artifactId>
+        <version>${google-iam-admin.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.apis</groupId>
+        <artifactId>google-api-services-androidpublisher</artifactId>
+        <version>${google-api-services-androidpublisher.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bigquery</artifactId>
-        <version>${google.cloud.bigquery.version}</version>
+        <version>${google-cloud-bigquery.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.apis</groupId>
         <artifactId>google-api-services-bigquery</artifactId>
-        <version>${google.api.services.bigquery}</version>
+        <version>${google-api-services-bigquery.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.google.appengine</groupId>
-        <artifactId>appengine-api-1.0-sdk</artifactId>
-        <version>${appengine.api.1.0.sdk.version}</version>
+        <groupId>com.google.cloud</groupId>
+        <!-- BOM? -->
+        <artifactId>google-cloud-bigquerystorage-bom</artifactId>
+        <version>${google-cloud-bigquerystorage.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-storage</artifactId>
-        <version>${google.cloud.storage.version}</version>
+        <version>${google-cloud-storage.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-bigtable</artifactId>
-        <version>${google.cloud.bigtable.version}</version>
+        <!-- BOM? -->
+        <artifactId>google-cloud-trace-bom</artifactId>
+        <version>${google-cloud-trace.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <!-- BOM? -->
+        <artifactId>google-cloud-monitoring-bom</artifactId>
+        <version>${google-cloud-monitoring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-spanner</artifactId>
+        <version>${google-cloud-spanner.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.api.grpc</groupId>
-        <artifactId>proto-google-cloud-bigtable-v2</artifactId>
-        <version>${google.cloud.bigtable.version}</version>
+        <artifactId>proto-google-cloud-spanner-admin-database-v1</artifactId>
+        <version>${google-cloud-spanner.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.api.grpc</groupId>
+        <artifactId>proto-google-cloud-spanner-v1</artifactId>
+        <version>${google-cloud-spanner.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <!-- BOM? -->
+        <artifactId>google-cloud-tasks-bom</artifactId>
+        <version>${google-cloud-tasks.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud.bigtable</groupId>
@@ -281,67 +337,82 @@
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-trace</artifactId>
-        <version>${google.cloud.trace.version}</version>
+        <artifactId>google-cloud-bigtable</artifactId>
+        <version>${google-cloud-bigtable.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.api.grpc</groupId>
-        <artifactId>proto-google-cloud-trace-v1</artifactId>
-        <version>${google.cloud.trace.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-monitoring</artifactId>
-        <version>${google.cloud.monitoring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.api.grpc</groupId>
-        <artifactId>proto-google-cloud-monitoring-v3</artifactId>
-        <version>${google.cloud.monitoring.version}</version>
+        <artifactId>proto-google-cloud-bigtable-v2</artifactId>
+        <version>${google-cloud-bigtable.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-pubsub</artifactId>
-        <version>${google.cloud.pubsub.version}</version>
+        <version>${google-cloud-pubsub.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.api.grpc</groupId>
         <artifactId>proto-google-cloud-pubsub-v1</artifactId>
-        <version>${proto.google.cloud.pubsub.version.v1}</version>
+        <version>${proto-google-cloud-pubsub-v1.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud.datastore</groupId>
         <artifactId>datastore-v1-proto-client</artifactId>
-        <version>${datastore.v1.proto.client.version}</version>
+        <version>${datastore-v1-proto-client.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.api.grpc</groupId>
         <artifactId>proto-google-cloud-datastore-v1</artifactId>
-        <version>${proto.google.cloud.datastore.v1}</version>
+        <version>${proto-google-cloud-datastore-v1.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-spanner</artifactId>
-        <version>${google.cloud.spanner.version}</version>
+        <!-- BOM? -->
+        <artifactId>google-cloud-service-usage-bom</artifactId>
+        <version>${google-cloud-service-usage.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.google.api.grpc</groupId>
-        <artifactId>proto-google-cloud-spanner-admin-database-v1</artifactId>
-        <version>${google.cloud.spanner.version}</version>
+        <groupId>com.google.cloud</groupId>
+        <!-- BOM? -->
+        <artifactId>google-cloud-container-bom</artifactId>
+        <version>${google-cloud-container.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.google.api.grpc</groupId>
-        <artifactId>proto-google-cloud-spanner-v1</artifactId>
-        <version>${google.cloud.spanner.version}</version>
+        <groupId>com.google.cloud</groupId>
+        <!-- BOM? -->
+        <artifactId>google-cloud-orchestration-airflow-bom</artifactId>
+        <version>${google-cloud-orchestration-airflow.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.google.apis</groupId>
-        <artifactId>google-api-services-androidpublisher</artifactId>
-        <version>${androidpublisher.version}</version>
+        <groupId>com.google.cloud</groupId>
+        <!-- BOM? -->
+        <artifactId>google-cloud-resourcemanager-bom</artifactId>
+        <version>${google-cloud-resourcemanager.version}</version>
       </dependency>
-
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <!-- BOM? -->
+        <artifactId>google-cloud-redis-bom</artifactId>
+        <version>${google-cloud-redis.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud.bigdataoss</groupId>
+        <artifactId>gcs-connector</artifactId>
+        <version>hadoop3-${gcs-connector.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud.bigdataoss</groupId>
+        <artifactId>gcsio</artifactId>
+        <version>${gcs-connector.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud.bigdataoss</groupId>
+        <artifactId>util</artifactId>
+        <version>${gcs-connector.version}</version>
+      </dependency>
 
       <!-- Layer 3: Beam -->
+      <!-- As of November 2021, the Beam artifacts are not ready
       <dependency>
         <groupId>org.apache.beam</groupId>
         <artifactId>beam-sdks-java-core</artifactId>
@@ -362,6 +433,7 @@
         <artifactId>beam-sdks-java-io-google-cloud-platform</artifactId>
         <version>${beam.version}</version>
       </dependency>
+      -->
     </dependencies>
   </dependencyManagement>
 
