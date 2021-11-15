@@ -22,15 +22,15 @@ import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.DependencyMediation;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
@@ -40,6 +40,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class BomTest {
+  private static VersionScheme versionScheme = new GenericVersionScheme();
 
   @Test
   public void testLtsBom() throws Exception {
@@ -91,56 +92,65 @@ public class BomTest {
    * is bad practice in general because newer versions have more features (classes and methods).
    *
    * <p>For example, if google-http-client 1.40.1 is in the BOM, then no other libraries in the BOM
-   * must not depend on the higher version of the google-http-client.
+   * depend on the higher version of the google-http-client.
    *
    * @param bom the BOM to assert with this no-downgrade rule.
    */
   private static void assertNoDowngradeRule(Bom bom) throws InvalidVersionSpecificationException {
-
-    boolean violationFound = false;
-    StringBuilder errorMessages = new StringBuilder();
-    Map<String, Artifact> versionlessCoordinatesToArtifact = new HashMap<>();
+    List<String> violations = new ArrayList<>();
+    Map<String, Artifact> bomArtifacts = new HashMap<>();
     for (Artifact artifact : bom.getManagedDependencies()) {
-      versionlessCoordinatesToArtifact.put(Artifacts.makeKey(artifact), artifact);
+      bomArtifacts.put(Artifacts.makeKey(artifact), artifact);
     }
-    VersionScheme versionScheme = new GenericVersionScheme();
 
     for (Artifact artifact : bom.getManagedDependencies()) {
-      ClassPathBuilder classPathBuilder = new ClassPathBuilder();
-      ClassPathResult result =
-          classPathBuilder.resolve(ImmutableList.of(artifact), false, DependencyMediation.MAVEN);
+      violations.addAll(findNoDowngradeViolation(bomArtifacts, artifact));
+    }
 
-      for (ClassPathEntry entry : result.getClassPath()) {
-        Artifact transitiveDependency = entry.getArtifact();
-        String dependencyVersionlessCoordinates = Artifacts.makeKey(transitiveDependency);
-        Artifact bomArtifact =
-            versionlessCoordinatesToArtifact.get(dependencyVersionlessCoordinates);
-        if (bomArtifact == null) {
-          // transitiveDependency is not part of the BOM
-          continue;
-        }
+    String violationMessage = Joiner.on("\n").join(violations);
+    Assert.assertTrue(violationMessage, violations.isEmpty());
+  }
 
-        Version versionInBom = versionScheme.parseVersion(bomArtifact.getVersion());
-        Version versionInTransitiveDependency =
-            versionScheme.parseVersion(transitiveDependency.getVersion());
+  /**
+   * Returns messages describing the violation of the no-downgrade rule by {@code artifact} against
+   * the BOM containing {@code bomArtifacts}. An empty list if there is no violations.
+   */
+  private static ImmutableList<String> findNoDowngradeViolation(
+      Map<String, Artifact> bomArtifacts, Artifact artifact)
+      throws InvalidVersionSpecificationException {
+    ImmutableList.Builder<String> violations = ImmutableList.builder();
 
-        if (versionInTransitiveDependency.compareTo(versionInBom) <= 0) {
-          // When versionInTransitiveDependency is less than or equal to versionInBom, it satisfies
-          // the no-downgrade rule.
-          continue;
-        }
-        // No downgrade rule is violated
-        violationFound = true;
-        errorMessages.append(
-            artifact
-                + " has a transitive dependency "
-                + transitiveDependency
-                + ". This is higher version than "
-                + bomArtifact
-                + " in the BOM\n");
+    ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+    ClassPathResult result =
+        classPathBuilder.resolve(ImmutableList.of(artifact), false, DependencyMediation.MAVEN);
+    for (ClassPathEntry entry : result.getClassPath()) {
+      Artifact transitiveDependency = entry.getArtifact();
+      String key = Artifacts.makeKey(transitiveDependency);
+      Artifact bomArtifact = bomArtifacts.get(key);
+      if (bomArtifact == null) {
+        // transitiveDependency is not part of the BOM
+        continue;
       }
-    }
 
-    Assert.assertFalse(errorMessages.toString(), violationFound);
+      Version versionInBom = versionScheme.parseVersion(bomArtifact.getVersion());
+      Version versionInTransitiveDependency =
+          versionScheme.parseVersion(transitiveDependency.getVersion());
+
+      if (versionInTransitiveDependency.compareTo(versionInBom) <= 0) {
+        // When versionInTransitiveDependency is less than or equal to versionInBom, it satisfies
+        // the no-downgrade rule.
+        continue;
+      }
+
+      // A violation of the no-downgrade rule is found.
+      violations.add(
+          artifact
+              + " has a transitive dependency "
+              + transitiveDependency
+              + ". This is higher version than "
+              + bomArtifact
+              + " in the BOM");
+    }
+    return violations.build();
   }
 }
