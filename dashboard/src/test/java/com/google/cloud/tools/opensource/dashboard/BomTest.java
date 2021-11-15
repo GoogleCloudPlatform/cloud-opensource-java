@@ -85,10 +85,13 @@ public class BomTest {
   }
 
   /**
-   * Asserts that the members of the {@code bom} satisfy the no-downgrade rule. This rule asserts
-   * that the members have the highest versions among the dependencies of them. For example, if
-   * google-http-client 1.40.1 is in the BOM, then no other libraries in the BOM must not depend on
-   * the higher version of the google-http-client.
+   * Asserts that the members of the {@code bom} satisfy the no-downgrade rule. This rule means that
+   * the members have the highest versions among the dependencies of them. If there's a violation,
+   * users of the BOM would see our BOM downgrading certain dependencies. Downgrading a dependency
+   * is bad practice in general because newer versions have more features (classes and methods).
+   *
+   * <p>For example, if google-http-client 1.40.1 is in the BOM, then no other libraries in the BOM
+   * must not depend on the higher version of the google-http-client.
    *
    * @param bom the BOM to assert with this no-downgrade rule.
    */
