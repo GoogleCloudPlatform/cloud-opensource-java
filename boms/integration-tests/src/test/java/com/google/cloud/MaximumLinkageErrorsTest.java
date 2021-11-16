@@ -32,10 +32,12 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class MaximumLinkageErrorsTest {
 
+  @Ignore // For this 1.0.x-lts branch, there's no point to compare the libraries BOM
   @Test
   public void testForNewLinkageErrors()
       throws IOException, MavenRepositoryException, RepositoryException {
