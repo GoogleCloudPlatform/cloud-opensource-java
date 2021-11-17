@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.cloud.tools.opensource.dashboard;
+package com.google.cloud;
 
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
@@ -29,8 +29,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
@@ -39,18 +41,18 @@ import org.eclipse.aether.version.VersionScheme;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class BomTest {
+public class BomContentTest {
   private static VersionScheme versionScheme = new GenericVersionScheme();
 
   @Test
   public void testLtsBom() throws Exception {
-    Path bomPath = Paths.get("..", "boms", "cloud-lts-bom", "pom.xml").toAbsolutePath();  
+    Path bomPath = Paths.get("..", "cloud-lts-bom", "pom.xml").toAbsolutePath();
     checkBom(bomPath);
   }
 
   @Test
   public void testLibrariesBom() throws Exception {
-    Path bomPath = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();  
+    Path bomPath = Paths.get("..", "cloud-oss-bom", "pom.xml").toAbsolutePath();
     checkBom(bomPath);
   }
 
