@@ -64,6 +64,7 @@ public class BomContentTest {
     }
 
     assertNoDowngradeRule(bom);
+    assertUniqueClasses(artifacts);
   }
 
   private static String buildMavenCentralUrl(Artifact artifact) {
@@ -74,6 +75,66 @@ public class BomContentTest {
         + "/"
         + artifact.getVersion()
         + "/";
+  }
+
+  /**
+   * Asserts that the BOM only provides JARs which contains unique class names to the classpath.
+   */
+  private static void assertUniqueClasses(List<Artifact> allArtifacts)
+      throws InvalidVersionSpecificationException, IOException {
+
+    boolean duplicatesDetected = false;
+
+    ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+    ClassPathResult result =
+        classPathBuilder.resolve(allArtifacts, false, DependencyMediation.MAVEN);
+
+    // A Map of every class name to its artifact ID.
+    HashMap<String, String> fullClasspathMap = new HashMap<>();
+
+    for (ClassPathEntry classPathEntry : result.getClassPath()) {
+      Artifact currentArtifact = classPathEntry.getArtifact();
+
+      if (!currentArtifact.getGroupId().contains("google")
+          || currentArtifact.getGroupId().contains("com.google.android")
+          || currentArtifact.getArtifactId().startsWith("grpc-")
+          || currentArtifact.getArtifactId().startsWith("proto-")
+          || currentArtifact.getArtifactId().equals("protobuf-javalite")
+          || currentArtifact.getArtifactId().equals("appengine-testing")) {
+        // Skip libraries that produce false positives.
+        // See: https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2226
+        continue;
+      }
+
+      String artifactCoordinates = Artifacts.toCoordinates(currentArtifact);
+
+      for (String fullyQualifiedClassName : classPathEntry.getFileNames()) {
+        if (fullyQualifiedClassName.contains("javax.annotation")
+            || fullyQualifiedClassName.contains("$")
+            || fullyQualifiedClassName.endsWith("package-info")) {
+          // Ignore annotations, nested classes, and package-info files.
+          continue;
+        }
+
+        String previousArtifact = fullClasspathMap.get(fullyQualifiedClassName);
+
+        if (previousArtifact != null) {
+          String msg = String.format(
+              "Duplicate class %s found in classpath. Found in artifacts %s and %s.",
+              fullyQualifiedClassName,
+              previousArtifact,
+              artifactCoordinates);
+          System.out.println(msg);
+          duplicatesDetected = true;
+        } else {
+          fullClasspathMap.put(fullyQualifiedClassName, artifactCoordinates);
+        }
+      }
+    }
+
+    if (duplicatesDetected) {
+      Assert.fail("Failing test due to duplicate classes found on classpath.");
+    }
   }
 
   private static void assertReachable(String url) throws IOException {
