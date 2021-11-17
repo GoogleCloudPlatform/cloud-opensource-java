@@ -83,7 +83,7 @@ public class BomContentTest {
   private static void assertUniqueClasses(List<Artifact> allArtifacts)
       throws InvalidVersionSpecificationException, IOException {
 
-    boolean duplicatesDetected = false;
+    StringBuilder errorMessageBuilder = new StringBuilder();
 
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
     ClassPathResult result =
@@ -120,21 +120,20 @@ public class BomContentTest {
 
         if (previousArtifact != null) {
           String msg = String.format(
-              "Duplicate class %s found in classpath. Found in artifacts %s and %s.",
+              "Duplicate class %s found in classpath. Found in artifacts %s and %s.\n",
               fullyQualifiedClassName,
               previousArtifact,
               artifactCoordinates);
-          System.out.println(msg);
-          duplicatesDetected = true;
+          errorMessageBuilder.append(msg);
         } else {
           fullClasspathMap.put(fullyQualifiedClassName, artifactCoordinates);
         }
       }
     }
 
-    if (duplicatesDetected) {
-      Assert.fail("Failing test due to duplicate classes found on classpath.");
-    }
+    String error = errorMessageBuilder.toString();
+    Assert.assertTrue(
+        "Failing test due to duplicate classes found on classpath:\n" + error, error.isEmpty());
   }
 
   private static void assertReachable(String url) throws IOException {
