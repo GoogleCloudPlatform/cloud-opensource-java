@@ -97,7 +97,6 @@ public class BomContentTest {
 
       if (!currentArtifact.getGroupId().contains("google")
           || currentArtifact.getGroupId().contains("com.google.android")
-          || currentArtifact.getArtifactId().startsWith("grpc-")
           || currentArtifact.getArtifactId().startsWith("proto-")
           || currentArtifact.getArtifactId().equals("protobuf-javalite")
           || currentArtifact.getArtifactId().equals("appengine-testing")) {
@@ -108,25 +107,27 @@ public class BomContentTest {
 
       String artifactCoordinates = Artifacts.toCoordinates(currentArtifact);
 
-      for (String fullyQualifiedClassName : classPathEntry.getFileNames()) {
-        if (fullyQualifiedClassName.contains("javax.annotation")
-            || fullyQualifiedClassName.contains("$")
-            || fullyQualifiedClassName.endsWith("package-info")) {
+      for (String className : classPathEntry.getFileNames()) {
+        if (className.contains("javax.annotation")
+            || className.contains("$")
+            || className.equals("com.google.cloud.location.LocationsGrpc")
+            || className.endsWith("package-info")) {
           // Ignore annotations, nested classes, and package-info files.
+          // Ignore LocationsGrpc classes which are duplicated in generated grpc libraries.
           continue;
         }
 
-        String previousArtifact = fullClasspathMap.get(fullyQualifiedClassName);
+        String previousArtifact = fullClasspathMap.get(className);
 
         if (previousArtifact != null) {
           String msg = String.format(
               "Duplicate class %s found in classpath. Found in artifacts %s and %s.\n",
-              fullyQualifiedClassName,
+              className,
               previousArtifact,
               artifactCoordinates);
           errorMessageBuilder.append(msg);
         } else {
-          fullClasspathMap.put(fullyQualifiedClassName, artifactCoordinates);
+          fullClasspathMap.put(className, artifactCoordinates);
         }
       }
     }
