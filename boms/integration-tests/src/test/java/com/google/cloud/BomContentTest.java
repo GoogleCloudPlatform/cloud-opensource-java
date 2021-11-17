@@ -46,13 +46,13 @@ public class BomContentTest {
 
   @Test
   public void testLtsBom() throws Exception {
-    Path bomPath = Paths.get("..",  "cloud-lts-bom", "pom.xml").toAbsolutePath();
+    Path bomPath = Paths.get("..", "cloud-lts-bom", "pom.xml").toAbsolutePath();
     checkBom(bomPath);
   }
 
   @Test
   public void testLibrariesBom() throws Exception {
-    Path bomPath = Paths.get("..",  "cloud-oss-bom", "pom.xml").toAbsolutePath();
+    Path bomPath = Paths.get("..", "cloud-oss-bom", "pom.xml").toAbsolutePath();
     checkBom(bomPath);
   }
 
