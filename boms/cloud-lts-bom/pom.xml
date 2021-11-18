@@ -289,6 +289,8 @@
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bigquerystorage-bom</artifactId>
         <version>${google-cloud-bigquerystorage.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
@@ -299,11 +301,15 @@
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-trace-bom</artifactId>
         <version>${google-cloud-trace.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-monitoring-bom</artifactId>
         <version>${google-cloud-monitoring.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
@@ -324,6 +330,8 @@
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-tasks-bom</artifactId>
         <version>${google-cloud-tasks.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.google.cloud.bigtable</groupId>
@@ -355,6 +363,8 @@
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-datastore-bom</artifactId>
         <version>${google-cloud-datastore.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.google.cloud.datastore</groupId>
@@ -365,26 +375,36 @@
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-service-usage-bom</artifactId>
         <version>${google-cloud-service-usage.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-container-bom</artifactId>
         <version>${google-cloud-container.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-orchestration-airflow-bom</artifactId>
         <version>${google-cloud-orchestration-airflow.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-resourcemanager-bom</artifactId>
         <version>${google-cloud-resourcemanager.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-redis-bom</artifactId>
         <version>${google-cloud-redis.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.google.cloud.bigdataoss</groupId>
