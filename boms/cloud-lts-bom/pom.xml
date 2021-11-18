@@ -88,7 +88,7 @@
     <google-cloud-orchestration-airflow.version>1.0.0</google-cloud-orchestration-airflow.version>
     <google-cloud-resourcemanager.version>1.1.4</google-cloud-resourcemanager.version>
     <google-cloud-redis.version>2.0.6</google-cloud-redis.version>
-    <gcs-connector.version>2.2.3</gcs-connector.version>
+    <gcs-connector.version>2.2.4</gcs-connector.version>
 
     <!-- Layer 3: Beam -->
     <beam.version>2.35.0</beam.version>
