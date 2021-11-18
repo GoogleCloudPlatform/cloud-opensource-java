@@ -288,7 +288,6 @@
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <!-- BOM? -->
         <artifactId>google-cloud-bigquerystorage-bom</artifactId>
         <version>${google-cloud-bigquerystorage.version}</version>
       </dependency>
@@ -299,13 +298,11 @@
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <!-- BOM? -->
         <artifactId>google-cloud-trace-bom</artifactId>
         <version>${google-cloud-trace.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <!-- BOM? -->
         <artifactId>google-cloud-monitoring-bom</artifactId>
         <version>${google-cloud-monitoring.version}</version>
       </dependency>
@@ -326,7 +323,6 @@
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <!-- BOM? -->
         <artifactId>google-cloud-tasks-bom</artifactId>
         <version>${google-cloud-tasks.version}</version>
       </dependency>
@@ -337,6 +333,7 @@
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
+        <!-- Not using a BOM because it has google-cloud-bigtable-emulator -->
         <artifactId>google-cloud-bigtable</artifactId>
         <version>${google-cloud-bigtable.version}</version>
       </dependency>
@@ -367,31 +364,26 @@
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <!-- BOM? -->
         <artifactId>google-cloud-service-usage-bom</artifactId>
         <version>${google-cloud-service-usage.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <!-- BOM? -->
         <artifactId>google-cloud-container-bom</artifactId>
         <version>${google-cloud-container.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <!-- BOM? -->
         <artifactId>google-cloud-orchestration-airflow-bom</artifactId>
         <version>${google-cloud-orchestration-airflow.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <!-- BOM? -->
         <artifactId>google-cloud-resourcemanager-bom</artifactId>
         <version>${google-cloud-resourcemanager.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <!-- BOM? -->
         <artifactId>google-cloud-redis-bom</artifactId>
         <version>${google-cloud-redis.version}</version>
       </dependency>
