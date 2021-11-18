@@ -65,6 +65,7 @@ public class BomContentTest {
 
     assertNoDowngradeRule(bom);
     assertUniqueClasses(artifacts);
+    assertBomIsImported(bom);
   }
 
   private static String buildMavenCentralUrl(Artifact artifact) {
@@ -215,5 +216,15 @@ public class BomContentTest {
               + " in the BOM");
     }
     return violations.build();
+  }
+
+  private void assertBomIsImported(Bom bom) {
+    // BOMs must be declared as "import" type. Otherwise, the BOM users would see
+    // "google-cloud-XXX-bom" as an artifact declared in the BOM, not the content of it.
+    for (Artifact artifact : bom.getManagedDependencies()) {
+      String artifactId = artifact.getArtifactId();
+      Assert.assertFalse(
+          artifactId + " must be declared with import type", artifactId.endsWith("-bom"));
+    }
   }
 }
