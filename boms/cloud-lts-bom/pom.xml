@@ -68,6 +68,7 @@
     <!-- Layer 2: Cloud -->
     <appengine-api-1.0-sdk.version>1.9.91</appengine-api-1.0-sdk.version>
     <google-iam-admin.version>1.0.0</google-iam-admin.version>
+    <google-cloud-iamcredentials.version>2.0.6</google-cloud-iamcredentials.version>
     <google-api-services-androidpublisher.version>v3-rev20211021-1.32.1</google-api-services-androidpublisher.version>
     <google-cloud-bigquery.version>2.3.3</google-cloud-bigquery.version>
     <google-api-services-bigquery.version>v2-rev20211017-1.32.1</google-api-services-bigquery.version>
@@ -267,8 +268,17 @@
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <artifactId>google-iam-admin</artifactId>
+        <artifactId>google-iam-admin-bom</artifactId>
         <version>${google-iam-admin.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-iamcredentials-bom</artifactId>
+        <version>${google-cloud-iamcredentials.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.google.apis</groupId>
