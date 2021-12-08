@@ -12,9 +12,6 @@
   </LinkageError>
 
   <LinkageError>
-    <Target>
-      <Package name="jdk.vm.ci" />
-    </Target>
     <Source>
       <Package name="com.oracle.svm" />
     </Source>
@@ -402,6 +399,30 @@
       has been closed since 2004. For those who don't use Apache Avalon, the class references does
       not cause a problem.
       https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1871
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="sun.misc" />
+    </Target>
+    <Source>
+      <Class name="com.google.common.flogger.util.JavaLangAccessStackGetter" />
+    </Source>
+    <Reason>
+      Flogger's JavaLangAccessStackGetter and StackWalkerStackGetter trys to use available classes
+      in different JDK versions. Certain classes are unavailable in a JDK.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="java" />
+    </Target>
+    <Source>
+      <Class name="com.google.common.flogger.util.StackWalkerStackGetter" />
+    </Source>
+    <Reason>
+      Flogger's JavaLangAccessStackGetter and StackWalkerStackGetter trys to use available classes
+      in different JDK versions. Certain classes are unavailable in a JDK.
     </Reason>
   </LinkageError>
 </LinkageCheckerFilter>
