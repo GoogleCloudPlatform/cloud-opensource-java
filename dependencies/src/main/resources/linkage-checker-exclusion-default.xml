@@ -401,4 +401,16 @@
       https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1871
     </Reason>
   </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="sun.misc" />
+    </Target>
+    <Source>
+      <Class name="com.google.common.flogger.util.JavaLangAccessStackGetter" />
+    </Source>
+    <Reason>
+      The JavaLangAccessStackGetter tries to use available classes in different JDK versions.
+      Certain classes are unavailable in Java 8.
+    </Reason>
+  </LinkageError>
 </LinkageCheckerFilter>
