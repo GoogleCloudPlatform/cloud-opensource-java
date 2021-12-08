@@ -409,8 +409,20 @@
       <Class name="com.google.common.flogger.util.JavaLangAccessStackGetter" />
     </Source>
     <Reason>
-      The JavaLangAccessStackGetter tries to use available classes in different JDK versions.
-      Certain classes are unavailable in Java 8.
+      Flogger's JavaLangAccessStackGetter and StackWalkerStackGetter trys to use available classes
+      in different JDK versions. Certain classes are unavailable in a JDK.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="java" />
+    </Target>
+    <Source>
+      <Class name="com.google.common.flogger.util.StackWalkerStackGetter" />
+    </Source>
+    <Reason>
+      Flogger's JavaLangAccessStackGetter and StackWalkerStackGetter trys to use available classes
+      in different JDK versions. Certain classes are unavailable in a JDK.
     </Reason>
   </LinkageError>
 </LinkageCheckerFilter>
