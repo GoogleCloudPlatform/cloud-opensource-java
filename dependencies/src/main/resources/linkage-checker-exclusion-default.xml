@@ -12,9 +12,6 @@
   </LinkageError>
 
   <LinkageError>
-    <Target>
-      <Package name="jdk.vm.ci" />
-    </Target>
     <Source>
       <Package name="com.oracle.svm" />
     </Source>
