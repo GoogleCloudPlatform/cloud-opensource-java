@@ -23,6 +23,7 @@ import com.google.cloud.tools.opensource.classpath.DependencyMediation;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -31,11 +32,18 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.resolution.ArtifactRequest;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
@@ -59,9 +67,22 @@ public class BomContentTest {
   }
 
   @Test
-  public void testLog4J() throws Exception {
-    Bom bom = Bom.readBom("com.google.cloud:gcp-lts-bom:1.0.8");
+  public void testLog4J_BOM() throws Exception {
+    Bom bom = Bom.readBom("com.google.cloud:libraries-bom:24.1.0");
     List<Artifact> artifacts = bom.getManagedDependencies();
+    findLog4j(artifacts);
+  }
+
+  @Test
+  public void testLog4J_Artifact() throws Exception {
+
+
+
+    List<Artifact> artifacts = ImmutableList.of(
+        resolveArtifact("com.google.cloud.bigtable:bigtable-hbase-1.x:2.0.0-beta3"),
+        resolveArtifact("com.google.cloud.bigtable:bigtable-hbase-1.x:1.26.0")
+    );
+
     findLog4j(artifacts);
   }
 
@@ -94,20 +115,20 @@ public class BomContentTest {
 
     for (Artifact artifact : allArtifacts) {
       ClassPathResult result =
-          classPathBuilder.resolve(ImmutableList.of(artifact), false, DependencyMediation.MAVEN);
+          classPathBuilder.resolve(ImmutableList.of(artifact), true, DependencyMediation.MAVEN);
 
       for (ClassPathEntry entry : result.getClassPath()) {
         Artifact transitiveDependency = entry.getArtifact();
         String depKey = Artifacts.toCoordinates(transitiveDependency);
 
-        if (depKey.contains("log4j-api") || depKey.contains("log4j-core")) {
+        if (depKey.contains("log4j-api") || depKey.contains("log4j-core") || depKey.contains("log4j")) {
           List<DependencyPath> dependencyPaths =
               result.getDependencyPaths(entry)
                     .stream()
-                    .filter(path -> path.size() <= 4)
+                    .limit(5)
                     .collect(Collectors.toList());
 
-          System.out.println(Artifacts.toCoordinates(artifact) + " --> " + depKey);
+          System.out.println(Artifacts.toCoordinates(artifact) + "\t" + depKey);
           System.out.println(dependencyPaths.stream().map(path -> path.toString()).collect(Collectors.joining("\n")));
           System.out.println();
         }
@@ -285,5 +306,18 @@ public class BomContentTest {
       Assert.assertFalse(
           artifactId + " must be declared with import type", artifactId.endsWith("-bom"));
     }
+  }
+
+  private static Artifact resolveArtifact(String coordinates) throws ArtifactResolutionException {
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
+
+    Artifact artifact = new DefaultArtifact(coordinates);
+    ArtifactRequest artifactRequest = new ArtifactRequest();
+    artifactRequest.addRepository(RepositoryUtility.CENTRAL);
+    artifactRequest.setArtifact(artifact);
+    ArtifactResult artifactResult = system.resolveArtifact(session, artifactRequest);
+
+    return artifactResult.getArtifact();
   }
 }
