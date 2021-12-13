@@ -75,9 +75,6 @@ public class BomContentTest {
 
   @Test
   public void testLog4J_Artifact() throws Exception {
-
-
-
     List<Artifact> artifacts = ImmutableList.of(
         resolveArtifact("com.google.cloud.bigtable:bigtable-hbase-1.x:2.0.0-beta3"),
         resolveArtifact("com.google.cloud.bigtable:bigtable-hbase-1.x:1.26.0")
