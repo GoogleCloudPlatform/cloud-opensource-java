@@ -22,6 +22,7 @@ import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.DependencyMediation;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
@@ -56,6 +58,13 @@ public class BomContentTest {
     checkBom(bomPath);
   }
 
+  @Test
+  public void testLog4J() throws Exception {
+    Bom bom = Bom.readBom("com.google.cloud:gcp-lts-bom:1.0.8");
+    List<Artifact> artifacts = bom.getManagedDependencies();
+    findLog4j(artifacts);
+  }
+
   private void checkBom(Path bomPath) throws Exception {
     Bom bom = Bom.readBom(bomPath);
     List<Artifact> artifacts = bom.getManagedDependencies();
@@ -76,6 +85,56 @@ public class BomContentTest {
         + "/"
         + artifact.getVersion()
         + "/";
+  }
+
+  private static void findLog4j(List<Artifact> allArtifacts)
+      throws InvalidVersionSpecificationException, IOException {
+
+    ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+
+    for (Artifact artifact : allArtifacts) {
+      ClassPathResult result =
+          classPathBuilder.resolve(ImmutableList.of(artifact), false, DependencyMediation.MAVEN);
+
+      for (ClassPathEntry entry : result.getClassPath()) {
+        Artifact transitiveDependency = entry.getArtifact();
+        String depKey = Artifacts.toCoordinates(transitiveDependency);
+
+        if (depKey.contains("log4j-api") || depKey.contains("log4j-core")) {
+          List<DependencyPath> dependencyPaths =
+              result.getDependencyPaths(entry)
+                    .stream()
+                    .filter(path -> path.size() <= 4)
+                    .collect(Collectors.toList());
+
+          System.out.println(Artifacts.toCoordinates(artifact) + " --> " + depKey);
+          System.out.println(dependencyPaths.stream().map(path -> path.toString()).collect(Collectors.joining("\n")));
+          System.out.println();
+        }
+      }
+    }
+  }
+
+  private static void findLog4j_old(List<Artifact> allArtifacts)
+      throws InvalidVersionSpecificationException, IOException {
+
+    ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+
+
+    for (Artifact artifact : allArtifacts) {
+      ClassPathResult result =
+          classPathBuilder.resolve(ImmutableList.of(artifact), false, DependencyMediation.MAVEN);
+
+      for (ClassPathEntry entry : result.getClassPath()) {
+        Artifact transitiveDependency = entry.getArtifact();
+        String depKey = Artifacts.toCoordinates(transitiveDependency);
+
+        if (depKey.contains("log4j")) {
+          System.out.println(Artifacts.toCoordinates(artifact) + " --> " + depKey);
+          break;
+        }
+      }
+    }
   }
 
   /**
