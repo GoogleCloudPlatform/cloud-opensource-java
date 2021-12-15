@@ -74,11 +74,50 @@ public class BomContentTest {
   }
 
   @Test
-  public void testLog4J_Artifact() throws Exception {
-    List<Artifact> artifacts = ImmutableList.of(
-        resolveArtifact("com.google.cloud.bigtable:bigtable-hbase-1.x:2.0.0-beta3"),
-        resolveArtifact("com.google.cloud.bigtable:bigtable-hbase-1.x:1.26.0")
-    );
+  public void testLog4J_Single() throws Exception {
+    List<Artifact> artifacts = Collections.singletonList(
+        resolveArtifact("com.google.cloud:google-cloud-pubsublite:1.4.4"));
+
+    findLog4j(artifacts);
+  }
+
+  @Test
+  public void testLog4J_BigTable() throws Exception {
+    String[] bigtableLibs2 = new String[] {
+        "bigtable-hbase-1.x-hadoop",
+        "bigtable-hbase-1.x",
+        "bigtable-emulator-maven-plugin",
+        "bigtable-hbase",
+        "bigtable-emulator-maven-plugin",
+        "bigtable-beam-import",
+        "bigtable-hbase-1.x-shaded",
+        "bigtable-hbase-1.x-mapreduce",
+        "bigtable-hbase-2.x-hadoop",
+        "bigtable-hbase-2.x",
+        "bigtable-hbase-1.x-tools",
+        "bigtable-hbase-beam",
+        "bigtable-hbase-2.x-shaded"
+    };
+
+    String[] bigtableLibs1 = new String[] {
+        "bigtable-client-core",
+        "bigtable-hbase-1.x-integration-tests",
+        "bigtable-hbase-2.x-integration-tests",
+        "bigtable-hbase-integration-tests-common",
+        "bigtable-metrics-api"
+    };
+
+    String v1Format = "com.google.cloud.bigtable:%s:1.26.0";
+    String v2Format = "com.google.cloud.bigtable:%s:2.0.0-beta3";
+
+    List<Artifact> artifacts = new ArrayList<>();
+    for (String s : bigtableLibs1) {
+      artifacts.add(resolveArtifact(String.format(v1Format, s)));
+    }
+
+    for (String s : bigtableLibs2) {
+      artifacts.add(resolveArtifact(String.format(v2Format, s)));
+    }
 
     findLog4j(artifacts);
   }
@@ -122,10 +161,10 @@ public class BomContentTest {
           List<DependencyPath> dependencyPaths =
               result.getDependencyPaths(entry)
                     .stream()
-                    .limit(5)
+                    .limit(4)
                     .collect(Collectors.toList());
 
-          System.out.println(Artifacts.toCoordinates(artifact) + "\t" + depKey);
+          System.out.println(Artifacts.toCoordinates(artifact) + ": " + depKey);
           System.out.println(dependencyPaths.stream().map(path -> path.toString()).collect(Collectors.joining("\n")));
           System.out.println();
         }
