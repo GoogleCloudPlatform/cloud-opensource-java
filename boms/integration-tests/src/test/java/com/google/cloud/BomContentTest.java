@@ -98,6 +98,7 @@ public class BomContentTest {
 
       if (!currentArtifact.getGroupId().contains("google")
           || currentArtifact.getGroupId().contains("com.google.android")
+          || currentArtifact.getGroupId().contains("com.google.cloud.bigtable")
           || currentArtifact.getArtifactId().startsWith("proto-")
           || currentArtifact.getArtifactId().equals("protobuf-javalite")
           || currentArtifact.getArtifactId().equals("appengine-testing")) {
