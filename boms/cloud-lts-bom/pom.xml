@@ -441,7 +441,6 @@
       </dependency>
 
       <!-- Layer 3: Beam -->
-      <!-- As of November 2021, the Beam artifacts are not ready
       <dependency>
         <groupId>org.apache.beam</groupId>
         <artifactId>beam-sdks-java-core</artifactId>
@@ -462,7 +461,6 @@
         <artifactId>beam-sdks-java-io-google-cloud-platform</artifactId>
         <version>${beam.version}</version>
       </dependency>
-      -->
     </dependencies>
   </dependencyManagement>
 
