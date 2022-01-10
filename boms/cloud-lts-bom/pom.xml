@@ -74,7 +74,7 @@
     <google.cloud.storage.version>1.113.14-sp.3</google.cloud.storage.version>
     <datastore.v1.proto.client.version>1.6.4-sp.1</datastore.v1.proto.client.version>
     <proto.google.cloud.datastore.v1>0.89.5-sp.1</proto.google.cloud.datastore.v1>
-    <appengine.api.1.0.sdk.version>1.9.89</appengine.api.1.0.sdk.version>
+    <appengine.api.1.0.sdk.version>1.9.93</appengine.api.1.0.sdk.version>
     <androidpublisher.version>v3-rev20210429-1.31.0</androidpublisher.version>
   </properties>
 
