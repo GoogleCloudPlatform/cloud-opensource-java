@@ -288,7 +288,7 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <!-- need for JaCoCo -->
-              <argLine>@{argLine} -Xms512m -Xmx512m</argLine>
+              <argLine>@{argLine} -Xms1024m -Xmx1024m</argLine>
               <includes>
                 <include>**/*Test.java</include>
               </includes>
