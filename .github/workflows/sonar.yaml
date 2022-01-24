@@ -48,7 +48,8 @@ jobs:
         run: |
           ./mvnw \
             -B \
-            org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            --activate-profiles codecoverage \
             -Dsonar.projectKey=GoogleCloudPlatform_cloud-opensource-java \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.organization=googlecloudplatform \
+            org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
