@@ -1,0 +1,13 @@
+name: Dependency Update
+description: Update pom.xml files with specified Maven coordinates
+inputs:
+  mavenCoordinates:
+    description: 'Maven coordinates of the dependencies to update. Separated by comma.'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Update the dependencies
+      run: |
+        ${{ github.action_path }}/compatibility-pom-updater.sh ${{ inputs.mavenCoordinates }}
+      shell: bash
