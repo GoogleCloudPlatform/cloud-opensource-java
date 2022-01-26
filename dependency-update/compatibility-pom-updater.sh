@@ -16,6 +16,11 @@ ls -alt
 
 echo "MAVEN_COORDINATES_LIST = $MAVEN_COORDINATES_LIST"
 
+if [ -z "$MAVEN_COORDINATES_LIST" ]; then
+  echo "The argument is empty"
+  exit 1
+fi
+
 function replacePomFile () {
   GROUP_ID=$1
   ARTIFACT_ID=$2
