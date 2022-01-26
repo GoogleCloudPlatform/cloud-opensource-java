@@ -7,6 +7,10 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Install xmlstarlet used by compatibility-pom-updater.sh
+      run: |
+        sudo apt-get install xmlstarlet
+      shell: bash
     - name: Update the dependencies
       run: |
         ${{ github.action_path }}/compatibility-pom-updater.sh ${{ inputs.mavenCoordinates }}
