@@ -35,16 +35,18 @@ function replacePomFile () {
     if [ "${HAS_DEPENDENCY}" -eq 0 ]; then
       continue;
     fi
+    echo "$POM has dependency element for ${ARTIFACT_ID}"
 
     C=$(xmlstarlet sel -N x=http://maven.apache.org/POM/4.0.0 \
         -t -v "count(//x:project/x:dependencies/x:dependency/x:artifactId[text()='${ARTIFACT_ID}']/../x:version)" \
         "$POM")
-    echo "$POM" has $C matching node
     if [ "$C" -eq 0 ];then
+      echo "$POM has no version element for ${ARTIFACT_ID}. Inserting <version>${$VERSION}</version>"
       xmlstarlet ed --pf --inplace -N x=http://maven.apache.org/POM/4.0.0 \
         --append "//*/x:artifactId[text()='${ARTIFACT_ID}']" \
         -t elem -n version --value "$VERSION" "$POM"
     else
+      echo "$POM has the version element for ${ARTIFACT_ID}. Overriding it."
       xmlstarlet ed --pf --inplace -N x=http://maven.apache.org/POM/4.0.0 \
         --update "//*/x:artifactId[text()='${ARTIFACT_ID}']/../x:version" \
         --value "$VERSION" "$POM"

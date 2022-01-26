@@ -15,3 +15,7 @@ runs:
       run: |
         ${{ github.action_path }}/compatibility-pom-updater.sh ${{ inputs.mavenCoordinates }}
       shell: bash
+    - name: Showing diff after version update
+      run: |
+        git diff
+      shell: bash
