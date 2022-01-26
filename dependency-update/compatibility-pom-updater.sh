@@ -4,14 +4,23 @@
 MAVEN_COORDINATES_LIST=$1
 
 set -e
+echo "pwd"
 
-IFS_BACKUP=$IFS
+pwd
+
+echo
+
+echo "ls"
+
+ls -alt
+
+echo "MAVEN_COORDINATES_LIST = $MAVEN_COORDINATES_LIST"
 
 function replacePomFile () {
   GROUP_ID=$1
   ARTIFACT_ID=$2
   VERSION=$3
-  echo "$GROUP_ID $ARTIFACT_ID $VERSION"
+  echo "replacePomFile $GROUP_ID  $ARTIFACT_ID  $VERSION"
 
   while IFS= read -r -d '' POM
   do
@@ -38,7 +47,6 @@ function replacePomFile () {
   done <   <(find . -name pom.xml -print0)
 }
 
-IFS_BACKUP=$IFS
 IFS=","
 for MAVEN_COORDINATES in $MAVEN_COORDINATES_LIST; do
   IFS=':' read -ra items <<< "$MAVEN_COORDINATES"
