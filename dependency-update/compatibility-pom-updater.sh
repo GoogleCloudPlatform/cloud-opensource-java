@@ -41,7 +41,7 @@ function replacePomFile () {
         -t -v "count(//x:project/x:dependencies/x:dependency/x:artifactId[text()='${ARTIFACT_ID}']/../x:version)" \
         "$POM")
     if [ "$C" -eq 0 ];then
-      echo "$POM has no version element for ${ARTIFACT_ID}. Inserting <version>${$VERSION}</version>"
+      echo "$POM has no version element for ${ARTIFACT_ID}. Inserting <version>${VERSION}</version>"
       xmlstarlet ed --pf --inplace -N x=http://maven.apache.org/POM/4.0.0 \
         --append "//*/x:artifactId[text()='${ARTIFACT_ID}']" \
         -t elem -n version --value "$VERSION" "$POM"
