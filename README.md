@@ -39,7 +39,7 @@ https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checke
 
 # GCP Libraries BOM
 
-The [GCP Libraries BOM](https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM) is a Bill-of-Materials (BOM) that
+The [GCP Libraries BOM](https://cloud.google.com/java/docs/bom) is a Bill-of-Materials (BOM) that
 provides consistent versions of Google Cloud Java libraries that work together
 without linkage errors.
 
