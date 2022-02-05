@@ -47,7 +47,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           ./mvnw \
-            -B \
+            -B -ntp \
             --activate-profiles codecoverage \
             -Dsonar.projectKey=GoogleCloudPlatform_cloud-opensource-java \
             -Dsonar.host.url=https://sonarcloud.io \
