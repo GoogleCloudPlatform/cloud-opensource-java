@@ -10,7 +10,17 @@
       https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/816
     </Reason>
   </LinkageError>
-
+  <LinkageError>
+    <Source>
+      <Package name="com.oracle.objectfile" />
+    </Source>
+    <Reason>
+      GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that
+      only exists in special JDK. These missing classes are false positives, because
+      the code is only invoked when running in a GraalVM.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
+    </Reason>
+  </LinkageError>
   <LinkageError>
     <Source>
       <Package name="com.oracle.svm" />
