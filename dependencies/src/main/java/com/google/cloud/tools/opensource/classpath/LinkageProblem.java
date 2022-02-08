@@ -218,10 +218,12 @@ public abstract class LinkageProblem {
 
     for (AbstractMethodProblem abstractMethodProblem : abstractMethodProblems.build()) {
       output.append(abstractMethodProblem + "\n");
-      output.append("  Cause:\n");
       LinkageProblemCause cause = abstractMethodProblem.getCause();
-      String causeWithIndent = cause.toString().replaceAll("\n", "\n    ");
-      output.append("    " + causeWithIndent + "\n");
+      if (cause != null) {
+        output.append("  Cause:\n");
+        String causeWithIndent = cause.toString().replaceAll("\n", "\n    ");
+        output.append("    " + causeWithIndent + "\n");
+      }
     }
 
     if (classPathResult != null) {
