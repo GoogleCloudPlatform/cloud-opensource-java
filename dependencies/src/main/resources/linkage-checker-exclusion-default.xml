@@ -26,17 +26,16 @@
     <Target>
       <Package name="jdk.vm.ci" />
     </Target>
-    <Source>
-      <Package name="com.oracle.graal" />
-    </Source>
   </LinkageError>
   <LinkageError>
     <Target>
       <Package name="jdk.vm.ci" />
     </Target>
-    <Source>
-      <Package name="org.graalvm" />
-    </Source>
+    <Reason>
+      Substrate VM is part of GraalVM and the virtual machine references classes in the JVM-internal
+      package 'sun.text.normalizer' that are not available in JVM runtime.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1825
+    </Reason>
   </LinkageError>
   <LinkageError>
     <Target>
@@ -423,6 +422,27 @@
     <Reason>
       Flogger's JavaLangAccessStackGetter and StackWalkerStackGetter trys to use available classes
       in different JDK versions. Certain classes are unavailable in a JDK.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Source>
+      <Package name="com.sun.mail.smtp" />
+    </Source>
+    <Reason>
+      Google Cloud libraries do not use SMTP protocols. There are discrepancy in
+      javax.mail:mail:1.4.3 com.sun.mail:javax.mail:1.6.2 in dependency graph.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Source>
+      <Package name="com.ctc.wstx.shaded" />
+    </Source>
+    <Target>
+      <Class name="com.ctc.wstx.shaded.msv_core.driver.textui.Driver" />
+    </Target>
+    <Reason>
+      Shaded class in com.fasterxml.woodstox:woodstox-core:6.2.6 has a class
+      reference to the textui.Driver but the shading process didn't include it.
     </Reason>
   </LinkageError>
 </LinkageCheckerFilter>
