@@ -73,7 +73,7 @@
     <google-cloud-bigquery.version>2.3.3</google-cloud-bigquery.version>
     <google-api-services-bigquery.version>v2-rev20211017-1.32.1</google-api-services-bigquery.version>
     <google-cloud-bigquerystorage.version>2.4.2</google-cloud-bigquerystorage.version>
-    <google-cloud-storage.version>2.1.9</google-cloud-storage.version>
+    <google-cloud-storage.version>2.1.10</google-cloud-storage.version>
     <google-cloud-trace.version>2.0.6</google-cloud-trace.version>
     <google-cloud-monitoring.version>3.1.0</google-cloud-monitoring.version>
     <google-cloud-spanner.version>6.14.1</google-cloud-spanner.version>
