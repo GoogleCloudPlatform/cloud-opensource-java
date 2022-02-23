@@ -124,8 +124,8 @@ git push origin "${RELEASE_TAG}"
 git push --set-upstream origin ${VERSION}-${SUFFIX}
 
 # Create the PR
-gh pr create --title "Release ${VERSION}-${SUFFIX}" \
-    --body "Release ${VERSION}-${SUFFIX}" \
+gh pr create --title "Release ${VERSION}-${SUFFIX}: Bumping to next version post release" \
+    --body "1st commit marks ${VERSION}-${SUFFIX} release with the Git tag. 2nd commit bumps the version in the branch with SNAPSHOT suffix." \
     --base ${BASE_BRANCH}
 
 # File a PR on Github for the new branch. Have someone LGTM it, which gives you permission to continue.
