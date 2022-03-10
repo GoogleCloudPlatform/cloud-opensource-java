@@ -48,7 +48,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <guava.version>31.0.1-jre</guava.version>
-    <google.cloud.bom.version>0.170.0</google.cloud.bom.version>
+    <google.cloud.bom.version>0.171.0</google.cloud.bom.version>
     <google.cloud.core.version>2.5.6</google.cloud.core.version>
     <io.grpc.version>1.44.1</io.grpc.version>
     <http.version>1.41.4</http.version>
