@@ -1,6 +1,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -22,6 +23,8 @@ class BomReleaseNote {
 
   private static final RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
   private static final VersionComparator versionComparator = new VersionComparator();
+  private static final Splitter dotSplitter = Splitter.on(".");
+  private static final String cloudLibraryArtifactPrefix = "com.google.cloud:google-cloud-";
 
   public static void main(String[] arguments)
       throws ArtifactDescriptorException, MavenRepositoryException {
@@ -34,7 +37,7 @@ class BomReleaseNote {
     Bom bom = Bom.readBom(bomCoordinates);
 
     Bom previousBom = previousBom(bom);
-    printCloudClientDifference(previousBom, bom);
+    printCloudClientBomDifference(previousBom, bom);
   }
 
   /**
@@ -82,14 +85,12 @@ class BomReleaseNote {
     return ImmutableMap.copyOf(versionLessCoordinatesToVersion);
   }
 
-  private static void printCloudClientDifference(Bom oldBom, Bom newBom)
+  private static void printCloudClientBomDifference(Bom oldBom, Bom newBom)
       throws MavenRepositoryException {
     Map<String, String> versionlessCoordinatesToVersionOld =
         createVersionLessCoordinatesToKey(oldBom);
     Map<String, String> versionlessCoordinatesToVersionNew =
         createVersionLessCoordinatesToKey(newBom);
-
-    String cloudLibraryArtifactPrefix = "com.google.cloud:google-cloud-";
 
     Predicate<String> clientLibraryFilter =
         coordinates ->
@@ -123,14 +124,69 @@ class BomReleaseNote {
     SetView<String> artifactsInBothBoms =
         Sets.intersection(
             cloudLibrariesVersionlessCoordinatesInNew, cloudLibrariesVersionlessCoordinatesInOld);
+
+    List<String> majorVersionBumpVersionlessCoordinates = new ArrayList<>();
+    List<String> minorVersionBumpVersionlessCoordinates = new ArrayList<>();
+    List<String> patchVersionBumpVersionlessCoordinates = new ArrayList<>();
     for (String versionlessCoordinates : artifactsInBothBoms) {
-      StringBuilder line = new StringBuilder("  ");
+      String previousVersion = versionlessCoordinatesToVersionOld.get(versionlessCoordinates);
+      String currentVersion = versionlessCoordinatesToVersionNew.get(versionlessCoordinates);
+
+      if (isMajorVersionBump(previousVersion, currentVersion)) {
+        majorVersionBumpVersionlessCoordinates.add(versionlessCoordinates);
+      } else if (isMinorVersionBump(previousVersion, currentVersion)) {
+        minorVersionBumpVersionlessCoordinates.add(versionlessCoordinates);
+      } else {
+        patchVersionBumpVersionlessCoordinates.add(versionlessCoordinates);
+      }
+    }
+    System.out.println("## Major Version Upgrades");
+    printClientLibraryVersionDifference(
+        majorVersionBumpVersionlessCoordinates,
+        versionlessCoordinatesToVersionOld,
+        versionlessCoordinatesToVersionNew);
+
+    System.out.println("## Minor Version Upgrades");
+    printClientLibraryVersionDifference(
+        minorVersionBumpVersionlessCoordinates,
+        versionlessCoordinatesToVersionOld,
+        versionlessCoordinatesToVersionNew);
+
+    System.out.println("## Patch Version Upgrades");
+    printClientLibraryVersionDifference(
+        patchVersionBumpVersionlessCoordinates,
+        versionlessCoordinatesToVersionOld,
+        versionlessCoordinatesToVersionNew);
+
+    SetView<String> artifactsOnlyInOld =
+        Sets.difference(
+            cloudLibrariesVersionlessCoordinatesInOld, cloudLibrariesVersionlessCoordinatesInNew);
+
+    if (!artifactsOnlyInOld.isEmpty()) {
+      System.out.println("# Removed artifacts");
+      for (String versionlessCoordinates : artifactsOnlyInOld) {
+        System.out.println(
+            "- "
+                + versionlessCoordinates
+                + " (prev:"
+                + versionlessCoordinatesToVersionOld.get(versionlessCoordinates)
+                + ")");
+      }
+    }
+  }
+
+  private static void printClientLibraryVersionDifference(
+      Iterable<String> artifactsInBothBoms,
+      Map<String, String> versionlessCoordinatesToVersionOld,
+      Map<String, String> versionlessCoordinatesToVersionNew)
+      throws MavenRepositoryException {
+    for (String versionlessCoordinates : artifactsInBothBoms) {
+      StringBuilder line = new StringBuilder("- ");
 
       String previousVersion = versionlessCoordinatesToVersionOld.get(versionlessCoordinates);
       String currentVersion = versionlessCoordinatesToVersionNew.get(versionlessCoordinates);
       line.append(
-          "- "
-              + versionlessCoordinates
+          versionlessCoordinates
               + ":"
               + currentVersion
               + " (prev:"
@@ -152,22 +208,6 @@ class BomReleaseNote {
       line.append(Joiner.on(", ").join(links)).append(")");
 
       System.out.println(line);
-    }
-
-    SetView<String> artifactsOnlyInOld =
-        Sets.difference(
-            cloudLibrariesVersionlessCoordinatesInOld, cloudLibrariesVersionlessCoordinatesInNew);
-
-    if (!artifactsOnlyInOld.isEmpty()) {
-      System.out.println("# Removed artifacts");
-      for (String versionlessCoordinates : artifactsOnlyInOld) {
-        System.out.println(
-            "- "
-                + versionlessCoordinates
-                + " (prev:"
-                + versionlessCoordinatesToVersionOld.get(versionlessCoordinates)
-                + ")");
-      }
     }
   }
 
@@ -202,5 +242,19 @@ class BomReleaseNote {
       }
     }
     return releaseNoteVersions.build();
+  }
+
+  private static boolean isMajorVersionBump(String previousVersion, String currentVersion) {
+    List<String> previousVersionElements = dotSplitter.splitToList(previousVersion);
+    List<String> currentVersionElements = dotSplitter.splitToList(currentVersion);
+    return !previousVersionElements.get(0).equals(currentVersionElements.get(0));
+  }
+
+  private static boolean isMinorVersionBump(String previousVersion, String currentVersion) {
+    Splitter dotSplitter = Splitter.on(".");
+    List<String> previousVersionElements = dotSplitter.splitToList(previousVersion);
+    List<String> currentVersionElements = dotSplitter.splitToList(currentVersion);
+    return previousVersionElements.get(0).equals(currentVersionElements.get(0))
+        && !previousVersionElements.get(1).equals(currentVersionElements.get(1));
   }
 }
