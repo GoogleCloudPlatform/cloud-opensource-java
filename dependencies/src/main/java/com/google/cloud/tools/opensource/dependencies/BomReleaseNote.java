@@ -38,6 +38,46 @@ class BomReleaseNote {
 
     Bom previousBom = previousBom(bom);
     printCloudClientBomDifference(previousBom, bom);
+    printKeyCoreLibraryDependencies(bom);
+
+    printApiReferenceLink();
+  }
+
+  private static void printKeyCoreLibraryDependencies(Bom bom) {
+    Map<String, String> versionlessCoordinatesToVersion = createVersionLessCoordinatesToKey(bom);
+    StringBuilder builder = new StringBuilder();
+    builder.append("# Core Library Dependencies\n");
+    builder.append("These client libraries are built with the following Java libraries:\n");
+    builder
+        .append("- Guava: ")
+        .append(versionlessCoordinatesToVersion.get("com.google.guava:guava"))
+        .append("\n");
+    builder
+        .append("- Protobuf Java: ")
+        .append(versionlessCoordinatesToVersion.get("com.google.protobuf:protobuf-java"))
+        .append("\n");
+    builder
+        .append("- Google Auth Library: ")
+        .append(
+            versionlessCoordinatesToVersion.get("com.google.auth:google-auth-library-credentials"))
+        .append("\n");
+    builder
+        .append("- gRPC: ")
+        .append(versionlessCoordinatesToVersion.get("io.grpc:grpc-api"))
+        .append("\n");
+    builder
+        .append("- GAX: ")
+        .append(versionlessCoordinatesToVersion.get("com.google.api:gax"))
+        .append("\n");
+
+    System.out.println(builder);
+  }
+
+  private static void printApiReferenceLink() {
+    System.out.println("# API Reference");
+    System.out.println(
+        "You can find the API references of the SDK in [Java Cloud Client Libraries]"
+            + "(https://cloud.google.com/java/docs/reference)");
   }
 
   /**
