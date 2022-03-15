@@ -35,7 +35,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 
 /** Tool to generate the changes in the content of the BOM since the previous release. */
-class BomReleaseNote {
+class LibrariesBomReleaseNote {
 
   private static final RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
   private static final VersionComparator versionComparator = new VersionComparator();
@@ -53,6 +53,10 @@ class BomReleaseNote {
     Bom bom = Bom.readBom(bomCoordinates);
 
     Bom previousBom = previousBom(bom);
+
+    DefaultArtifact bomArtifact = new DefaultArtifact(bom.getCoordinates());
+    System.out.println("GCP Libraries BOM " + bomArtifact.getVersion());
+
     printCloudClientBomDifference(previousBom, bom);
     printKeyCoreLibraryDependencies(bom);
 
@@ -166,7 +170,7 @@ class BomReleaseNote {
             cloudLibrariesVersionlessCoordinatesInNew, cloudLibrariesVersionlessCoordinatesInOld);
 
     if (!artifactsOnlyInNew.isEmpty()) {
-      System.out.println("# New addition:");
+      System.out.println("# New Addition");
       for (String versionlessCoordinates : artifactsOnlyInNew) {
         System.out.println(
             "- "
@@ -196,23 +200,29 @@ class BomReleaseNote {
         patchVersionBumpVersionlessCoordinates.add(versionlessCoordinates);
       }
     }
-    System.out.println("## Major Version Upgrades");
-    printClientLibraryVersionDifference(
-        majorVersionBumpVersionlessCoordinates,
-        versionlessCoordinatesToVersionOld,
-        versionlessCoordinatesToVersionNew);
+    if (!majorVersionBumpVersionlessCoordinates.isEmpty()) {
+      System.out.println("## Major Version Upgrades");
+      printClientLibraryVersionDifference(
+          majorVersionBumpVersionlessCoordinates,
+          versionlessCoordinatesToVersionOld,
+          versionlessCoordinatesToVersionNew);
+    }
 
-    System.out.println("## Minor Version Upgrades");
-    printClientLibraryVersionDifference(
-        minorVersionBumpVersionlessCoordinates,
-        versionlessCoordinatesToVersionOld,
-        versionlessCoordinatesToVersionNew);
+    if (!minorVersionBumpVersionlessCoordinates.isEmpty()) {
+      System.out.println("## Minor Version Upgrades");
+      printClientLibraryVersionDifference(
+          minorVersionBumpVersionlessCoordinates,
+          versionlessCoordinatesToVersionOld,
+          versionlessCoordinatesToVersionNew);
+    }
 
-    System.out.println("## Patch Version Upgrades");
-    printClientLibraryVersionDifference(
-        patchVersionBumpVersionlessCoordinates,
-        versionlessCoordinatesToVersionOld,
-        versionlessCoordinatesToVersionNew);
+    if (!patchVersionBumpVersionlessCoordinates.isEmpty()) {
+      System.out.println("## Patch Version Upgrades");
+      printClientLibraryVersionDifference(
+          patchVersionBumpVersionlessCoordinates,
+          versionlessCoordinatesToVersionOld,
+          versionlessCoordinatesToVersionNew);
+    }
 
     SetView<String> artifactsOnlyInOld =
         Sets.difference(

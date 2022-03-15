@@ -130,6 +130,7 @@ public class DashboardMain {
     String groupId = elements.get(0);
     String artifactId = elements.get(1);
 
+    RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
     ImmutableList<String> versions =
         RepositoryUtility.findVersions(repositorySystem, groupId, artifactId);
     for (String version : versions) {
