@@ -40,7 +40,32 @@ class LibrariesBomReleaseNote {
   private static final RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
   private static final VersionComparator versionComparator = new VersionComparator();
   private static final Splitter dotSplitter = Splitter.on(".");
-  private static final String cloudLibraryArtifactPrefix = "com.google.cloud:google-cloud-";
+  private static final String cloudLibraryArtifactPrefix =  "com.google.cloud:google-cloud-";
+
+  private static class ClientLibraryFilterPredicate implements Predicate<String> {
+
+    @Override
+    public boolean test(String s) {
+      return false;
+    }
+  }
+
+  private static boolean clientLibraryFilter(String coordinates) {
+    if (coordinates.contains("google-cloud-core")) {
+      // Google Cloud Core is reported in core Google library section as this is not meant to be
+      // used by customers directly.
+      return false;
+    }
+    if (coordinates.startsWith(cloudLibraryArtifactPrefix)) {
+      return true;
+    }
+    if (coordinates.startsWith("com.google.cloud:google-")) {
+      // google-iam-admin has special group ID because it's not just for Cloud
+      return true;
+    }
+    // proto- and grpc- artifacts are not meant to be used by the customers directly
+    return false;
+  }
 
   public static void main(String[] arguments)
       throws ArtifactDescriptorException, MavenRepositoryException {
@@ -61,6 +86,8 @@ class LibrariesBomReleaseNote {
     printKeyCoreLibraryDependencies(bom);
 
     printApiReferenceLink();
+
+    System.out.println("\n\n\n\n");
   }
 
   private static void printKeyCoreLibraryDependencies(Bom bom) {
@@ -88,6 +115,10 @@ class LibrariesBomReleaseNote {
     builder
         .append("- GAX: ")
         .append(versionlessCoordinatesToVersion.get("com.google.api:gax"))
+        .append("\n");
+    builder
+        .append("- Google Cloud Core: ")
+        .append(versionlessCoordinatesToVersion.get("com.google.cloud:google-cloud-core"))
         .append("\n");
 
     System.out.println(builder);
@@ -137,12 +168,16 @@ class LibrariesBomReleaseNote {
   }
 
   private static ImmutableMap<String, String> createVersionLessCoordinatesToKey(Bom bom) {
-    Map<String, String> versionLessCoordinatesToVersion = new HashMap<>();
-    for (Artifact managedDependency : bom.getManagedDependencies()) {
+    ImmutableMap.Builder<String, String> versionLessCoordinatesToVersion = ImmutableMap.builder();
+    List<Artifact> managedDependencies = new ArrayList(bom.getManagedDependencies());
+
+    // Sort alphabetical order based on the Maven coordinates
+    managedDependencies.sort((artifact1, artifact2) -> artifact1.toString().compareTo(artifact2.toString()));
+    for (Artifact managedDependency : managedDependencies) {
       String versionlessCoordinates = Artifacts.makeKey(managedDependency);
       versionLessCoordinatesToVersion.put(versionlessCoordinates, managedDependency.getVersion());
     }
-    return ImmutableMap.copyOf(versionLessCoordinatesToVersion);
+    return versionLessCoordinatesToVersion.build();
   }
 
   private static void printCloudClientBomDifference(Bom oldBom, Bom newBom)
@@ -152,17 +187,13 @@ class LibrariesBomReleaseNote {
     Map<String, String> versionlessCoordinatesToVersionNew =
         createVersionLessCoordinatesToKey(newBom);
 
-    Predicate<String> clientLibraryFilter =
-        coordinates ->
-            coordinates.contains(cloudLibraryArtifactPrefix)
-                && !coordinates.contains("google-cloud-core");
     ImmutableSet<String> cloudLibrariesVersionlessCoordinatesInNew =
         versionlessCoordinatesToVersionNew.keySet().stream()
-            .filter(clientLibraryFilter)
+            .filter(LibrariesBomReleaseNote::clientLibraryFilter)
             .collect(ImmutableSet.toImmutableSet());
     ImmutableSet<String> cloudLibrariesVersionlessCoordinatesInOld =
         versionlessCoordinatesToVersionOld.keySet().stream()
-            .filter(clientLibraryFilter)
+            .filter(LibrariesBomReleaseNote::clientLibraryFilter)
             .collect(ImmutableSet.toImmutableSet());
 
     SetView<String> artifactsOnlyInNew =
@@ -181,6 +212,7 @@ class LibrariesBomReleaseNote {
     }
 
     System.out.println("# Version Upgrades");
+    System.out.println("When omitted, the group ID of the artifacts is `com.google.cloud`.");
     SetView<String> artifactsInBothBoms =
         Sets.intersection(
             cloudLibrariesVersionlessCoordinatesInNew, cloudLibrariesVersionlessCoordinatesInOld);
@@ -251,8 +283,14 @@ class LibrariesBomReleaseNote {
 
       String previousVersion = versionlessCoordinatesToVersionOld.get(versionlessCoordinates);
       String currentVersion = versionlessCoordinatesToVersionNew.get(versionlessCoordinates);
+
+      List<String> groupIdAndArtifactId = Splitter.on(":").splitToList(versionlessCoordinates);
+      Verify.verify(groupIdAndArtifactId.size() == 2, "Versionless coordinates should have 2 elements separated by ':'");
+      String groupId = groupIdAndArtifactId.get(0);
+      String artifactId = groupIdAndArtifactId.get(1);
       line.append(
-          versionlessCoordinates
+          ("com.google.cloud".equals(groupId) ?
+          artifactId : versionlessCoordinates)
               + ":"
               + currentVersion
               + " (prev:"
@@ -262,8 +300,15 @@ class LibrariesBomReleaseNote {
       ImmutableList<String> versionsForReleaseNotes =
           clientLibraryReleaseNoteVersions(versionlessCoordinates, previousVersion, currentVersion);
 
-      String artifactSuffix = versionlessCoordinates.replace(cloudLibraryArtifactPrefix, "");
-      String repositoryUrl = "https://github.com/googleapis/java-" + artifactSuffix;
+      String libraryName = null;
+      if (artifactId.contains("google-cloud-")) {
+        libraryName = artifactId.replace("google-cloud-", "");
+      } else if (artifactId.contains("google-")) {
+        // Case of google-iam-admin
+        libraryName = artifactId.replace("google-", "");
+      }
+
+      String repositoryUrl = "https://github.com/googleapis/java-" + libraryName;
       List<String> links = new ArrayList<>();
       for (String versionForReleaseNotes : versionsForReleaseNotes) {
         String[] versionAndQualifier = versionForReleaseNotes.split("-");
