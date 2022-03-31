@@ -26,10 +26,8 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -41,7 +39,7 @@ class LibrariesBomReleaseNote {
   private static final RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
   private static final VersionComparator versionComparator = new VersionComparator();
   private static final Splitter dotSplitter = Splitter.on(".");
-  private static final String cloudLibraryArtifactPrefix =  "com.google.cloud:google-cloud-";
+  private static final String cloudLibraryArtifactPrefix = "com.google.cloud:google-cloud-";
   private static final StringBuilder report = new StringBuilder();
 
   private static boolean clientLibraryFilter(String coordinates) {
@@ -65,14 +63,17 @@ class LibrariesBomReleaseNote {
       throws ArtifactDescriptorException, MavenRepositoryException {
     if (arguments.length != 1) {
       System.out.println(
-          "Please provide BOM coordinates or file path. For example, com.google.cloud:libraries-bom:25.0.0");
+          "Please provide BOM coordinates or file path. For example,"
+              + " com.google.cloud:libraries-bom:25.0.0");
       System.exit(1);
     }
     String bomCoordinatesOrFile = arguments[0];
 
     int splitByColonSize = Splitter.on(":").splitToList(bomCoordinatesOrFile).size();
-    Bom bom = (splitByColonSize == 3 || splitByColonSize ==4) ?
-        Bom.readBom(bomCoordinatesOrFile): Bom.readBom(Paths.get(bomCoordinatesOrFile));
+    Bom bom =
+        (splitByColonSize == 3 || splitByColonSize == 4)
+            ? Bom.readBom(bomCoordinatesOrFile)
+            : Bom.readBom(Paths.get(bomCoordinatesOrFile));
 
     Bom previousBom = previousBom(bom);
 
@@ -168,7 +169,8 @@ class LibrariesBomReleaseNote {
     List<Artifact> managedDependencies = new ArrayList(bom.getManagedDependencies());
 
     // Sort alphabetical order based on the Maven coordinates
-    managedDependencies.sort((artifact1, artifact2) -> artifact1.toString().compareTo(artifact2.toString()));
+    managedDependencies.sort(
+        (artifact1, artifact2) -> artifact1.toString().compareTo(artifact2.toString()));
     for (Artifact managedDependency : managedDependencies) {
       String versionlessCoordinates = Artifacts.makeKey(managedDependency);
       versionLessCoordinatesToVersion.put(versionlessCoordinates, managedDependency.getVersion());
@@ -204,7 +206,7 @@ class LibrariesBomReleaseNote {
                 + versionlessCoordinates
                 + ":"
                 + versionlessCoordinatesToVersionNew.get(versionlessCoordinates)
-        +"\n");
+                + "\n");
       }
     }
 
@@ -260,7 +262,7 @@ class LibrariesBomReleaseNote {
     if (!artifactsOnlyInOld.isEmpty()) {
       report.append("# Removed artifacts\n");
       for (String versionlessCoordinates : artifactsOnlyInOld) {
-       report.append(
+        report.append(
             "- "
                 + versionlessCoordinates
                 + " (prev:"
@@ -282,12 +284,13 @@ class LibrariesBomReleaseNote {
       String currentVersion = versionlessCoordinatesToVersionNew.get(versionlessCoordinates);
 
       List<String> groupIdAndArtifactId = Splitter.on(":").splitToList(versionlessCoordinates);
-      Verify.verify(groupIdAndArtifactId.size() == 2, "Versionless coordinates should have 2 elements separated by ':'");
+      Verify.verify(
+          groupIdAndArtifactId.size() == 2,
+          "Versionless coordinates should have 2 elements separated by ':'");
       String groupId = groupIdAndArtifactId.get(0);
       String artifactId = groupIdAndArtifactId.get(1);
       line.append(
-          ("com.google.cloud".equals(groupId) ?
-          artifactId : versionlessCoordinates)
+          ("com.google.cloud".equals(groupId) ? artifactId : versionlessCoordinates)
               + ":"
               + currentVersion
               + " (prev:"
