@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,14 +42,7 @@ class LibrariesBomReleaseNote {
   private static final VersionComparator versionComparator = new VersionComparator();
   private static final Splitter dotSplitter = Splitter.on(".");
   private static final String cloudLibraryArtifactPrefix =  "com.google.cloud:google-cloud-";
-
-  private static class ClientLibraryFilterPredicate implements Predicate<String> {
-
-    @Override
-    public boolean test(String s) {
-      return false;
-    }
-  }
+  private static final StringBuilder report = new StringBuilder();
 
   private static boolean clientLibraryFilter(String coordinates) {
     if (coordinates.contains("google-cloud-core")) {
@@ -63,7 +57,7 @@ class LibrariesBomReleaseNote {
       // google-iam-admin has special group ID because it's not just for Cloud
       return true;
     }
-    // proto- and grpc- artifacts are not meant to be used by the customers directly
+    // proto- and grpc- artifacts are not meant to be used by the customers directly.
     return false;
   }
 
@@ -71,64 +65,66 @@ class LibrariesBomReleaseNote {
       throws ArtifactDescriptorException, MavenRepositoryException {
     if (arguments.length != 1) {
       System.out.println(
-          "Please provide BOM coordinates. For example, com.google.cloud:libraries-bom:25.0.0");
+          "Please provide BOM coordinates or file path. For example, com.google.cloud:libraries-bom:25.0.0");
       System.exit(1);
     }
-    String bomCoordinates = arguments[0];
-    Bom bom = Bom.readBom(bomCoordinates);
+    String bomCoordinatesOrFile = arguments[0];
+
+    int splitByColonSize = Splitter.on(":").splitToList(bomCoordinatesOrFile).size();
+    Bom bom = (splitByColonSize == 3 || splitByColonSize ==4) ?
+        Bom.readBom(bomCoordinatesOrFile): Bom.readBom(Paths.get(bomCoordinatesOrFile));
 
     Bom previousBom = previousBom(bom);
 
     DefaultArtifact bomArtifact = new DefaultArtifact(bom.getCoordinates());
-    System.out.println("GCP Libraries BOM " + bomArtifact.getVersion());
+    report.append("GCP Libraries BOM " + bomArtifact.getVersion() + "\n\n");
 
     printCloudClientBomDifference(previousBom, bom);
+    report.append("\n");
     printKeyCoreLibraryDependencies(bom);
-
+    report.append("\n");
     printApiReferenceLink();
 
-    System.out.println("\n\n\n\n");
+    report.append("\n\n\n\n");
+    System.out.println(report);
   }
 
   private static void printKeyCoreLibraryDependencies(Bom bom) {
     Map<String, String> versionlessCoordinatesToVersion = createVersionLessCoordinatesToKey(bom);
-    StringBuilder builder = new StringBuilder();
-    builder.append("# Core Library Dependencies\n");
-    builder.append("These client libraries are built with the following Java libraries:\n");
-    builder
+    report.append("# Core Library Dependencies\n");
+    report.append("These client libraries are built with the following Java libraries:\n");
+    report
         .append("- Guava: ")
         .append(versionlessCoordinatesToVersion.get("com.google.guava:guava"))
         .append("\n");
-    builder
+    report
         .append("- Protobuf Java: ")
         .append(versionlessCoordinatesToVersion.get("com.google.protobuf:protobuf-java"))
         .append("\n");
-    builder
+    report
         .append("- Google Auth Library: ")
         .append(
             versionlessCoordinatesToVersion.get("com.google.auth:google-auth-library-credentials"))
         .append("\n");
-    builder
+    report
         .append("- gRPC: ")
         .append(versionlessCoordinatesToVersion.get("io.grpc:grpc-api"))
         .append("\n");
-    builder
+    report
         .append("- GAX: ")
         .append(versionlessCoordinatesToVersion.get("com.google.api:gax"))
         .append("\n");
-    builder
+    report
         .append("- Google Cloud Core: ")
         .append(versionlessCoordinatesToVersion.get("com.google.cloud:google-cloud-core"))
         .append("\n");
-
-    System.out.println(builder);
   }
 
   private static void printApiReferenceLink() {
-    System.out.println("# API Reference");
-    System.out.println(
+    report.append("# API Reference\n");
+    report.append(
         "You can find the API references of the SDK in [Java Cloud Client Libraries]"
-            + "(https://cloud.google.com/java/docs/reference)");
+            + "(https://cloud.google.com/java/docs/reference)\n");
   }
 
   /**
@@ -201,18 +197,19 @@ class LibrariesBomReleaseNote {
             cloudLibrariesVersionlessCoordinatesInNew, cloudLibrariesVersionlessCoordinatesInOld);
 
     if (!artifactsOnlyInNew.isEmpty()) {
-      System.out.println("# New Addition");
+      report.append("# New Addition\n");
       for (String versionlessCoordinates : artifactsOnlyInNew) {
-        System.out.println(
+        report.append(
             "- "
                 + versionlessCoordinates
                 + ":"
-                + versionlessCoordinatesToVersionNew.get(versionlessCoordinates));
+                + versionlessCoordinatesToVersionNew.get(versionlessCoordinates)
+        +"\n");
       }
     }
 
-    System.out.println("# Version Upgrades");
-    System.out.println("When omitted, the group ID of the artifacts is `com.google.cloud`.");
+    report.append("# Version Upgrades\n");
+    report.append("When omitted, the group ID of the artifacts is `com.google.cloud`.\n");
     SetView<String> artifactsInBothBoms =
         Sets.intersection(
             cloudLibrariesVersionlessCoordinatesInNew, cloudLibrariesVersionlessCoordinatesInOld);
@@ -233,7 +230,7 @@ class LibrariesBomReleaseNote {
       }
     }
     if (!majorVersionBumpVersionlessCoordinates.isEmpty()) {
-      System.out.println("## Major Version Upgrades");
+      report.append("## Major Version Upgrades\n");
       printClientLibraryVersionDifference(
           majorVersionBumpVersionlessCoordinates,
           versionlessCoordinatesToVersionOld,
@@ -241,7 +238,7 @@ class LibrariesBomReleaseNote {
     }
 
     if (!minorVersionBumpVersionlessCoordinates.isEmpty()) {
-      System.out.println("## Minor Version Upgrades");
+      report.append("## Minor Version Upgrades\n");
       printClientLibraryVersionDifference(
           minorVersionBumpVersionlessCoordinates,
           versionlessCoordinatesToVersionOld,
@@ -249,7 +246,7 @@ class LibrariesBomReleaseNote {
     }
 
     if (!patchVersionBumpVersionlessCoordinates.isEmpty()) {
-      System.out.println("## Patch Version Upgrades");
+      report.append("## Patch Version Upgrades\n");
       printClientLibraryVersionDifference(
           patchVersionBumpVersionlessCoordinates,
           versionlessCoordinatesToVersionOld,
@@ -261,14 +258,14 @@ class LibrariesBomReleaseNote {
             cloudLibrariesVersionlessCoordinatesInOld, cloudLibrariesVersionlessCoordinatesInNew);
 
     if (!artifactsOnlyInOld.isEmpty()) {
-      System.out.println("# Removed artifacts");
+      report.append("# Removed artifacts\n");
       for (String versionlessCoordinates : artifactsOnlyInOld) {
-        System.out.println(
+       report.append(
             "- "
                 + versionlessCoordinates
                 + " (prev:"
                 + versionlessCoordinatesToVersionOld.get(versionlessCoordinates)
-                + ")");
+                + ")\n");
       }
     }
   }
@@ -318,7 +315,7 @@ class LibrariesBomReleaseNote {
       }
       line.append(Joiner.on(", ").join(links)).append(")");
 
-      System.out.println(line);
+      report.append(line).append("\n");
     }
   }
 
