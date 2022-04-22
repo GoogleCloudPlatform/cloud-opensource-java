@@ -61,6 +61,11 @@ class LibrariesBomReleaseNote {
 
   public static void main(String[] arguments)
       throws ArtifactDescriptorException, MavenRepositoryException {
+
+    ImmutableMap.Builder<String, String> keyCacheBuilder = new ImmutableMap.Builder<>();
+    keyCacheBuilder.put("foo", null);
+
+
     if (arguments.length != 1) {
       System.out.println(
           "Please provide BOM coordinates or file path. For example,"
@@ -137,7 +142,7 @@ class LibrariesBomReleaseNote {
     String coordinates = bom.getCoordinates();
     DefaultArtifact bomArtifact = new DefaultArtifact(coordinates);
 
-    // The highest versions come last.
+    // The highest version comes last.
     ImmutableList<String> versions =
         RepositoryUtility.findVersions(
             repositorySystem, bomArtifact.getGroupId(), bomArtifact.getArtifactId());
@@ -198,6 +203,11 @@ class LibrariesBomReleaseNote {
         Sets.difference(
             cloudLibrariesVersionlessCoordinatesInNew, cloudLibrariesVersionlessCoordinatesInOld);
 
+    String oldBomVersion = Splitter.on(':').splitToList(oldBom.getCoordinates()).get(3);
+    report.append("Here are the differences from the previous version (")
+        .append(oldBomVersion)
+        .append(")\n\n");
+
     if (!artifactsOnlyInNew.isEmpty()) {
       report.append("# New Addition\n");
       for (String versionlessCoordinates : artifactsOnlyInNew) {
@@ -210,8 +220,8 @@ class LibrariesBomReleaseNote {
       }
     }
 
-    report.append("# Version Upgrades\n");
-    report.append("When omitted, the group ID of the artifacts is `com.google.cloud`.\n");
+    report.append("# Version Upgrades\n\n");
+    report.append("The group ID of the following artifacts is `com.google.cloud`.\n");
     SetView<String> artifactsInBothBoms =
         Sets.intersection(
             cloudLibrariesVersionlessCoordinatesInNew, cloudLibrariesVersionlessCoordinatesInOld);
@@ -346,6 +356,9 @@ class LibrariesBomReleaseNote {
     ImmutableList.Builder<String> releaseNoteVersions = ImmutableList.builder();
 
     for (String version : versions) {
+      if (version.contains("-SNAPSHOT")) {
+        continue;
+      }
       // The compare method returns negative if the first argument is less than the second.
       if (versionComparator.compare(previousVersion, version) < 0
           && versionComparator.compare(version, currentVersion) <= 0) {
@@ -362,7 +375,6 @@ class LibrariesBomReleaseNote {
   }
 
   private static boolean isMinorVersionBump(String previousVersion, String currentVersion) {
-    Splitter dotSplitter = Splitter.on(".");
     List<String> previousVersionElements = dotSplitter.splitToList(previousVersion);
     List<String> currentVersionElements = dotSplitter.splitToList(currentVersion);
     return previousVersionElements.get(0).equals(currentVersionElements.get(0))
