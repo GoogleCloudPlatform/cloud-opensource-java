@@ -149,73 +149,10 @@
       <!-- GRPC; specifically https://github.com/grpc/grpc-java -->
       <dependency>
         <groupId>io.grpc</groupId>
-        <artifactId>grpc-alts</artifactId>
+        <artifactId>grpc-bom</artifactId>
         <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-api</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-auth</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-context</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-core</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-grpclb</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-netty</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-netty-shaded</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-okhttp</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-protobuf</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-protobuf-lite</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-services</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-stub</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-testing</artifactId>
-        <version>${io.grpc.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
 
       <!-- google-cloud-java from https://github.com/googleapis/java-cloud-bom-->
