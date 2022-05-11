@@ -80,8 +80,8 @@
     <google-cloud-tasks.version>2.1.11</google-cloud-tasks.version>
     <bigtable-hbase-beam.version>2.1.1</bigtable-hbase-beam.version>
     <google-cloud-bigtable.version>2.6.2</google-cloud-bigtable.version>
-    <google-cloud-pubsub.version>1.116.4</google-cloud-pubsub.version>
-    <proto-google-cloud-pubsub-v1.version>1.98.4</proto-google-cloud-pubsub-v1.version>
+    <google-cloud-pubsub.version>1.117.0</google-cloud-pubsub.version>
+    <proto-google-cloud-pubsub-v1.version>1.99.0</proto-google-cloud-pubsub-v1.version>
     <google-cloud-datastore.version>2.2.10</google-cloud-datastore.version>
     <google-cloud-service-usage.version>2.2.7</google-cloud-service-usage.version>
     <google-cloud-container.version>2.3.7</google-cloud-container.version>
