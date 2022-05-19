@@ -61,11 +61,6 @@ class LibrariesBomReleaseNote {
 
   public static void main(String[] arguments)
       throws ArtifactDescriptorException, MavenRepositoryException {
-
-    ImmutableMap.Builder<String, String> keyCacheBuilder = new ImmutableMap.Builder<>();
-    keyCacheBuilder.put("foo", null);
-
-
     if (arguments.length != 1) {
       System.out.println(
           "Please provide BOM coordinates or file path. For example,"
@@ -237,7 +232,7 @@ class LibrariesBomReleaseNote {
         majorVersionBumpVersionlessCoordinates.add(versionlessCoordinates);
       } else if (isMinorVersionBump(previousVersion, currentVersion)) {
         minorVersionBumpVersionlessCoordinates.add(versionlessCoordinates);
-      } else {
+      } else if (isPatchVersionBump(previousVersion, currentVersion)) {
         patchVersionBumpVersionlessCoordinates.add(versionlessCoordinates);
       }
     }
@@ -379,5 +374,12 @@ class LibrariesBomReleaseNote {
     List<String> currentVersionElements = dotSplitter.splitToList(currentVersion);
     return previousVersionElements.get(0).equals(currentVersionElements.get(0))
         && !previousVersionElements.get(1).equals(currentVersionElements.get(1));
+  }
+  private static boolean isPatchVersionBump(String previousVersion, String currentVersion) {
+    List<String> previousVersionElements = dotSplitter.splitToList(previousVersion);
+    List<String> currentVersionElements = dotSplitter.splitToList(currentVersion);
+    return previousVersionElements.get(0).equals(currentVersionElements.get(0))
+        && previousVersionElements.get(1).equals(currentVersionElements.get(1))
+        && !previousVersionElements.get(2).equals(currentVersionElements.get(2));
   }
 }
