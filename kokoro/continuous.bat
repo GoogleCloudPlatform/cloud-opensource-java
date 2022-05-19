@@ -2,7 +2,7 @@
 
 set JAVA_HOME=c:\program files\java\jdk1.8.0_152
 set PATH=%JAVA_HOME%\bin;%PATH%
-set MAVEN_OPTS="-Xmx8g"
+set MAVEN_OPTS="-Xmx12g"
 
 cd github/cloud-opensource-java
 
