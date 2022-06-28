@@ -93,7 +93,7 @@
     <gcs-connector.version>2.2.6</gcs-connector.version>
 
     <!-- Layer 3: Beam -->
-    <beam.version>2.35.0</beam.version>
+    <beam.version>2.40.0</beam.version>
   </properties>
 
   <distributionManagement>
