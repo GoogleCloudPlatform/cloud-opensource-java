@@ -74,7 +74,7 @@ public class BomContentTest {
     // Sometimes the artifacts are not yet available in Maven Central and only available in local
     // Maven repository. Use this property in that case.
     boolean disableMavenCentralCheck =
-        ! "true".equals(System.getProperty("disableMavenCentralCheck"));
+        "true".equals(System.getProperty("disableMavenCentralCheck"));
 
     List<Artifact> artifacts = bom.getManagedDependencies();
     if (!disableMavenCentralCheck) {
