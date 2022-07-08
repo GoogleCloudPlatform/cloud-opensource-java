@@ -72,12 +72,12 @@ public class BomContentTest {
     Bom bom = Bom.readBom(bomPath);
 
     // Sometimes the artifacts are not yet available in Maven Central and only available in local
-    // Maven repository. Use
-    boolean enableMavenCentralAvailabilityCheck =
+    // Maven repository. Use this property in that case.
+    boolean disableMavenCentralCheck =
         ! "true".equals(System.getProperty("disableMavenCentralCheck"));
 
     List<Artifact> artifacts = bom.getManagedDependencies();
-    if (enableMavenCentralAvailabilityCheck) {
+    if (!disableMavenCentralCheck) {
       for (Artifact artifact : artifacts) {
         assertReachable(buildMavenCentralUrl(artifact));
       }
