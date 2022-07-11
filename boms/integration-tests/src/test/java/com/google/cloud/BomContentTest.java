@@ -44,6 +44,10 @@ import org.eclipse.aether.version.VersionScheme;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * Checks the content of the BOMs in this repository. When some artifacts are not available in Maven
+ * Central yet, use "-DdisableMavenCentralCheck=true" system property when running this test.
+ */
 public class BomContentTest {
   private static VersionScheme versionScheme = new GenericVersionScheme();
 
@@ -66,9 +70,17 @@ public class BomContentTest {
 
   private void checkBom(Path bomPath) throws Exception {
     Bom bom = Bom.readBom(bomPath);
+
+    // Sometimes the artifacts are not yet available in Maven Central and only available in local
+    // Maven repository. Use this property in that case.
+    boolean disableMavenCentralCheck =
+        "true".equals(System.getProperty("disableMavenCentralCheck"));
+
     List<Artifact> artifacts = bom.getManagedDependencies();
-    for (Artifact artifact : artifacts) {
-      assertReachable(buildMavenCentralUrl(artifact));
+    if (!disableMavenCentralCheck) {
+      for (Artifact artifact : artifacts) {
+        assertReachable(buildMavenCentralUrl(artifact));
+      }
     }
 
     assertNoDowngradeRule(bom);
