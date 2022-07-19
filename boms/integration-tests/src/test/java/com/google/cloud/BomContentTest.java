@@ -22,7 +22,9 @@ import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.DependencyMediation;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.base.Joiner;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -34,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
@@ -41,8 +44,17 @@ import org.eclipse.aether.version.VersionScheme;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * Checks the content of the BOMs in this repository. When some artifacts are not available in Maven
+ * Central yet, use "-DdisableMavenCentralCheck=true" system property when running this test.
+ */
 public class BomContentTest {
   private static VersionScheme versionScheme = new GenericVersionScheme();
+
+  // List of Maven dependency scopes that are visible to library users. For example "provided" scope
+  // dependencies do not appear in users' class path.
+  private static final ImmutableList<String> dependencyScopesVisibleToUsers =
+      ImmutableList.of("compile", "runtime");
 
   @Test
   public void testLtsBom() throws Exception {
@@ -58,9 +70,17 @@ public class BomContentTest {
 
   private void checkBom(Path bomPath) throws Exception {
     Bom bom = Bom.readBom(bomPath);
+
+    // Sometimes the artifacts are not yet available in Maven Central and only available in local
+    // Maven repository. Use this property in that case.
+    boolean disableMavenCentralCheck =
+        "true".equals(System.getProperty("disableMavenCentralCheck"));
+
     List<Artifact> artifacts = bom.getManagedDependencies();
-    for (Artifact artifact : artifacts) {
-      assertReachable(buildMavenCentralUrl(artifact));
+    if (!disableMavenCentralCheck) {
+      for (Artifact artifact : artifacts) {
+        assertReachable(buildMavenCentralUrl(artifact));
+      }
     }
 
     assertNoDowngradeRule(bom);
@@ -207,6 +227,28 @@ public class BomContentTest {
         continue;
       }
 
+      // Filter by scopes that are invisible to library users
+      ImmutableList<DependencyPath> dependencyPaths = result.getDependencyPaths(entry);
+      Verify.verify(
+          !dependencyPaths.isEmpty(),
+          "The class path entry should have at least one dependency path from the root");
+      boolean dependencyVisibleToUsers = false;
+      for (DependencyPath dependencyPath : dependencyPaths) {
+        int length = dependencyPath.size();
+        // As the root element is an empty node, the last element is at "length - 2".
+        Dependency dependency = dependencyPath.getDependency(length - 2);
+        if (dependencyScopesVisibleToUsers.contains(dependency.getScope())) {
+          dependencyVisibleToUsers = true;
+          break;
+        }
+      }
+      if (!dependencyVisibleToUsers) {
+        // For provided-scope dependencies, we don't have to worry about them because they don't
+        // appear in library users' class path. For example, appengine-api-1.0-sdk are used via
+        // provided scope.
+        continue;
+      }
+
       // A violation of the no-downgrade rule is found.
       violations.add(
           artifact
@@ -214,7 +256,8 @@ public class BomContentTest {
               + transitiveDependency
               + ". This is higher version than "
               + bomArtifact
-              + " in the BOM");
+              + " in the BOM. Example dependency path: "
+              + dependencyPaths.get(0));
     }
     return violations.build();
   }
