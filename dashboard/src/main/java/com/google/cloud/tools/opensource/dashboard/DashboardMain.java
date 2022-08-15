@@ -86,6 +86,7 @@ public class DashboardMain {
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
   public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
+  private static final int LATEST_BOM_VERSION_COUNT = 30;
 
   private static final Configuration freemarkerConfiguration = configureFreemarker();
 
@@ -107,7 +108,7 @@ public class DashboardMain {
     DashboardArguments dashboardArguments = DashboardArguments.readCommandLine(arguments);
 
     if (dashboardArguments.hasVersionlessCoordinates()) {
-      generateAllVersions(
+      generateLatestVersions(
           dashboardArguments.getVersionlessCoordinates(),
           dashboardArguments.getDependencyMediation());
     } else if (dashboardArguments.hasFile()) {
@@ -117,7 +118,7 @@ public class DashboardMain {
     }
   }
 
-  private static void generateAllVersions(
+  private static void generateLatestVersions(
       String versionlessCoordinates, DependencyMediationAlgorithm dependencyMediationAlgorithm)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
           MavenRepositoryException {
@@ -131,13 +132,19 @@ public class DashboardMain {
     String artifactId = elements.get(1);
 
     RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
-    ImmutableList<String> versions =
+
+    // New versions come last
+    ImmutableList<String> allVersions =
         RepositoryUtility.findVersions(repositorySystem, groupId, artifactId);
-    for (String version : versions) {
+    // Because previous versions in Maven Central not change, no need to regenerate dashboards
+    // for old BOM versions. This avoids timeout in nightly Kokoro job.
+    ImmutableList<String> latestNVersions = allVersions.subList(
+        Math.max(allVersions.size() - LATEST_BOM_VERSION_COUNT, 0), allVersions.size());
+    for (String version : latestNVersions) {
       generate(
           String.format("%s:%s:%s", groupId, artifactId, version), dependencyMediationAlgorithm);
     }
-    generateVersionIndex(groupId, artifactId, versions);
+    generateVersionIndex(groupId, artifactId, allVersions);
   }
 
   @VisibleForTesting
