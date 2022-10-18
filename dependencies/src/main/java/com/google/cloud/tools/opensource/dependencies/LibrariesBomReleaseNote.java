@@ -26,6 +26,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.aether.RepositorySystem;
@@ -165,7 +166,7 @@ class LibrariesBomReleaseNote {
   }
 
   private static ImmutableMap<String, String> createVersionLessCoordinatesToKey(Bom bom) {
-    ImmutableMap.Builder<String, String> versionLessCoordinatesToVersion = ImmutableMap.builder();
+    Map<String, String> versionLessCoordinatesToVersion = new HashMap<>();
     List<Artifact> managedDependencies = new ArrayList(bom.getManagedDependencies());
 
     // Sort alphabetical order based on the Maven coordinates
@@ -175,7 +176,7 @@ class LibrariesBomReleaseNote {
       String versionlessCoordinates = Artifacts.makeKey(managedDependency);
       versionLessCoordinatesToVersion.put(versionlessCoordinates, managedDependency.getVersion());
     }
-    return versionLessCoordinatesToVersion.build();
+    return ImmutableMap.copyOf(versionLessCoordinatesToVersion);
   }
 
   private static void printCloudClientBomDifference(Bom oldBom, Bom newBom)
