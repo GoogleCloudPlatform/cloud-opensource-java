@@ -84,7 +84,7 @@
     <google-cloud-bigtable.version>2.6.3</google-cloud-bigtable.version>
     <google-cloud-pubsub.version>1.117.1</google-cloud-pubsub.version>
     <!-- the proto-google-cloud-pubsub-v1 used by the google-cloud-pubsub version above -->
-    <proto-google-cloud-pubsub-v1.version>1.99.0</proto-google-cloud-pubsub-v1.version>
+    <proto-google-cloud-pubsub-v1.version>1.99.1</proto-google-cloud-pubsub-v1.version>
     <google-cloud-datastore.version>2.2.11</google-cloud-datastore.version>
     <google-cloud-service-usage.version>2.2.8</google-cloud-service-usage.version>
     <google-cloud-container.version>2.3.8</google-cloud-container.version>
