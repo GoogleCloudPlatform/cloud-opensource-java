@@ -36,8 +36,10 @@ import java.util.stream.Collectors;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore("3.0.x-lts branch is not used for libraries-bom release.")
 public class MaximumLinkageErrorsTest {
 
   @Test
