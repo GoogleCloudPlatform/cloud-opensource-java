@@ -27,8 +27,10 @@ import com.google.common.collect.Sets.SetView;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -42,6 +44,22 @@ class LibrariesBomReleaseNote {
   private static final Splitter dotSplitter = Splitter.on(".");
   private static final String cloudLibraryArtifactPrefix = "com.google.cloud:google-cloud-";
   private static final StringBuilder report = new StringBuilder();
+  private static final ImmutableSet<String> splitRepositoryLibraryNames = ImmutableSet.of(
+      "bigquery",
+      "bigquerystorage",
+      "bigtable",
+      "datastore",
+      "firestore",
+      "logging",
+      "logging-logback",
+      "logging-servlet-initializer",
+      "pubsub",
+      "pubsublite",
+      "spanner",
+      "spanner-jdbc",
+      "storage",
+      "storage-nio"
+  );
 
   private static boolean clientLibraryFilter(String coordinates) {
     if (coordinates.contains("google-cloud-core")) {
@@ -59,6 +77,7 @@ class LibrariesBomReleaseNote {
     // proto- and grpc- artifacts are not meant to be used by the customers directly.
     return false;
   }
+
 
   public static void main(String[] arguments)
       throws ArtifactDescriptorException, MavenRepositoryException {
@@ -107,6 +126,10 @@ class LibrariesBomReleaseNote {
         .append("- Google Auth Library: ")
         .append(
             versionlessCoordinatesToVersion.get("com.google.auth:google-auth-library-credentials"))
+        .append("\n");
+    report
+        .append("- Google API Client: ")
+        .append(versionlessCoordinatesToVersion.get("com.google.api-client:google-api-client"))
         .append("\n");
     report
         .append("- gRPC: ")
@@ -283,6 +306,7 @@ class LibrariesBomReleaseNote {
       Map<String, String> versionlessCoordinatesToVersionOld,
       Map<String, String> versionlessCoordinatesToVersionNew)
       throws MavenRepositoryException {
+
     for (String versionlessCoordinates : artifactsInBothBoms) {
       StringBuilder line = new StringBuilder("- ");
 
@@ -314,18 +338,26 @@ class LibrariesBomReleaseNote {
         libraryName = artifactId.replace("google-", "");
       }
 
-      String repositoryUrl = "https://github.com/googleapis/java-" + libraryName;
       List<String> links = new ArrayList<>();
       for (String versionForReleaseNotes : versionsForReleaseNotes) {
         String[] versionAndQualifier = versionForReleaseNotes.split("-");
         String version = versionAndQualifier[0];
-        String releaseUrl = repositoryUrl + "/releases/tag/v" + version;
+        String releaseUrl = splitRepositoryLibraryNames.contains(libraryName)?
+            releaseUrlForSplitRepo(libraryName, version):
+            releaseUrlForMonorepo(libraryName, version);
         links.add(String.format("[v%s](%s)", versionForReleaseNotes, releaseUrl));
       }
       line.append(Joiner.on(", ").join(links)).append(")");
 
       report.append(line).append("\n");
     }
+  }
+
+  private static String releaseUrlForSplitRepo(String libraryName, String version) {
+    return String.format("https://github.com/googleapis/java-%s/releases/tag/v%s", libraryName, version);
+  }
+  private static String releaseUrlForMonorepo(String libraryName, String version) {
+    return String.format("https://github.com/googleapis/google-cloud-java/releases/tag/google-cloud-%s-v%s", libraryName, version);
   }
 
   /**
