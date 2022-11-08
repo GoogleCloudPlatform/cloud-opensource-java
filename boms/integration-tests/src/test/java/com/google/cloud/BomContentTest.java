@@ -62,12 +62,6 @@ public class BomContentTest {
     checkBom(bomPath);
   }
 
-  @Test
-  public void testLibrariesBom() throws Exception {
-    Path bomPath = Paths.get("..", "cloud-oss-bom", "pom.xml").toAbsolutePath();
-    checkBom(bomPath);
-  }
-
   private void checkBom(Path bomPath) throws Exception {
     Bom bom = Bom.readBom(bomPath);
 
