@@ -86,6 +86,7 @@ public class DashboardMain {
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
   public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
+  public static final int LATEST_VERSIONS_COUNT = 10;
 
   private static final Configuration freemarkerConfiguration = configureFreemarker();
 
@@ -107,7 +108,7 @@ public class DashboardMain {
     DashboardArguments dashboardArguments = DashboardArguments.readCommandLine(arguments);
 
     if (dashboardArguments.hasVersionlessCoordinates()) {
-      generateAllVersions(
+      generateLatestVersions(
           dashboardArguments.getVersionlessCoordinates(),
           dashboardArguments.getDependencyMediation());
     } else if (dashboardArguments.hasFile()) {
@@ -117,10 +118,10 @@ public class DashboardMain {
     }
   }
 
-  private static void generateAllVersions(
+  private static void generateLatestVersions(
       String versionlessCoordinates, DependencyMediationAlgorithm dependencyMediationAlgorithm)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
-          MavenRepositoryException {
+      MavenRepositoryException {
     List<String> elements = Splitter.on(':').splitToList(versionlessCoordinates);
     if (elements.size() != 2) {
       System.err.println(
@@ -131,9 +132,14 @@ public class DashboardMain {
     String artifactId = elements.get(1);
 
     RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
+    // The highest version comes last.
     ImmutableList<String> versions =
         RepositoryUtility.findVersions(repositorySystem, groupId, artifactId);
-    for (String version : versions) {
+    ImmutableList<String> latestVersions =
+        versions.size() > LATEST_VERSIONS_COUNT ? versions.subList(
+            versions.size() - LATEST_VERSIONS_COUNT,
+            versions.size()) : versions;
+    for (String version : latestVersions) {
       generate(
           String.format("%s:%s:%s", groupId, artifactId, version), dependencyMediationAlgorithm);
     }
@@ -176,7 +182,7 @@ public class DashboardMain {
   @VisibleForTesting
   static Path generate(Path bomFile, DependencyMediationAlgorithm dependencyMediationAlgorithm)
       throws IOException, TemplateException, URISyntaxException, MavenRepositoryException,
-          InvalidVersionSpecificationException {
+      InvalidVersionSpecificationException {
     checkArgument(Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     checkArgument(Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
     Path output = generate(Bom.readBom(bomFile), dependencyMediationAlgorithm);
@@ -186,7 +192,7 @@ public class DashboardMain {
 
   private static Path generate(Bom bom, DependencyMediationAlgorithm dependencyMediationAlgorithm)
       throws IOException, TemplateException, URISyntaxException,
-          InvalidVersionSpecificationException {
+      InvalidVersionSpecificationException {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
@@ -562,8 +568,8 @@ public class DashboardMain {
    *
    * <p>Using this summary in the BOM dashboard avoids repetitive items in the {@link
    * DependencyPath} list that share the same root problem caused by widely-used libraries, for
-   * example, {@code commons-logging:commons-logging}, {@code
-   * com.google.http-client:google-http-client} and {@code log4j:log4j}.
+   * example, {@code commons-logging:commons-logging}, {@code com.google.http-client:google-http-client}
+   * and {@code log4j:log4j}.
    */
   private static ImmutableMap<String, String> findRootCauses(ClassPathResult classPathResult) {
     // Freemarker is not good at handling non-string keys. Path object in .ftl is automatically
