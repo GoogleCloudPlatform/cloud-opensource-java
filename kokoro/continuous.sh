@@ -7,7 +7,7 @@ set -x
 
 if which brew > /dev/null; then
   # Kokoro MacOS environment does not have Java 11
-  brew install adoptopenjdk11
+  brew install --cask adoptopenjdk
 fi
 
 export MAVEN_OPTS="-Xmx8g"
