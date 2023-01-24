@@ -5,18 +5,11 @@ set -e
 # Display commands being run.
 set -x
 
-if which brew > /dev/null; then
-  # Kokoro MacOS environment does not have Java 11
-  brew install --cask temurin11
-  brew install --cask temurin
-  brew tap homebrew/cask-versions
-fi
-
 export MAVEN_OPTS="-Xmx8g"
 
 cd github/cloud-opensource-java
 
-./mvnw -V -B -ntp clean install javadoc:jar
+./mvnw -V -B -ntp clean install -Djavadoc.skip
 
 cd gradle-plugin
 ./gradlew build publishToMavenLocal
