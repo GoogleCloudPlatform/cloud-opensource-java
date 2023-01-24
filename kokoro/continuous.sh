@@ -5,6 +5,11 @@ set -e
 # Display commands being run.
 set -x
 
+if which brew > /dev/null; then
+  # Kokoro MacOS environment does not have Java 11
+  brew install adoptopenjdk11
+fi
+
 export MAVEN_OPTS="-Xmx8g"
 
 cd github/cloud-opensource-java
