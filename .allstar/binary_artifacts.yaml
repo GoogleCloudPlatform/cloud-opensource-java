@@ -1,0 +1,5 @@
+# Linkage Checker has test to examine JAR files and class files
+ignorePaths:
+- enforcer-rules/src/test/resources/dummy-0.0.1.jar
+- example-problems/gradle-project/build/classes/java/main/App.class
+
