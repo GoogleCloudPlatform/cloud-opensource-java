@@ -80,7 +80,7 @@
     <google-cloud-monitoring.version>3.7.0</google-cloud-monitoring.version>
     <google-cloud-spanner.version>6.33.0</google-cloud-spanner.version>
     <google-cloud-tasks.version>2.6.0</google-cloud-tasks.version>
-    <bigtable-hbase-beam.version>2.6.6</bigtable-hbase-beam.version>
+    <bigtable-hbase-beam.version>2.6.5</bigtable-hbase-beam.version>
     <google-cloud-bigtable.version>2.16.0</google-cloud-bigtable.version>
     <google-cloud-pubsub.version>1.121.0</google-cloud-pubsub.version>
     <!-- the proto-google-cloud-pubsub-v1 used by the google-cloud-pubsub version above -->
