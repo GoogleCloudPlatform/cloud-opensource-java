@@ -93,6 +93,8 @@
     <google-cloud-redis.version>2.9.0</google-cloud-redis.version>
     <google-cloud-logging.version>3.13.6</google-cloud-logging.version>
     <google-cloud-secretmanager.version>2.6.0</google-cloud-secretmanager.version>
+    <google-cloud-kms.version>2.9.0</google-cloud-kms.version>
+    <google-cloud-vision.version>3.4.0</google-cloud-vision.version>
     <gcs-connector.version>2.2.10</gcs-connector.version>
 
     <!-- Layer 3: Beam -->
@@ -434,6 +436,21 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-kms-bom</artifactId>
+        <version>${google-cloud-kms.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-vision-bom</artifactId>
+        <version>${google-cloud-vision.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <dependency>
         <groupId>com.google.cloud.bigdataoss</groupId>
         <artifactId>gcs-connector</artifactId>
