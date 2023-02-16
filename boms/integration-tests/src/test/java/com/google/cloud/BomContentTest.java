@@ -49,7 +49,6 @@ import org.junit.Test;
  * Central yet, use "-DdisableMavenCentralCheck=true" system property when running this test.
  */
 public class BomContentTest {
-
   private static VersionScheme versionScheme = new GenericVersionScheme();
 
   // List of Maven dependency scopes that are visible to library users. For example "provided" scope
