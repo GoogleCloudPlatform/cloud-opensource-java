@@ -50,7 +50,7 @@
 
     <!-- Layer 1: Core -->
     <guava.version>31.1-jre</guava.version>
-    <autovalue.version>1.9</autovalue.version>
+    <autovalue.version>1.10</autovalue.version>
     <protobuf.version>3.21.10</protobuf.version>
     <google-http-client.version>1.42.3</google-http-client.version>
     <api-common.version>2.2.2</api-common.version>
@@ -91,7 +91,7 @@
     <google-cloud-orchestration-airflow.version>1.6.0</google-cloud-orchestration-airflow.version>
     <google-cloud-resourcemanager.version>1.8.0</google-cloud-resourcemanager.version>
     <google-cloud-redis.version>2.9.0</google-cloud-redis.version>
-    <google-cloud-logging.version>3.13.6</google-cloud-logging.version>
+    <google-cloud-logging.version>3.13.1</google-cloud-logging.version>
     <google-cloud-secretmanager.version>2.6.0</google-cloud-secretmanager.version>
     <google-cloud-kms.version>2.9.0</google-cloud-kms.version>
     <google-cloud-vision.version>3.4.0</google-cloud-vision.version>
