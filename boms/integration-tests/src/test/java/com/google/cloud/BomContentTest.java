@@ -110,12 +110,16 @@ public class BomContentTest {
     for (ClassPathEntry classPathEntry : result.getClassPath()) {
       Artifact currentArtifact = classPathEntry.getArtifact();
 
-      if (!currentArtifact.getGroupId().contains("google")
-          || currentArtifact.getGroupId().contains("com.google.android")
-          || currentArtifact.getGroupId().contains("com.google.cloud.bigtable")
-          || currentArtifact.getArtifactId().startsWith("proto-")
-          || currentArtifact.getArtifactId().equals("protobuf-javalite")
-          || currentArtifact.getArtifactId().equals("appengine-testing")) {
+      String artifactId = currentArtifact.getArtifactId();
+      String groupId = currentArtifact.getGroupId();
+      if (!groupId.contains("google")
+          || groupId.contains("com.google.android")
+          || groupId.contains("com.google.cloud.bigtable")
+          || artifactId.startsWith("proto-")
+          || artifactId.equals("protobuf-javalite")
+          || artifactId.equals("appengine-testing")
+          || artifactId.equals("appengine-remote-api")
+          || artifactId.equals("appengine-api-1.0-sdk")) {
         // Skip libraries that produce false positives.
         // See: https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2226
         continue;
