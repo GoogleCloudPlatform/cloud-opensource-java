@@ -117,9 +117,7 @@ public class BomContentTest {
           || groupId.contains("com.google.cloud.bigtable")
           || artifactId.startsWith("proto-")
           || artifactId.equals("protobuf-javalite")
-          || artifactId.equals("appengine-testing")
-          || artifactId.equals("appengine-remote-api")
-          || artifactId.equals("appengine-api-1.0-sdk")) {
+          || artifactId.startsWith("appengine-")) {
         // Skip libraries that produce false positives.
         // See: https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2226
         continue;
