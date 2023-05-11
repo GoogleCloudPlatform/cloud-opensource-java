@@ -38,9 +38,6 @@ import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 
 public final class Bom {
-  
-  private static final ImmutableSet<String> BOM_SKIP_ARTIFACT_IDS =
-      ImmutableSet.of("google-cloud-logging-logback", "google-cloud-contrib");
 
   private final ImmutableList<Artifact> artifacts;
   private final String coordinates;
@@ -151,12 +148,7 @@ public final class Bom {
     if ("test-jar".equals(type)) {
       return true;
     }
-  
-    // TODO remove this hack once we get these out of google-cloud-java's BOM
-    if (BOM_SKIP_ARTIFACT_IDS.contains(artifact.getArtifactId())) {
-      return true;
-    }
-  
+
     return false;
   }
 }
