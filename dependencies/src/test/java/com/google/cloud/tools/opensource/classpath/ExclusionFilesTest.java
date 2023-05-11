@@ -344,10 +344,11 @@ public class ExclusionFilesTest {
 
     String expected =
         new String(
-            Files.readAllBytes(
-                absolutePathOfResource(
-                    "exclusion-sample-rules/expected-exclusion-output-file.xml")),
-            StandardCharsets.UTF_8);
+                Files.readAllBytes(
+                    absolutePathOfResource(
+                        "exclusion-sample-rules/expected-exclusion-output-file.xml")),
+                StandardCharsets.UTF_8)
+            .replaceAll("\\R", "\n");
 
     assertEquals(expected, actual);
   }

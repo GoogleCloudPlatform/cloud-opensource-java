@@ -421,7 +421,8 @@ public class DashboardTest {
     String bomUpgradeMessage = globalUpperBoundBomUpgradeNodes.get(0).getValue();
     assertThat(bomUpgradeMessage)
         .contains(
-            "Upgrade com.google.protobuf:protobuf-java-util:jar:3.6.1 in the BOM to version \"3.7.1\"");
+            "Upgrade com.google.protobuf:protobuf-java-util:jar:3.6.1 in the BOM to version"
+                + " \"3.7.1\"");
 
     // Case 2: Dependency needs to be updated
     Nodes globalUpperBoundDependencyUpgradeNodes =
