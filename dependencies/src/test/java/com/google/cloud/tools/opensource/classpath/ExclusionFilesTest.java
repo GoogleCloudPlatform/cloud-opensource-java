@@ -340,7 +340,7 @@ public class ExclusionFilesTest {
 
     ExclusionFiles.write(output, linkageErrors);
 
-    String actual = new String(Files.readAllBytes(output));
+    String actual = new String(Files.readAllBytes(output)).replaceAll("\\R", "\n");
 
     String expected =
         new String(
