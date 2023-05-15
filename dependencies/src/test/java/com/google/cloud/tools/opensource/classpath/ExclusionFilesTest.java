@@ -340,14 +340,15 @@ public class ExclusionFilesTest {
 
     ExclusionFiles.write(output, linkageErrors);
 
-    String actual = new String(Files.readAllBytes(output));
+    String actual = new String(Files.readAllBytes(output)).replaceAll("\\R", "\n");
 
     String expected =
         new String(
-            Files.readAllBytes(
-                absolutePathOfResource(
-                    "exclusion-sample-rules/expected-exclusion-output-file.xml")),
-            StandardCharsets.UTF_8);
+                Files.readAllBytes(
+                    absolutePathOfResource(
+                        "exclusion-sample-rules/expected-exclusion-output-file.xml")),
+                StandardCharsets.UTF_8)
+            .replaceAll("\\R", "\n");
 
     assertEquals(expected, actual);
   }

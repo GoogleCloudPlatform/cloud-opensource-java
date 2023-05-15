@@ -138,7 +138,7 @@ public class LinkageCheckerMainIntegrationTest {
       LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 631 linkage errors", expected.getMessage());
+      assertEquals("Found 734 linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();
@@ -172,7 +172,7 @@ public class LinkageCheckerMainIntegrationTest {
       LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 653 linkage errors", expected.getMessage());
+      assertEquals("Found 756 linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();

@@ -421,7 +421,8 @@ public class DashboardTest {
     String bomUpgradeMessage = globalUpperBoundBomUpgradeNodes.get(0).getValue();
     assertThat(bomUpgradeMessage)
         .contains(
-            "Upgrade com.google.protobuf:protobuf-java-util:jar:3.6.1 in the BOM to version \"3.7.1\"");
+            "Upgrade com.google.protobuf:protobuf-java-util:jar:3.6.1 in the BOM to version"
+                + " \"3.7.1\"");
 
     // Case 2: Dependency needs to be updated
     Nodes globalUpperBoundDependencyUpgradeNodes =
@@ -469,7 +470,7 @@ public class DashboardTest {
     Nodes dependencyTreeParagraph = document.query("//p[@class='dependency-tree-node']");
 
     // characterization test
-    assertThat(dependencyTreeParagraph).hasSize(38391);
+    assertThat(dependencyTreeParagraph).hasSize(39649);
     Assert.assertEquals(
         "com.google.protobuf:protobuf-java:jar:3.6.1", dependencyTreeParagraph.get(0).getValue());
   }

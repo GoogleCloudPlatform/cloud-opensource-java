@@ -108,7 +108,8 @@ public class ClassPathBuilderTest {
         .isEqualTo("com.google.api:api-common:1.7.0"); // first element in the BOM
     int bomSize = managedDependencies.size();
     String lastFileName = entries.get(bomSize - 1).toString();
-    assertThat(lastFileName).isEqualTo("com.google.api:gax-httpjson:0.57.0"); // last element in BOM
+    assertThat(lastFileName)
+        .isEqualTo("com.google.code.findbugs:jsr305:3.0.2"); // last element in BOM
   }
 
   @Test

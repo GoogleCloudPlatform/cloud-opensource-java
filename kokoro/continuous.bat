@@ -1,6 +1,6 @@
 @echo on
 
-set JAVA_HOME=c:\program files\java\jdk1.8.0_152
+set JAVA_HOME=c:\program files\java\jdk1.8.0_211
 set PATH=%JAVA_HOME%\bin;%PATH%
 set MAVEN_OPTS="-Xmx12g"
 
