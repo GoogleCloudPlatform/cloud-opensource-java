@@ -17,8 +17,6 @@
 #
 
 function prepare_installer_debian_ubuntu {
-  apt install -y apt-transport-https
-
   sudo mkdir -p /etc/apt/keyrings
   sudo wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public |
     sudo tee /etc/apt/keyrings/adoptium.asc

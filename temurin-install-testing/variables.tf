@@ -42,6 +42,12 @@ variable "zone" {
   description = "GCP zone used to deploy resources. Must be a zone in the chosen region."
   default     = "us-central1-a"
 }
+variable "bucket_folder" {
+  type        = string
+  description = "Generally, leave empty. By default, a timestamp will be provided as the value."
+  default     = ""
+}
+
 
 ## See https://cloud.google.com/compute/docs/machine-resource
 variable "x86_machine_types" {

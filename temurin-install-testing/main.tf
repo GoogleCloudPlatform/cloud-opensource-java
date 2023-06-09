@@ -49,7 +49,7 @@ locals {
 
   all_instances = concat(local.linux_instances, local.windows_instances)
 
-  time = timestamp()
+  bucket_folder = var.bucket_folder == "" ? timestamp() : var.bucket_folder
 }
 
 resource "google_compute_instance" "windows" {
@@ -70,7 +70,7 @@ resource "google_compute_instance" "windows" {
       {
         bucket        = data.google_storage_bucket.results.name
         vm_name       = each.value.name
-        bucket_folder = local.time
+        bucket_folder = local.bucket_folder
         vm_zone       = var.zone
         os_name       = each.value.os_name
         machine_type  = each.value.type
@@ -113,7 +113,7 @@ resource "google_compute_instance" "linux" {
     {
       bucket        = data.google_storage_bucket.results.name
       vm_name       = each.value.name
-      bucket_folder = local.time
+      bucket_folder = local.bucket_folder
       vm_zone       = var.zone
       os_name       = each.value.os_name
       machine_type  = each.value.type
