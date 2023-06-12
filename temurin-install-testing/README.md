@@ -1,7 +1,21 @@
 # temurin-testing
 
 This Terraform configuration installs Temurin on a matrix of GCE machine types and OS boot images.
-The tests are split into three batches to prevent hitting standard compute quotas.
+The tests are split into three batches to prevent hitting standard compute quotas, and are enabled
+using three boolean input variables:
+
+* `enable_arm`: Performs testing on `arm_machine_types` x `arm_boot_images`
+* `enable_linux`: Performs testing on `x86_machine_types` x `x86_boot_images`
+* `enable_windows`: Performs testing on `x86_machine_types` x `x86_windows_boot_images`
+
+Defaults for the above values are found in `variables.tf`.
+
+## Snippet Region Tags
+
+The `startup.sh` and `startup.ps1` files have region tags used to identify the boundaries of the
+snippets to include in Temurin installation documentation.
+
+## Workflow
 
 1. Create a file named `private.auto.tfvars` in this folder with contents:
    ```shell
@@ -11,10 +25,10 @@ The tests are split into three batches to prevent hitting standard compute quota
    ```
 
 2. Invoke the tests
-    * To invoke the full test suite, execute `./test-all.sh`
+    * To invoke the full test suite, execute `terraform init`, then `./test-all.sh`
     * To invoke a single test batch, modify `inputs.auto.tfvars` to enable one batch, then execute
       `terraform apply`. To destroy these resources later, set the batch variable back
-      to false and execute `terraform apply` again.
+      to false and execute `terraform apply` again.cd
         * (Optional) Review the input matrix for the batch you've enabled in `variables.tf`.
 
 3. (Parsing Results) Test results are uploaded to the specified GCS bucket at
