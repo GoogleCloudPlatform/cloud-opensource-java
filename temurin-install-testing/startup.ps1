@@ -16,9 +16,11 @@
 
 function Refresh-Path
 {
+    # [START windows_env_reset]
     $MachinePath = [System.Environment]::GetEnvironmentVariable('Path', 'Machine')
     $UserPath = [System.Environment]::GetEnvironmentVariable('Path', 'User')
     $env:Path = "$MachinePath;$UserPath"
+    # [END windows_env_reset]
 }
 
 function Perform-Test
@@ -33,23 +35,23 @@ function Perform-Test
 
     try
     {
-        # [START temurin_installation_windows]
+        # [START windows_temurin_download]
         $JdkUrl = "https://api.adoptium.net/v3/binary/latest/$JdkVersion/ga/windows/x64/jdk/hotspot/normal/eclipse?project=jdk"
         $JdkExtractionPath = "C:\temurin-$JdkVersion-jdk"
         $JdkDownload = "$JdkExtractionPath.zip"
-
-        "Downloading: $JdkUrl"
         [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]'Tls12'
         Invoke-WebRequest -Uri $JdkUrl -OutFile $JdkDownload
         Expand-Archive $JdkDownload -DestinationPath $JdkExtractionPath -Force
+        # [END windows_temurin_download]
+        "Downloaded: $JdkUrl"
 
+        # [START windows_temurin_install]
         pushd $JdkExtractionPath
         $JdkPath = (Get-ChildItem).FullName
         popd
-
         [System.Environment]::SetEnvironmentVariable('JAVA_HOME', $JdkPath, 'Machine')
         [System.Environment]::SetEnvironmentVariable('Path', "$env:Path;$JdkPath\bin", 'Machine')
-        # [END temurin_installation_windows]
+        # [END windows_temurin_install]
 
         Refresh-Path
         java -version 2>&1 | %%{ "$_" } > $SuccessFileName # For syntax, see https://stackoverflow.com/a/20950421

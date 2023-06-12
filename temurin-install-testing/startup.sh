@@ -17,30 +17,35 @@
 #
 
 function prepare_installer_debian_ubuntu {
+  # [START debian_adoptium_key]
   sudo mkdir -p /etc/apt/keyrings
   sudo wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public |
     sudo tee /etc/apt/keyrings/adoptium.asc
+  # [END debian_adoptium_key]
 
-  eval "$(grep VERSION_CODENAME /etc/os-release)"
-  sudo tee /etc/apt/sources.list.d/adoptium2.list <<EOM
+# [START debian_adoptium_repo]
+eval "$(grep VERSION_CODENAME /etc/os-release)"
+sudo tee /etc/apt/sources.list.d/adoptium.list <<EOM
 deb [signed-by=/etc/apt/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb $VERSION_CODENAME main
 EOM
+# [END debian_adoptium_repo]
 
   export INSTALLER="apt"
 }
 
 function prepare_installer_redhat_centos_rocky {
+  # [START centos_major_version]
   eval "$(grep VERSION_ID /etc/os-release)"
   eval "$(grep ^ID= /etc/os-release)"
-
-  # Get only the major version by splitting on '.'
   OLD_IFS=$IFS
   IFS='.'
   read -ra split_version <<<"$VERSION_ID"
   IFS=$OLD_IFS
-  MAJOR_VERSION=$${split_version[0]}
+  MAJOR_VERSION=$split_version
+  # [END centos_major_version]
 
-  sudo tee /etc/yum.repos.d/adoptium.repo <<EOM
+# [START centos_adoptium_repo]
+sudo tee /etc/yum.repos.d/adoptium.repo <<EOM
 [Adoptium]
 name=Adoptium
 baseurl=https://packages.adoptium.net/artifactory/rpm/$ID/$MAJOR_VERSION/\$basearch
@@ -48,18 +53,23 @@ enabled=1
 gpgcheck=1
 gpgkey=https://packages.adoptium.net/artifactory/api/gpg/key/public
 EOM
+# [END centos_adoptium_repo]
 
   export INSTALLER="yum"
 }
 
 function prepare_installer_sles {
+  # [START sles_adoptium_key]
   sudo mkdir -p /etc/zypp/keyrings
   sudo wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public |
     sudo tee /etc/zypp/keyrings/adoptium.asc
   sudo rpm --import /etc/zypp/keyrings/adoptium.asc
+  # [START sles_adoptium_key]
 
+  # [START sles_adoptium_repo]
   eval "$(grep VERSION_ID /etc/os-release)"
   sudo zypper ar -f "https://packages.adoptium.net/artifactory/rpm/opensuse/$VERSION_ID/$(uname -m)" adoptium
+  # [START sles_adoptium_repo]
 
   export INSTALLER="zypper"
 
