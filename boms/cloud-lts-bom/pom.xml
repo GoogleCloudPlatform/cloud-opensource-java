@@ -352,11 +352,6 @@
         <scope>import</scope>
       </dependency>
       <dependency>
-        <groupId>com.google.cloud.bigtable</groupId>
-        <artifactId>bigtable-hbase-beam</artifactId>
-        <version>${bigtable-hbase-beam.version}</version>
-      </dependency>
-      <dependency>
         <groupId>com.google.cloud</groupId>
         <!-- Not using a BOM because it has google-cloud-bigtable-emulator -->
         <artifactId>google-cloud-bigtable</artifactId>
@@ -489,6 +484,13 @@
 <!--        <groupId>org.apache.beam</groupId>-->
 <!--        <artifactId>beam-sdks-java-io-google-cloud-platform</artifactId>-->
 <!--        <version>${beam.version}</version>-->
+<!--      </dependency>-->
+
+      <!-- Layer 4: HBase Connector -->
+<!--      <dependency>-->
+<!--        <groupId>com.google.cloud.bigtable</groupId>-->
+<!--        <artifactId>bigtable-hbase-beam</artifactId>-->
+<!--        <version>${bigtable-hbase-beam.version}</version>-->
 <!--      </dependency>-->
     </dependencies>
   </dependencyManagement>
