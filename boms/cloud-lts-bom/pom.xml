@@ -94,7 +94,7 @@
     <google-cloud-secretmanager.version>2.19.0</google-cloud-secretmanager.version>
     <google-cloud-kms.version>2.22.0</google-cloud-kms.version>
     <google-cloud-vision.version>3.17.0</google-cloud-vision.version>
-    <gcs-connector.version>2.2.16</gcs-connector.version>
+    <gcs-connector.version>2.2.15</gcs-connector.version>
 
     <!-- Layer 3: Beam -->
 <!--    <beam.version>2.49.0</beam.version>-->
