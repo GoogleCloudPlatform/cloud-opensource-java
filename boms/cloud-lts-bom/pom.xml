@@ -61,9 +61,7 @@
     <proto-google-common-protos.version>2.22.0</proto-google-common-protos.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
         When updating gax.version, update gax.httpjson.version too. -->
-    <gax.version>2.29.0</gax.version>
-    <!-- the gax-httpjson version in the gax-bom version above -->
-    <gax-httpjson.version>0.114.0</gax-httpjson.version>
+    <gax.version>2.31.0</gax.version>
     <google-cloud-core.version>2.21.0</google-cloud-core.version>
 
     <!-- Layer 2: Cloud -->
@@ -255,7 +253,7 @@
       <dependency>
         <groupId>com.google.api</groupId>
         <artifactId>gax-httpjson</artifactId>
-        <version>${gax-httpjson.version}</version>
+        <version>${gax.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
