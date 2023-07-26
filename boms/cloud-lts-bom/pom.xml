@@ -58,7 +58,7 @@
     <google-auth-library.version>1.19.0</google-auth-library.version>
     <io.grpc.version>1.55.3</io.grpc.version>
     <google-api-client.version>2.2.0</google-api-client.version>
-    <proto-google-common-protos.version>2.20.0</proto-google-common-protos.version>
+    <proto-google-common-protos.version>2.22.0</proto-google-common-protos.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
         When updating gax.version, update gax.httpjson.version too. -->
     <gax.version>2.29.0</gax.version>
