@@ -64,7 +64,7 @@
     <gax.version>2.29.0</gax.version>
     <!-- the gax-httpjson version in the gax-bom version above -->
     <gax-httpjson.version>0.114.0</gax-httpjson.version>
-    <google-cloud-core.version>2.19.0</google-cloud-core.version>
+    <google-cloud-core.version>2.21.0</google-cloud-core.version>
 
     <!-- Layer 2: Cloud -->
     <appengine-api-1.0-sdk.version>2.0.16</appengine-api-1.0-sdk.version>
