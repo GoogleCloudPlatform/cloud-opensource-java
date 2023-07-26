@@ -81,9 +81,9 @@
     <google-cloud-spanner.version>6.43.2</google-cloud-spanner.version>
     <google-cloud-tasks.version>2.19.0</google-cloud-tasks.version>
     <google-cloud-bigtable.version>2.23.3</google-cloud-bigtable.version>
-    <google-cloud-pubsub.version>1.123.14</google-cloud-pubsub.version>
+    <google-cloud-pubsub.version>1.123.18</google-cloud-pubsub.version>
     <!-- the proto-google-cloud-pubsub-v1 used by the google-cloud-pubsub version above -->
-    <proto-google-cloud-pubsub-v1.version>1.105.14</proto-google-cloud-pubsub-v1.version>
+    <proto-google-cloud-pubsub-v1.version>1.105.18</proto-google-cloud-pubsub-v1.version>
     <google-cloud-datastore.version>2.15.0</google-cloud-datastore.version>
     <google-cloud-service-usage.version>2.19.0</google-cloud-service-usage.version>
     <google-cloud-container.version>2.22.0</google-cloud-container.version>
