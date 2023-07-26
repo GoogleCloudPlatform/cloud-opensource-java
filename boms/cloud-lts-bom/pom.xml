@@ -485,11 +485,11 @@
       </dependency>
 
       <!-- Layer 4: HBase Connector -->
-<!--      <dependency>-->
-<!--        <groupId>com.google.cloud.bigtable</groupId>-->
-<!--        <artifactId>bigtable-hbase-beam</artifactId>-->
-<!--        <version>${bigtable-hbase-beam.version}</version>-->
-<!--      </dependency>-->
+      <dependency>
+        <groupId>com.google.cloud.bigtable</groupId>
+        <artifactId>bigtable-hbase-beam</artifactId>
+        <version>${bigtable-hbase-beam.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
