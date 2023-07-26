@@ -95,9 +95,9 @@
     <gcs-connector.version>2.2.15</gcs-connector.version>
 
     <!-- Layer 3: Beam -->
-<!--    <beam.version>2.49.0</beam.version>-->
+    <beam.version>2.49.0</beam.version>
     <!-- Layer 4: HBase Connector -->
-<!--    <bigtable-hbase-beam.version>2.6.6</bigtable-hbase-beam.version>-->
+    <bigtable-hbase-beam.version>2.9.1</bigtable-hbase-beam.version>
   </properties>
 
   <distributionManagement>
@@ -463,33 +463,33 @@
       </dependency>
 
       <!-- Layer 3: Beam -->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.beam</groupId>-->
-<!--        <artifactId>beam-sdks-java-core</artifactId>-->
-<!--        <version>${beam.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.beam</groupId>-->
-<!--        <artifactId>beam-sdks-java-extensions-google-cloud-platform-core</artifactId>-->
-<!--        <version>${beam.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.beam</groupId>-->
-<!--        <artifactId>beam-runners-google-cloud-dataflow-java</artifactId>-->
-<!--        <version>${beam.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.beam</groupId>-->
-<!--        <artifactId>beam-sdks-java-io-google-cloud-platform</artifactId>-->
-<!--        <version>${beam.version}</version>-->
-<!--      </dependency>-->
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-sdks-java-core</artifactId>
+        <version>${beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-sdks-java-extensions-google-cloud-platform-core</artifactId>
+        <version>${beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-runners-google-cloud-dataflow-java</artifactId>
+        <version>${beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-sdks-java-io-google-cloud-platform</artifactId>
+        <version>${beam.version}</version>
+      </dependency>
 
       <!-- Layer 4: HBase Connector -->
-<!--      <dependency>-->
-<!--        <groupId>com.google.cloud.bigtable</groupId>-->
-<!--        <artifactId>bigtable-hbase-beam</artifactId>-->
-<!--        <version>${bigtable-hbase-beam.version}</version>-->
-<!--      </dependency>-->
+      <dependency>
+        <groupId>com.google.cloud.bigtable</groupId>
+        <artifactId>bigtable-hbase-beam</artifactId>
+        <version>${bigtable-hbase-beam.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
