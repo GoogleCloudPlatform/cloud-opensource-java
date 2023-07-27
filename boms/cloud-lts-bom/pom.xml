@@ -73,12 +73,12 @@
     <!-- the google-api-services-bigquery version used by the google-cloud-bigquery version above -->
     <google-api-services-bigquery.version>v2-rev20230520-2.0.0</google-api-services-bigquery.version>
     <google-cloud-bigquerystorage.version>2.38.0</google-cloud-bigquerystorage.version>
-    <google-cloud-storage.version>2.22.4</google-cloud-storage.version>
+    <google-cloud-storage.version>2.22.6</google-cloud-storage.version>
     <google-cloud-trace.version>2.19.0</google-cloud-trace.version>
     <google-cloud-monitoring.version>3.20.0</google-cloud-monitoring.version>
     <google-cloud-spanner.version>6.43.2</google-cloud-spanner.version>
     <google-cloud-tasks.version>2.19.0</google-cloud-tasks.version>
-    <google-cloud-bigtable.version>2.23.3</google-cloud-bigtable.version>
+    <google-cloud-bigtable.version>2.25.0</google-cloud-bigtable.version>
     <google-cloud-pubsub.version>1.123.18</google-cloud-pubsub.version>
     <!-- the proto-google-cloud-pubsub-v1 used by the google-cloud-pubsub version above -->
     <proto-google-cloud-pubsub-v1.version>1.105.18</proto-google-cloud-pubsub-v1.version>
