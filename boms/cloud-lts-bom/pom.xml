@@ -75,7 +75,7 @@
     <google-cloud-bigquerystorage.version>2.38.0</google-cloud-bigquerystorage.version>
     <google-cloud-storage.version>2.22.6</google-cloud-storage.version>
     <google-cloud-trace.version>2.19.0</google-cloud-trace.version>
-    <google-cloud-monitoring.version>3.20.0</google-cloud-monitoring.version>
+    <google-cloud-monitoring.version>3.22.0</google-cloud-monitoring.version>
     <google-cloud-spanner.version>6.43.2</google-cloud-spanner.version>
     <google-cloud-tasks.version>2.19.0</google-cloud-tasks.version>
     <google-cloud-bigtable.version>2.25.0</google-cloud-bigtable.version>
