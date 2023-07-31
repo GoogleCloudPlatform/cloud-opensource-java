@@ -7,7 +7,7 @@
 
   <groupId>com.google.cloud</groupId>
   <artifactId>gcp-lts-bom</artifactId>
-  <version>5.0.0-SNAPSHOT</version>
+  <version>5.0.0</version>
   <packaging>pom</packaging>
 
   <name>Google Cloud Long Term Support BOM</name>
@@ -82,7 +82,7 @@
     <google-cloud-pubsub.version>1.123.18</google-cloud-pubsub.version>
     <!-- the proto-google-cloud-pubsub-v1 used by the google-cloud-pubsub version above -->
     <proto-google-cloud-pubsub-v1.version>1.105.18</proto-google-cloud-pubsub-v1.version>
-    <google-cloud-datastore.version>2.15.0</google-cloud-datastore.version>
+    <google-cloud-datastore.version>2.15.1</google-cloud-datastore.version>
     <google-cloud-service-usage.version>2.19.0</google-cloud-service-usage.version>
     <google-cloud-container.version>2.22.0</google-cloud-container.version>
     <google-cloud-orchestration-airflow.version>1.19.0</google-cloud-orchestration-airflow.version>
