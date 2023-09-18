@@ -22,6 +22,8 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.google.common.collect.ImmutableSet;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.project.MavenProject;
@@ -145,6 +147,14 @@ public final class Bom {
   
     String type = artifact.getProperty(ArtifactProperties.TYPE, "jar");
     if ("test-jar".equals(type)) {
+      return true;
+    }
+
+    // Skipping grpc-android as it is not used by Google Cloud Client Libraries for Java. Checking
+    // for availability of
+    // this unused artifact on Maven Central has caused BOM validation check to fail in the past. See
+    // https://github.com/googleapis/sdk-platform-java/pull/1989#issuecomment-1724039670
+    if ("grpc-android".equals(artifact.getArtifactId())) {
       return true;
     }
 

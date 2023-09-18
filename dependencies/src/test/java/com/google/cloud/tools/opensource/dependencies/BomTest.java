@@ -27,6 +27,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -77,4 +78,9 @@ public class BomTest {
         .inOrder();
   }
 
+  @Test
+  public void testIsSkipped_grpcAndroid() {
+    Artifact artifact = new DefaultArtifact("io.grpc:grpc-android:jar:1.58.0");
+    Truth.assertThat(Bom.shouldSkipBomMember(artifact)).isTrue();
+  }
 }
