@@ -27,8 +27,10 @@ wait
 BUCKET_FOLDER=$(terraform output --raw bucket_folder)
 terraform apply -auto-approve
 terraform apply -var="enable_linux=true" -var="bucket_folder=$BUCKET_FOLDER" -auto-approve
+# For single invocations: terraform apply -var="enable_linux=true" -auto-approve
 wait
 terraform apply -auto-approve
 terraform apply -var="enable_windows=true" -var="bucket_folder=$BUCKET_FOLDER" -auto-approve
+# For single invocations: terraform apply -var="enable_windows=true" -auto-approve
 wait
 terraform apply -auto-approve

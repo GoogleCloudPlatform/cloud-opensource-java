@@ -59,6 +59,15 @@ EOM
 }
 
 function prepare_installer_sles {
+  # [START centos_major_version]
+  eval "$(grep VERSION_ID /etc/os-release)"
+  OLD_IFS=$IFS
+  IFS='.'
+  read -ra split_version <<<"$VERSION_ID"
+  IFS=$OLD_IFS
+  MAJOR_VERSION=$split_version
+  # [END centos_major_version]
+
   # [START sles_adoptium_key]
   sudo mkdir -p /etc/zypp/keyrings
   sudo wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public |
@@ -67,8 +76,7 @@ function prepare_installer_sles {
   # [START sles_adoptium_key]
 
   # [START sles_adoptium_repo]
-  eval "$(grep VERSION_ID /etc/os-release)"
-  sudo zypper ar -f "https://packages.adoptium.net/artifactory/rpm/opensuse/$VERSION_ID/$(uname -m)" adoptium
+  sudo zypper ar -f "https://packages.adoptium.net/artifactory/rpm/sles/$MAJOR_VERSION/$(uname -m)" adoptium
   # [START sles_adoptium_repo]
 
   export INSTALLER="zypper"
