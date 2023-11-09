@@ -217,7 +217,7 @@ public class DashboardTest {
     Nodes reports = details.query("//p[@class='jar-linkage-report']");
     // appengine-api-sdk, shown as first item in linkage errors, has these errors
     assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-        .isEqualTo("4 target classes causing linkage errors referenced from 4 source classes.");
+        .isEqualTo("5 target classes causing linkage errors referenced from 5 source classes.");
 
     Nodes dependencyPaths = details.query("//p[@class='linkage-check-dependency-paths']");
     Node dependencyPathMessageOnProblem = dependencyPaths.get(dependencyPaths.size() - 1);
