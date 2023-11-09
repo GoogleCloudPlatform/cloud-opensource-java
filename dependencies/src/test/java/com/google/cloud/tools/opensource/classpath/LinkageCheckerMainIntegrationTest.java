@@ -34,6 +34,7 @@ import org.hamcrest.core.StringStartsWith;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class LinkageCheckerMainIntegrationTest {
@@ -160,6 +161,9 @@ public class LinkageCheckerMainIntegrationTest {
   }
 
   @Test
+  @Ignore("Began failing after Oct 4, 2023 and before Nov 9, 2023 without source changes")
+  // Error: expected:<Found 75[6] linkage errors> but was:<Found 75[8] linkage errors>
+  // No previous list of 756 expected linkage errors exists to compare against the new error count.
   public void testBom_java11()
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
     // The number of linkage errors differs between Java 8 and Java 11 runtime.
