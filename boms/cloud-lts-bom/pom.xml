@@ -78,7 +78,7 @@
     <google-cloud-monitoring.version>3.22.0</google-cloud-monitoring.version>
     <google-cloud-spanner.version>6.43.2</google-cloud-spanner.version>
     <google-cloud-tasks.version>2.19.0</google-cloud-tasks.version>
-    <google-cloud-bigtable.version>2.25.2</google-cloud-bigtable.version>
+    <google-cloud-bigtable.version>2.25.3</google-cloud-bigtable.version>
     <google-cloud-pubsub.version>1.123.18</google-cloud-pubsub.version>
     <!-- the proto-google-cloud-pubsub-v1 used by the google-cloud-pubsub version above -->
     <proto-google-cloud-pubsub-v1.version>1.105.18</proto-google-cloud-pubsub-v1.version>
@@ -97,7 +97,7 @@
     <!-- Layer 3: Beam -->
     <beam.version>2.49.0</beam.version>
     <!-- Layer 4: HBase Connector -->
-    <bigtable-hbase-beam.version>2.9.1</bigtable-hbase-beam.version>
+    <bigtable-hbase-beam.version>2.9.2</bigtable-hbase-beam.version>
   </properties>
 
   <distributionManagement>
