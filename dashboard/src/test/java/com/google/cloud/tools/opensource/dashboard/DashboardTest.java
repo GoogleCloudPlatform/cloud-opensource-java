@@ -214,6 +214,11 @@ public class DashboardTest {
 
   @Test
   public void testLinkageReports() {
+    Nodes reports = details.query("//p[@class='jar-linkage-report']");
+    // appengine-api-sdk, shown as first item in linkage errors, has these errors
+    assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
+        .isEqualTo("4 target classes causing linkage errors referenced from 4 source classes.");
+
     Nodes dependencyPaths = details.query("//p[@class='linkage-check-dependency-paths']");
     Node dependencyPathMessageOnProblem = dependencyPaths.get(dependencyPaths.size() - 1);
     Assert.assertEquals(
@@ -291,12 +296,6 @@ public class DashboardTest {
     assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo("100 target classes causing linkage errors referenced from 540 source classes.");
 
-
-    Nodes artifactDetailsReports = details.query("//p[@class='jar-linkage-report']");
-    // appengine-api-sdk, shown as first item in linkage errors, has these errors
-    assertThat(trimAndCollapseWhiteSpace(artifactDetailsReports.get(0).getValue()))
-        .isEqualTo("4 target classes causing linkage errors referenced from 4 source classes.");
-
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
     assertWithMessage(
             "google-http-client-appengine should show linkage errors for RpcStubDescriptor")
@@ -313,11 +312,6 @@ public class DashboardTest {
     // javaMajorVersion is 1 when we use Java 8. Still good indicator to ensure Java 11 or higher.
     int javaMajorVersion = Integer.parseInt(javaVersion.split("\\.")[0]);
     Assume.assumeTrue(javaMajorVersion >= 11);
-
-    Nodes artifactDetailsReports = details.query("//p[@class='jar-linkage-report']");
-    // appengine-api-sdk, shown as first item in linkage errors, has these errors
-    assertThat(trimAndCollapseWhiteSpace(artifactDetailsReports.get(0).getValue()))
-        .isEqualTo("5 target classes causing linkage errors referenced from 5 source classes.");
 
     // The version used in libraries-bom 1.0.0. The google-http-client-appengine has been known to
     // have linkage errors in its dependency appengine-api-1.0-sdk:1.9.71.
