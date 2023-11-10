@@ -160,8 +160,6 @@ public class LinkageCheckerMainIntegrationTest {
   }
 
   @Test
-  // Error: expected:<Found 75[6] linkage errors> but was:<Found 75[8] linkage errors>
-  // No previous list of 756 expected linkage errors exists to compare against the new error count.
   public void testBom_java11()
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
     // The number of linkage errors differs between Java 8 and Java 11 runtime.
