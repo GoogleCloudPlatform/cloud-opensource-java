@@ -5,7 +5,7 @@ Linkage Checker is a tool that finds [linkage errors](
 path. It scans the class files in the class path for references to other
 classes and reports any reference that cannot be satisfied.
 
-#### User Documentation
+### User Documentation
 
 Linkage Checker can be used from Maven or Gradle.
 
