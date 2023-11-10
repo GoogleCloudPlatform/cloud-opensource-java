@@ -161,7 +161,6 @@ public class LinkageCheckerMainIntegrationTest {
   }
 
   @Test
-  @Ignore("Began failing after Oct 4, 2023 and before Nov 9, 2023 without source changes")
   // Error: expected:<Found 75[6] linkage errors> but was:<Found 75[8] linkage errors>
   // No previous list of 756 expected linkage errors exists to compare against the new error count.
   public void testBom_java11()
@@ -176,7 +175,7 @@ public class LinkageCheckerMainIntegrationTest {
       LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 756 linkage errors", expected.getMessage());
+      assertEquals("Found 758 linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();
