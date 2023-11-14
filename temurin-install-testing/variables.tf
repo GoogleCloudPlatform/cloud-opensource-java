@@ -69,36 +69,38 @@ variable "x86_machine_types" {
   ]
 }
 
-# See https://cloud.google.com/compute/docs/images
+# See https://cloud.google.com/compute/docs/images/os-details
 variable "x86_boot_images" {
   type        = list(string)
   description = "GCE boot image to use with created instance"
   default     = [
-    "debian-cloud/debian-11",
-    "debian-cloud/debian-10",
-
-    "rhel-cloud/rhel-9",
-    "rhel-cloud/rhel-7",
-    "rhel-sap-cloud/rhel-9-0-sap-ha",
-    "rhel-sap-cloud/rhel-7-7-sap-ha",
-
-    "centos-cloud/centos-stream-9",
-    "centos-cloud/centos-stream-8",
-    "centos-cloud/centos-7",
-
-    "rocky-linux-cloud/rocky-linux-9-optimized-gcp",
-    "rocky-linux-cloud/rocky-linux-8-optimized-gcp",
-    "rocky-linux-cloud/rocky-linux-8",
-
-    "ubuntu-os-cloud/ubuntu-2204-lts",
-    "ubuntu-os-cloud/ubuntu-2004-lts",
-    "ubuntu-os-pro-cloud/ubuntu-pro-2204-lts",
-    "ubuntu-os-pro-cloud/ubuntu-pro-1804-lts",
-    "ubuntu-os-pro-cloud/ubuntu-pro-1604-lts",
+#    "debian-cloud/debian-11",
+#    "debian-cloud/debian-10",
+#
+#    "rhel-cloud/rhel-9",
+#    "rhel-cloud/rhel-7",
+#    "rhel-sap-cloud/rhel-9-0-sap-ha",
+#    "rhel-sap-cloud/rhel-7-9-sap-ha",
+#
+#    "centos-cloud/centos-stream-9",
+#    "centos-cloud/centos-stream-8",
+#    "centos-cloud/centos-7",
+#
+#    "rocky-linux-cloud/rocky-linux-9-optimized-gcp",
+#    "rocky-linux-cloud/rocky-linux-8-optimized-gcp",
+#    "rocky-linux-cloud/rocky-linux-8",
+#
+#    "ubuntu-os-cloud/ubuntu-2204-lts",
+#    "ubuntu-os-cloud/ubuntu-2004-lts",
+#    "ubuntu-os-pro-cloud/ubuntu-pro-2204-lts",
+#    "ubuntu-os-pro-cloud/ubuntu-pro-1804-lts",
+#    "ubuntu-os-pro-cloud/ubuntu-pro-1604-lts",
 
     "suse-cloud/sles-15",
-    "suse-byos-cloud/sles-12-byos",
-    "suse-sap-cloud/sles-12-sp5-sap",
+    "suse-sap-cloud/sles-15-sp5-sap",
+    "suse-sap-cloud/sles-15-sp4-sap",
+#    "suse-byos-cloud/sles-12-byos",
+#    "suse-sap-cloud/sles-12-sp5-sap",
   ]
 }
 
