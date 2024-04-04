@@ -129,8 +129,10 @@ public class BomContentTest {
         if (className.contains("javax.annotation")
             || className.contains("$")
             || className.equals("com.google.cloud.location.LocationsGrpc")
-            || className.endsWith("package-info")) {
+            || className.endsWith("package-info")
+            || className.endsWith("module-info")) {
           // Ignore annotations, nested classes, and package-info files.
+          // Ignore module-info files.
           // Ignore LocationsGrpc classes which are duplicated in generated grpc libraries.
           continue;
         }
