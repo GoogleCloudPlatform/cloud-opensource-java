@@ -57,8 +57,7 @@
     <google-oauth-client.version>1.35.0</google-oauth-client.version>
     <google-auth-library.version>1.23.0</google-auth-library.version>
     <google-api-client.version>2.4.0</google-api-client.version>
-    <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
-    When updating gax.version, update gax.httpjson.version too. -->
+    <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier. -->
     <gax.version>2.48.0</gax.version>
     <api-common.version>2.31.0</api-common.version>
     <google-cloud-core.version>2.38.0</google-cloud-core.version>
