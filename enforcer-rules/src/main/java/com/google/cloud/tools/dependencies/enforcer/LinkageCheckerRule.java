@@ -64,6 +64,7 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectDependenciesResolver;
 import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
@@ -109,6 +110,31 @@ public class LinkageCheckerRule extends AbstractEnforcerRule {
 
   private ClassPathBuilder classPathBuilder;
 
+  // Properties managed by the dependency injection
+  private MavenProject project;
+
+  private MavenSession session;
+
+  private ProjectDependenciesResolver projectDependenciesResolver;
+
+  private MojoExecution execution;
+
+  private final RepositorySystem repoSystem;
+
+  @Inject
+  public LinkageCheckerRule(
+      MavenProject project,
+      MavenSession session,
+      MojoExecution execution,
+      ProjectDependenciesResolver projectDependenciesResolver,
+      RepositorySystem repoSystem) {
+    this.project = project;
+    this.session = session;
+    this.execution = execution;
+    this.projectDependenciesResolver = projectDependenciesResolver;
+    this.repoSystem = repoSystem;
+  }
+
   @VisibleForTesting
   void setDependencySection(DependencySection dependencySection) {
     this.dependencySection = dependencySection;
@@ -131,14 +157,6 @@ public class LinkageCheckerRule extends AbstractEnforcerRule {
   void setExclusionFile(String exclusionFile) {
     this.exclusionFile = exclusionFile;
   }
-
-  @Inject private MavenProject project;
-
-  @Inject private MavenSession session;
-
-  @Inject private ProjectDependenciesResolver projectDependenciesResolver;
-
-  @Inject private MojoExecution execution;
 
   private static EnforcerLogger logger;
 

@@ -41,12 +41,11 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.enforcer.rule.api.EnforcerLevel;
+import org.apache.maven.enforcer.rule.api.EnforcerLogger;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
-import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.plugin.MojoExecution;
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.DependencyResolutionRequest;
 import org.apache.maven.project.DependencyResolutionResult;
@@ -75,14 +74,13 @@ import org.mockito.ArgumentMatchers;
 
 public class LinkageCheckerRuleTest {
 
-  private LinkageCheckerRule rule = new LinkageCheckerRule();
+  private LinkageCheckerRule rule;
   private RepositorySystem repositorySystem;
   private RepositorySystemSession repositorySystemSession;
   private Artifact dummyArtifactWithFile;
 
   private MavenProject mockProject;
-  private EnforcerRuleHelper mockRuleHelper;
-  private Log mockLog;
+  private EnforcerLogger mockLog;
   private MavenSession mockMavenSession;
   private MojoExecution mockMojoExecution;
   private ProjectDependenciesResolver mockProjectDependenciesResolver;
@@ -96,6 +94,15 @@ public class LinkageCheckerRuleTest {
     repositorySystemSession = RepositoryUtility.newSession(repositorySystem);
     dummyArtifactWithFile = createArtifactWithDummyFile("a:b:0.1");
     setupMock();
+
+    rule =
+        new LinkageCheckerRule(
+            mockProject,
+            mockMavenSession,
+            mockMojoExecution,
+            mockProjectDependenciesResolver,
+            repositorySystem);
+    rule.setLog(mockLog);
   }
 
   private Artifact createArtifactWithDummyFile(String coordinates) throws URISyntaxException {
@@ -109,20 +116,13 @@ public class LinkageCheckerRuleTest {
     mockProject = mock(MavenProject.class);
     mockMavenSession = mock(MavenSession.class);
     when(mockMavenSession.getRepositorySession()).thenReturn(repositorySystemSession);
-    mockRuleHelper = mock(EnforcerRuleHelper.class);
     mockProjectDependenciesResolver = mock(ProjectDependenciesResolver.class);
     mockDependencyResolutionResult = mock(DependencyResolutionResult.class);
-    mockLog = mock(Log.class);
-    when(mockRuleHelper.getLog()).thenReturn(mockLog);
-    when(mockRuleHelper.getComponent(ProjectDependenciesResolver.class))
-        .thenReturn(mockProjectDependenciesResolver);
+    mockLog = mock(EnforcerLogger.class);
     when(mockProjectDependenciesResolver.resolve(any(DependencyResolutionRequest.class)))
         .thenReturn(mockDependencyResolutionResult);
-    when(mockRuleHelper.evaluate("${session}")).thenReturn(mockMavenSession);
-    when(mockRuleHelper.evaluate("${project}")).thenReturn(mockProject);
     mockMojoExecution = mock(MojoExecution.class);
     when(mockMojoExecution.getLifecyclePhase()).thenReturn("verify");
-    when(mockRuleHelper.evaluate("${mojoExecution}")).thenReturn(mockMojoExecution);
     org.apache.maven.artifact.DefaultArtifact rootArtifact =
         new org.apache.maven.artifact.DefaultArtifact(
             "com.google.cloud",
@@ -194,7 +194,7 @@ public class LinkageCheckerRuleTest {
     // Since Guava 27, it requires com.google.guava:failureaccess artifact in its dependency.
     setupMockDependencyResolution("com.google.guava:guava:27.0.1-jre");
     // This should not raise an EnforcerRuleException
-    rule.execute(mockRuleHelper);
+    rule.execute();
     verify(mockLog).info("No error found");
   }
 
@@ -203,7 +203,7 @@ public class LinkageCheckerRuleTest {
       throws EnforcerRuleException, RepositoryException, DependencyResolutionException {
     setupMockDependencyResolution("com.google.guava:guava:27.0.1-jre");
 
-    rule.execute(mockRuleHelper);
+    rule.execute();
 
     ArgumentCaptor<DependencyResolutionRequest> argumentCaptor =
         ArgumentCaptor.forClass(DependencyResolutionRequest.class);
@@ -225,7 +225,7 @@ public class LinkageCheckerRuleTest {
     try {
       // This artifact is known to contain classes missing dependencies
       setupMockDependencyResolution("com.google.appengine:appengine-api-1.0-sdk:1.9.64");
-      rule.execute(mockRuleHelper);
+      rule.execute();
       Assert.fail(
           "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
     } catch (EnforcerRuleException ex) {
@@ -259,7 +259,7 @@ public class LinkageCheckerRuleTest {
       setupMockDependencyResolution(
           "com.google.api-client:google-api-client:1.27.0", "io.grpc:grpc-core:1.17.1");
       rule.setReportOnlyReachable(true);
-      rule.execute(mockRuleHelper);
+      rule.execute();
       Assert.fail(
           "The rule should raise an EnforcerRuleException for artifacts with reachable errors");
     } catch (EnforcerRuleException ex) {
@@ -278,9 +278,23 @@ public class LinkageCheckerRuleTest {
     // grpc-core is included in entry point jars, the errors are reachable.
     setupMockDependencyResolution(
         "com.google.api-client:google-api-client:1.27.0", "io.grpc:grpc-core:1.17.1");
+
+    rule =
+        new LinkageCheckerRule(
+            mockProject,
+            mockMavenSession,
+            mockMojoExecution,
+            mockProjectDependenciesResolver,
+            repositorySystem) {
+          @Override
+          public EnforcerLevel getLevel() {
+            return EnforcerLevel.WARN;
+          }
+        };
+    rule.setLog(mockLog);
+
     rule.setReportOnlyReachable(true);
-    rule.setLevel(EnforcerLevel.WARN);
-    rule.execute(mockRuleHelper);
+    rule.execute();
     verify(mockLog)
         .warn(ArgumentMatchers.startsWith("Linkage Checker rule found 1 reachable error:"));
   }
@@ -293,7 +307,7 @@ public class LinkageCheckerRuleTest {
     setupMockDependencyResolution("com.google.cloud:google-cloud-automl:0.81.0-beta");
     rule.setReportOnlyReachable(true);
     // This should not raise EnforcerRuleException because the linkage errors are unreachable.
-    rule.execute(mockRuleHelper);
+    rule.execute();
   }
 
   private void setupMockDependencyManagementSection(String... coordinates) {
@@ -341,7 +355,7 @@ public class LinkageCheckerRuleTest {
     setupMockDependencyManagementSection(); // empty BOM
 
     // This should not raise an EnforcerRuleException
-    rule.execute(mockRuleHelper);
+    rule.execute();
   }
 
   @Test
@@ -352,7 +366,7 @@ public class LinkageCheckerRuleTest {
         "io.grpc:grpc-auth:1.18.0",
         "com.google.api:api-common:1.7.0");
     // This should not raise an EnforcerRuleException
-    rule.execute(mockRuleHelper);
+    rule.execute();
   }
 
   @Test
@@ -362,7 +376,7 @@ public class LinkageCheckerRuleTest {
         "com.google.api-client:google-api-client:1.27.0", "io.grpc:grpc-core:1.17.1");
 
     try {
-      rule.execute(mockRuleHelper);
+      rule.execute();
       Assert.fail("Enforcer rule should detect conflict between google-api-client and grpc-core");
     } catch (EnforcerRuleException ex) {
       // pass
@@ -384,7 +398,7 @@ public class LinkageCheckerRuleTest {
                 "jar", // BOM should have pom here
                 null,
                 new DefaultArtifactHandler()));
-    rule.execute(mockRuleHelper);
+    rule.execute();
   }
 
   @Test
@@ -400,7 +414,7 @@ public class LinkageCheckerRuleTest {
                 null,
                 new DefaultArtifactHandler()));
     // No exception
-    rule.execute(mockRuleHelper);
+    rule.execute();
   }
 
   @Test
@@ -419,7 +433,7 @@ public class LinkageCheckerRuleTest {
     when(mockProject.getDependencies())
         .thenReturn(ImmutableList.of(dependency));
 
-    rule.execute(mockRuleHelper);
+    rule.execute();
   }
 
   @Test
@@ -440,7 +454,7 @@ public class LinkageCheckerRuleTest {
       rootArtifact.setFile(new File("dummy.jar"));
       when(mockProject.getArtifact()).thenReturn(rootArtifact);
 
-      rule.execute(mockRuleHelper);
+      rule.execute();
       Assert.fail(
           "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
     } catch (EnforcerRuleException ex) {
@@ -470,7 +484,7 @@ public class LinkageCheckerRuleTest {
               .toAbsolutePath()
               .toString();
       rule.setExclusionFile(exclusionFileLocation);
-      rule.execute(mockRuleHelper);
+      rule.execute();
       Assert.fail(
           "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
     } catch (EnforcerRuleException ex) {
@@ -510,7 +524,7 @@ public class LinkageCheckerRuleTest {
     when(mockProjectDependenciesResolver.resolve(any())).thenThrow(exception);
 
     try {
-      rule.execute(mockRuleHelper);
+      rule.execute();
       fail("The rule should throw EnforcerRuleException upon dependency resolution exception");
     } catch (EnforcerRuleException expected) {
       verify(mockLog)
@@ -565,7 +579,7 @@ public class LinkageCheckerRuleTest {
 
     // Should not throw DependencyResolutionException, because the missing xerces-impl is under both
     // provided and optional dependencies.
-    rule.execute(mockRuleHelper);
+    rule.execute();
   }
 
   @Test
@@ -603,7 +617,7 @@ public class LinkageCheckerRuleTest {
 
     when(mockProjectDependenciesResolver.resolve(any())).thenThrow(exception);
 
-    rule.execute(mockRuleHelper);
+    rule.execute();
     verify(mockLog)
         .warn("xerces:xerces-impl:jar:2.6.2 was not resolved. Dependency path is unknown.");
   }
@@ -620,7 +634,7 @@ public class LinkageCheckerRuleTest {
                 "jar",
                 null,
                 new DefaultArtifactHandler()));
-    rule.execute(mockRuleHelper);
+    rule.execute();
   }
 
   @Test
@@ -638,7 +652,7 @@ public class LinkageCheckerRuleTest {
 
     when(mockMojoExecution.getLifecyclePhase()).thenReturn("validate");
     try {
-      rule.execute(mockRuleHelper);
+      rule.execute();
       fail("The rule should throw EnforcerRuleException when running in validate phase");
     } catch (EnforcerRuleException ex) {
       assertEquals(
