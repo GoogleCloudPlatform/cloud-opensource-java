@@ -17,8 +17,13 @@ $ mvn verify
 Listening for transport dt_socket at address: 5005
 ```
 
-When you debug one of the integration tests in the "src/it" directory, use the following
-command to specify the test case and to provide the debug parameter to Maven invoker plugin. 
+When you debug one of the integration tests in the "src/it" directory, check the
+`build.log` files in the `enforcer-rules/target/it` directory (run
+`find enforcer-rules -name 'build.log'`).
+The file is used in verification scripts and usually contains build errors.
+
+If you want to attach a debugger, use the following  command to specify the test
+case and to provide the debug parameter to Maven invoker plugin. 
 
 ```
 mvn install -Dmaven.test.skip -Dinvoker.test=bom-project-using-spring-repository \
