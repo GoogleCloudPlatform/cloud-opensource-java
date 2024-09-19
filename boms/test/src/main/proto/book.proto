@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package google.api;
+
+import "google/api/resource.proto";
+import "google/api/field_behavior.proto";
+
+message Book {
+  option (google.api.resource) = {
+    type: "library.googleapis.com/Book"
+    pattern:
+      "shelves/{shelf}/books/{book}"
+  };
+
+  string name = 1
+  [(google.api.field_behavior) = IDENTIFIER];
+  string title = 2;
+  string author = 3;
+}
