@@ -73,7 +73,9 @@
             </goals>
             <configuration>
               <rules>
-                <linkageCheckerRule/>
+                <linkageCheckerRule>
+                  <reportOnlyReachable>true</reportOnlyReachable>
+                </linkageCheckerRule>
               </rules>
             </configuration>
           </execution>
