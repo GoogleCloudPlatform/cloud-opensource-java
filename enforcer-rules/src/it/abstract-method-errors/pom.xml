@@ -52,7 +52,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.0.0-M3</version>
+        <version>@enforcer.version@</version>
         <dependencies>
           <dependency>
             <groupId>com.google.cloud.tools</groupId>
@@ -69,9 +69,7 @@
             </goals>
             <configuration>
               <rules>
-                <LinkageCheckerRule
-                  implementation="com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule">
-                </LinkageCheckerRule>
+                <linkageCheckerRule/>
               </rules>
             </configuration>
           </execution>
