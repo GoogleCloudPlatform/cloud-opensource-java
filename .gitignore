@@ -19,3 +19,6 @@ example-problems/*/gradlew
 example-problems/*/gradlew.bat
 gradle-plugin/.gradle/
 .mvn/wrapper/maven-wrapper.jar
+
+.gradle/
+build/

@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+import "google/api/field_behavior.proto";
+
+message SomeMessage {
+  int64 some_id = 1 [(google.api.field_behavior) = IDENTIFIER];
+}
