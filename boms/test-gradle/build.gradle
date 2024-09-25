@@ -12,8 +12,12 @@ repositories {
 
 
 dependencies {
-    implementation 'org.apache.beam:beam-sdks-java-core:2.57.0'
-    implementation 'com.google.api.grpc:proto-google-common-protos:2.39.0'
+    implementation platform('com.google.cloud:gcp-lts-bom:7.0.1')
+    implementation('org.apache.beam:beam-sdks-java-core') {
+        // build excluding this deps with older copy works
+        exclude group: 'org.apache.beam', module: 'beam-vendor-grpc-1_60_1'
+    }
+    implementation 'com.google.api.grpc:proto-google-common-protos'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
