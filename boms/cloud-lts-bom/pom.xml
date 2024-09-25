@@ -7,7 +7,7 @@
 
   <groupId>com.google.cloud</groupId>
   <artifactId>gcp-lts-bom</artifactId>
-  <version>6.0.2</version>
+  <version>6.0.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Google Cloud Long Term Support BOM</name>
