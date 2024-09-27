@@ -8,6 +8,10 @@ If comment out protobufPlatform configurations in L33-37, expect `gradle build` 
 
 
 ## Now with separate configurations for protobuf plugin
+Run `gradle dependencies` and observe that
+beam-vendor-grpc-1_60_1 is included for compileClasspath configuration (normal Java app) 
+while the "protobuf" configuration does not have it.
+
 dependencies for main project compilation is not changed, `org.apache.beam:beam-vendor-grpc-1_60_1:0.2` is available.
 ```
 compileClasspath - Compile classpath for source set 'main'.
@@ -140,5 +144,4 @@ protobufPlatform
 |    \--- joda-time:joda-time:2.10.10
 \--- com.google.api.grpc:proto-google-common-protos -> 2.39.0
      \--- com.google.protobuf:protobuf-java:3.25.3 -> 3.25.5
-
 ```
