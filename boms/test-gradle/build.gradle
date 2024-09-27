@@ -9,15 +9,33 @@ version '1.0-SNAPSHOT'
 repositories {
     mavenCentral()
 }
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.25.5"
+    }
+}
 
+// create a custom configuration to use for protobuf dependencies.
+// `protobuf`, is a custom configuration introduced by the Protobuf plugin
+// Not using it because protobuf configuration doesn't inherit from the BOM.
+configurations {
+    protobufPlatform
+    protobuf.extendsFrom(protobufPlatform)
+}
 
 dependencies {
+    // dependencies used for main project's compilation
     implementation platform('com.google.cloud:gcp-lts-bom:7.0.1')
-    implementation('org.apache.beam:beam-sdks-java-core') {
-        // build excluding this deps with older copy works
+    implementation('org.apache.beam:beam-sdks-java-core')
+    implementation('com.google.api.grpc:proto-google-common-protos')
+
+    // dependencies used for protoc
+    protobufPlatform platform('com.google.cloud:gcp-lts-bom:7.0.1')
+    protobufPlatform('org.apache.beam:beam-sdks-java-core') {
         exclude group: 'org.apache.beam', module: 'beam-vendor-grpc-1_60_1'
     }
-    implementation 'com.google.api.grpc:proto-google-common-protos'
+    protobufPlatform 'com.google.api.grpc:proto-google-common-protos'
+
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
