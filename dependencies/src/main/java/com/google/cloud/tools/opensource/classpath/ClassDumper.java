@@ -89,7 +89,7 @@ class ClassDumper {
             .collect(toImmutableList());
     checkArgument(
         unreadableFiles.isEmpty(), "Some jar files are not readable: %s", unreadableFiles);
-    
+
     Map<String, ClassPathEntry> map = new HashMap<>();
     for (ClassPathEntry entry : entries) {
       for (String className : entry.getFileNames()) {
@@ -98,7 +98,7 @@ class ClassDumper {
         }
       }
     }
-    
+
     return new ClassDumper(entries, extensionClassLoader, map);
   }
 
@@ -141,37 +141,54 @@ class ClassDumper {
     return className.startsWith("[");
   }
 
-  /**
-   * Returns a map from classes to the symbol references they contain.
-   */
+  /** Returns a map from classes to the symbol references they contain. */
   SymbolReferences findSymbolReferences() throws IOException {
     SymbolReferences.Builder builder = new SymbolReferences.Builder();
 
     for (ClassPathEntry jar : inputClassPath) {
+      int totalClassFileCount = 0;
+      int incompatibleClassFileCount = 0;
       for (JavaClass javaClass : listClasses(jar)) {
+        totalClassFileCount++;
         if (isCompatibleClassFileVersion(javaClass)) {
           String className = javaClass.getClassName();
           // In listClasses(jar), ClassPathRepository creates JavaClass through the first JAR file
           // that contains the class. It may be different from "jar" for an overlapping class.
           ClassFile source = new ClassFile(findClassLocation(className), className);
           builder.addAll(findSymbolReferences(source, javaClass));
+        } else {
+          incompatibleClassFileCount++;
         }
+      }
+      if (incompatibleClassFileCount > 0) {
+        logger.warning(
+            String.format(
+                "%s has %d (out of %d) incompatible class files (class file major version is outside %d <= v <= %d).",
+                jar,
+                incompatibleClassFileCount,
+                totalClassFileCount,
+                MINIMUM_CLASS_FILE_MAJOR_VERSION,
+                MAXIMUM_CLASS_FILE_MAJOR_VERSION));
       }
     }
 
     return builder.build();
   }
 
+  private static final int MINIMUM_CLASS_FILE_MAJOR_VERSION = 45;
+  private static final int MAXIMUM_CLASS_FILE_MAJOR_VERSION = 52;
+
   /**
-   * Returns true if {@code javaClass} file format is compatible with this tool. Currently
-   * Java 8 and earlier are supported.
+   * Returns true if {@code javaClass} file format is compatible with this tool. Currently Java 8
+   * (class file major version 52) and earlier are supported.
    *
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.1">Java
    *     Virtual Machine Specification: The ClassFile Structure: minor_version, major_version</a>
    */
   private static boolean isCompatibleClassFileVersion(JavaClass javaClass) {
     int classFileMajorVersion = javaClass.getMajor();
-    return 45 <= classFileMajorVersion && classFileMajorVersion <= 52;
+    return MINIMUM_CLASS_FILE_MAJOR_VERSION <= classFileMajorVersion
+        && classFileMajorVersion <= MAXIMUM_CLASS_FILE_MAJOR_VERSION;
   }
 
   private static SymbolReferences.Builder findSymbolReferences(
@@ -182,7 +199,7 @@ class ClassDumper {
     Constant[] constants = constantPool.getConstantPool();
     for (Constant constant : constants) {
       if (constant == null) {
-         continue;
+        continue;
       }
 
       byte constantTag = constant.getTag();
@@ -262,8 +279,7 @@ class ClassDumper {
     return new ClassSymbol(targetClassName);
   }
 
-  private static MethodSymbol makeSymbol(
-      ConstantCP constantMethodref, ConstantPool constantPool) {
+  private static MethodSymbol makeSymbol(ConstantCP constantMethodref, ConstantPool constantPool) {
     String className = constantMethodref.getClass(constantPool);
     ConstantNameAndType constantNameAndType = constantNameAndType(constantMethodref, constantPool);
     String methodName = constantNameAndType.getName(constantPool);
@@ -303,7 +319,7 @@ class ClassDumper {
               continue;
             }
           }
-  
+
           // Class names stored in constant pool have '/' as separator. We want '.' (as binary name)
           String normalInnerClassName = innerClassName.replace('/', '.');
           innerClassNames.add(normalInnerClassName);
