@@ -49,8 +49,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- Layer 1: Core -->
-    <guava.version>33.1.0-jre</guava.version>
-    <autovalue.version>1.10.4</autovalue.version>
+    <guava.version>33.3.1-jre</guava.version>
+    <autovalue.version>1.11.0</autovalue.version>
     <protobuf.version>4.28.1</protobuf.version>
     <io.grpc.version>1.68.1</io.grpc.version>
     <google-http-client.version>1.45.0</google-http-client.version>
@@ -58,7 +58,7 @@
     <google-auth-library.version>1.29.0</google-auth-library.version>
     <google-api-client.version>2.7.0</google-api-client.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier. -->
-    <gax.version>2.49.1</gax.version>
+    <gax.version>2.57.0</gax.version>
     <api-common.version>2.40.0</api-common.version>
     <google-cloud-core.version>2.47.0</google-cloud-core.version>
     <proto-google-common-protos.version>2.48.0</proto-google-common-protos.version>
@@ -81,23 +81,23 @@
     <google-api-services-androidpublisher.version>v3-rev20240418-2.0.0</google-api-services-androidpublisher.version>
     <appengine-api-1.0-sdk.version>2.0.26</appengine-api-1.0-sdk.version>
     <gcs-connector.version>2.2.22</gcs-connector.version>
-    <google-cloud-bigquery.version>2.48.0</google-cloud-bigquery.version>
+    <google-cloud-bigquery.version>2.43.3</google-cloud-bigquery.version>
     <!-- the google-api-services-bigquery version used by the google-cloud-bigquery version above -->
-    <google-api-services-bigquery.version>v2-rev20240323-2.0.0</google-api-services-bigquery.version>
+    <google-api-services-bigquery.version>v2-rev20241013-2.0.0</google-api-services-bigquery.version>
     <google-cloud-bigquerystorage.version>3.10.2</google-cloud-bigquerystorage.version>
     <google-cloud-bigtable.version>2.46.0</google-cloud-bigtable.version>
     <google-cloud-logging.version>3.20.6</google-cloud-logging.version>
     <google-cloud-datastore.version>2.24.1</google-cloud-datastore.version>
     <google-cloud-pubsub.version>1.134.1</google-cloud-pubsub.version>
     <!-- the proto-google-cloud-pubsub-v1 used by the google-cloud-pubsub version above -->
-    <proto-google-cloud-pubsub-v1.version>1.111.3</proto-google-cloud-pubsub-v1.version>
+    <proto-google-cloud-pubsub-v1.version>1.116.1</proto-google-cloud-pubsub-v1.version>
     <google-cloud-spanner.version>6.81.0</google-cloud-spanner.version>
     <google-cloud-storage.version>2.44.1</google-cloud-storage.version>
 
     <!-- Layer 3: Beam -->
     <beam.version>2.60.0</beam.version>
     <!-- Layer 4: HBase Connector -->
-    <bigtable-hbase-beam.version>2.2.25</bigtable-hbase-beam.version>
+    <bigtable-hbase-beam.version>2.14.6</bigtable-hbase-beam.version>
   </properties>
 
   <distributionManagement>
