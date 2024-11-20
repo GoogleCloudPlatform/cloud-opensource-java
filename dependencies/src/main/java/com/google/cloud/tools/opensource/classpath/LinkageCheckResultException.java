@@ -22,7 +22,7 @@ package com.google.cloud.tools.opensource.classpath;
  * <p>The caller of the tool can tell the existence of linkage errors by checking the exit status of
  * the {@link LinkageCheckerMain}.
  */
-final class LinkageCheckResultException extends Exception {
+public final class LinkageCheckResultException extends Exception {
   LinkageCheckResultException(int linkageErrorCount) {
     super(
         "Found "

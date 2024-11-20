@@ -33,7 +33,7 @@ import org.eclipse.aether.artifact.Artifact;
 /**
  * A tool to find linkage errors in a class path.
  */
-class LinkageCheckerMain {
+public class LinkageCheckerMain {
 
   /**
    * Forms a classpath from Maven coordinates or a list of jar files and reports linkage errors in
