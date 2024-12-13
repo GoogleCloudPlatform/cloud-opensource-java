@@ -133,7 +133,7 @@ public class LinkageCheckerMain {
     ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(inputClassPath);
     LinkageChecker linkageChecker =
         LinkageChecker.create(
-            inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
+            inputClassPath, entryPoints, null, linkageCheckerArguments.getInputExclusionFile());
 
     ImmutableSet<LinkageProblem> linkageProblems =
         findLinkageProblems(linkageChecker, linkageCheckerArguments.getReportOnlyReachable());
@@ -161,7 +161,7 @@ public class LinkageCheckerMain {
 
     LinkageChecker linkageChecker =
         LinkageChecker.create(
-            inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
+            inputClassPath, entryPoints, linkageCheckerArguments.getSourceFilterArtifact(), linkageCheckerArguments.getInputExclusionFile());
     ImmutableSet<LinkageProblem> linkageProblems =
         findLinkageProblems(linkageChecker,
             linkageCheckerArguments.getReportOnlyReachable());

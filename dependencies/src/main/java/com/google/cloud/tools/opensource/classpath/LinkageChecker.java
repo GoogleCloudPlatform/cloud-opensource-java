@@ -36,6 +36,7 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
@@ -54,6 +55,7 @@ public class LinkageChecker {
   private final ImmutableList<ClassPathEntry> classPath;
   private final SymbolReferences symbolReferences;
   private final ClassReferenceGraph classReferenceGraph;
+  private final Artifact sourceFilter;
   private final ExcludedErrors excludedErrors;
 
   @VisibleForTesting
@@ -66,7 +68,7 @@ public class LinkageChecker {
   }
 
   public static LinkageChecker create(List<ClassPathEntry> classPath) throws IOException {
-    return create(classPath, ImmutableSet.copyOf(classPath), null);
+    return create(classPath, ImmutableSet.copyOf(classPath), null, null);
   }
 
   /**
@@ -79,6 +81,7 @@ public class LinkageChecker {
   public static LinkageChecker create(
       List<ClassPathEntry> classPath,
       Iterable<ClassPathEntry> entryPoints,
+      Artifact sourceFilter,
       @Nullable Path exclusionFile)
       throws IOException {
     Preconditions.checkArgument(!classPath.isEmpty(), "The linkage classpath is empty.");
@@ -93,6 +96,7 @@ public class LinkageChecker {
         classPath,
         symbolReferenceMaps,
         classReferenceGraph,
+        sourceFilter,
         ExcludedErrors.create(exclusionFile));
   }
 
@@ -129,13 +133,13 @@ public class LinkageChecker {
     List<ClassPathEntry> artifactsInBom = classpath.subList(0, managedDependencies.size());
     ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(artifactsInBom);
 
-    return LinkageChecker.create(classpath, entryPoints, exclusionFile);
+    return LinkageChecker.create(classpath, entryPoints, null, exclusionFile);
   }
 
   @VisibleForTesting
   LinkageChecker cloneWith(SymbolReferences newSymbolMaps) {
     return new LinkageChecker(
-        classDumper, classPath, newSymbolMaps, classReferenceGraph, excludedErrors);
+        classDumper, classPath, newSymbolMaps, classReferenceGraph, null, excludedErrors);
   }
 
   private LinkageChecker(
@@ -143,11 +147,13 @@ public class LinkageChecker {
       List<ClassPathEntry> classPath,
       SymbolReferences symbolReferenceMaps,
       ClassReferenceGraph classReferenceGraph,
+      Artifact sourceFilter,
       ExcludedErrors excludedErrors) {
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.classPath = ImmutableList.copyOf(classPath);
     this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
     this.symbolReferences = Preconditions.checkNotNull(symbolReferenceMaps);
+    this.sourceFilter = sourceFilter;
     this.excludedErrors = Preconditions.checkNotNull(excludedErrors);
   }
 
@@ -161,7 +167,13 @@ public class LinkageChecker {
     ImmutableSet.Builder<LinkageProblem> problemToClass = ImmutableSet.builder();
 
     // This sourceClassFile is a source of references to other symbols.
-    for (ClassFile classFile : symbolReferences.getClassFiles()) {
+    Set<ClassFile> classFiles = symbolReferences.getClassFiles();
+    if (sourceFilter != null) {
+      classFiles = classFiles.stream()
+              .filter(x -> x.getClassPathEntry().getArtifact().toString().equals(sourceFilter.toString()))
+              .collect(Collectors.toSet());
+    }
+    for (ClassFile classFile : classFiles) {
       ImmutableSet<ClassSymbol> classSymbols = symbolReferences.getClassSymbols(classFile);
       for (ClassSymbol classSymbol : classSymbols) {
         if (classSymbol instanceof SuperClassSymbol) {
@@ -202,7 +214,7 @@ public class LinkageChecker {
       }    
     }
     
-    for (ClassFile classFile : symbolReferences.getClassFiles()) {
+    for (ClassFile classFile : classFiles) {
       ImmutableSet<MethodSymbol> methodSymbols = symbolReferences.getMethodSymbols(classFile);
       ImmutableSet<String> classFileNames = classFile.getClassPathEntry().getFileNames();
       for (MethodSymbol methodSymbol : methodSymbols) {
@@ -215,7 +227,7 @@ public class LinkageChecker {
       }
     }
 
-    for (ClassFile classFile : symbolReferences.getClassFiles()) {
+    for (ClassFile classFile : classFiles) {
       ImmutableSet<FieldSymbol> fieldSymbols = symbolReferences.getFieldSymbols(classFile);
       ImmutableSet<String> classFileNames = classFile.getClassPathEntry().getFileNames();
       for (FieldSymbol fieldSymbol : fieldSymbols) {

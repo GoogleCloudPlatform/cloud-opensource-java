@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -123,6 +125,14 @@ final class LinkageCheckerArguments {
             .desc("Jar files (separated by ',')")
             .build();
     inputGroup.addOption(jarOption);
+
+    Option sourceFilter =
+        Option.builder("s")
+            .longOpt("source-filter")
+            .hasArg(true)
+            .desc("Source Filter")
+            .build();
+    options.addOption(sourceFilter);
 
     Option repositoryOption =
         Option.builder("m")
@@ -274,6 +284,14 @@ final class LinkageCheckerArguments {
   Path getOutputExclusionFile() {
     if (commandLine.hasOption("o")) {
       return Paths.get(commandLine.getOptionValue("o"));
+    }
+    return null;
+  }
+
+  Artifact getSourceFilterArtifact() {
+    if (commandLine.hasOption("s")) {
+      String mavenCoordinatesOption = commandLine.getOptionValue('s');
+      return new DefaultArtifact(mavenCoordinatesOption);
     }
     return null;
   }
