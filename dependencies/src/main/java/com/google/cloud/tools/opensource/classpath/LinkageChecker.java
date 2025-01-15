@@ -55,7 +55,7 @@ public class LinkageChecker {
   private final ImmutableList<ClassPathEntry> classPath;
   private final SymbolReferences symbolReferences;
   private final ClassReferenceGraph classReferenceGraph;
-  private final Artifact sourceFilter;
+  private final List<Artifact> sourceFilterList;
   private final ExcludedErrors excludedErrors;
 
   @VisibleForTesting
@@ -81,7 +81,7 @@ public class LinkageChecker {
   public static LinkageChecker create(
       List<ClassPathEntry> classPath,
       Iterable<ClassPathEntry> entryPoints,
-      Artifact sourceFilter,
+      List<Artifact> sourceFilterList,
       @Nullable Path exclusionFile)
       throws IOException {
     Preconditions.checkArgument(!classPath.isEmpty(), "The linkage classpath is empty.");
@@ -96,7 +96,7 @@ public class LinkageChecker {
         classPath,
         symbolReferenceMaps,
         classReferenceGraph,
-        sourceFilter,
+        sourceFilterList,
         ExcludedErrors.create(exclusionFile));
   }
 
@@ -147,13 +147,13 @@ public class LinkageChecker {
       List<ClassPathEntry> classPath,
       SymbolReferences symbolReferenceMaps,
       ClassReferenceGraph classReferenceGraph,
-      Artifact sourceFilter,
+      List<Artifact> sourceFilterList,
       ExcludedErrors excludedErrors) {
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.classPath = ImmutableList.copyOf(classPath);
     this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
     this.symbolReferences = Preconditions.checkNotNull(symbolReferenceMaps);
-    this.sourceFilter = sourceFilter;
+    this.sourceFilterList = sourceFilterList;
     this.excludedErrors = Preconditions.checkNotNull(excludedErrors);
   }
 
@@ -168,9 +168,10 @@ public class LinkageChecker {
 
     // This sourceClassFile is a source of references to other symbols.
     Set<ClassFile> classFiles = symbolReferences.getClassFiles();
-    if (sourceFilter != null) {
+    if (sourceFilterList != null) {
+      List<String> sourceFilterStringList = sourceFilterList.stream().map(Artifact::toString).collect(Collectors.toList());
       classFiles = classFiles.stream()
-              .filter(x -> x.getClassPathEntry().getArtifact().toString().equals(sourceFilter.toString()))
+              .filter(x -> sourceFilterStringList.contains(x.getClassPathEntry().getArtifact().toString()))
               .collect(Collectors.toSet());
     }
     for (ClassFile classFile : classFiles) {

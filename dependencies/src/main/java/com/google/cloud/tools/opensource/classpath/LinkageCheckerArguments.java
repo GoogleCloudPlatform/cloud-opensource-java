@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -288,11 +289,13 @@ final class LinkageCheckerArguments {
     return null;
   }
 
-  Artifact getSourceFilterArtifact() {
+  List<Artifact> getSourceFilterArtifact() {
     if (commandLine.hasOption("s")) {
-      String mavenCoordinatesOption = commandLine.getOptionValue('s');
-      return new DefaultArtifact(mavenCoordinatesOption);
+      String[] mavenCoordinatesOption = commandLine.getOptionValues("s");
+      return Arrays.stream(mavenCoordinatesOption)
+              .map(DefaultArtifact::new)
+              .collect(Collectors.toList());
     }
-    return null;
+    return ImmutableList.of();
   }
 }

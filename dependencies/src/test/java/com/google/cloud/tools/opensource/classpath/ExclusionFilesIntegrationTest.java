@@ -58,7 +58,7 @@ public class ExclusionFilesIntegrationTest {
         classPathBuilder.resolve(ImmutableList.of(artifact), false, DependencyMediation.MAVEN);
 
     LinkageChecker linkagechecker =
-        LinkageChecker.create(classPathResult.getClassPath(), ImmutableList.of(), exclusionFile);
+        LinkageChecker.create(classPathResult.getClassPath(), ImmutableList.of(), ImmutableList.of(), exclusionFile);
 
     ImmutableSet<LinkageProblem> linkageProblems = linkagechecker.findLinkageProblems();
     Truth.assertThat(linkageProblems).isEmpty();
