@@ -130,7 +130,8 @@ final class LinkageCheckerArguments {
     Option sourceFilter =
         Option.builder("s")
             .longOpt("source-filter")
-            .hasArg(true)
+            .hasArgs()
+            .valueSeparator(',')
             .desc("Source Filter")
             .build();
     options.addOption(sourceFilter);
