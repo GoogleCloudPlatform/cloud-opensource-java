@@ -161,7 +161,7 @@ public class LinkageCheckerMain {
 
     LinkageChecker linkageChecker =
         LinkageChecker.create(
-            inputClassPath, entryPoints, linkageCheckerArguments.getSourceFilterArtifact(), linkageCheckerArguments.getInputExclusionFile());
+            inputClassPath, entryPoints, linkageCheckerArguments.getSourceFilterArtifactList(), linkageCheckerArguments.getInputExclusionFile());
     ImmutableSet<LinkageProblem> linkageProblems =
         findLinkageProblems(linkageChecker,
             linkageCheckerArguments.getReportOnlyReachable());

@@ -294,7 +294,7 @@ public class LinkageMonitor {
     List<ClassPathEntry> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
     ImmutableSet<LinkageProblem> problemsInSnapshot =
-        LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars), null, null)
+        LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars), ImmutableList.of(), null)
             .findLinkageProblems();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {

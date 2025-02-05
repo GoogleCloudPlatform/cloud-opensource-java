@@ -290,7 +290,7 @@ final class LinkageCheckerArguments {
     return null;
   }
 
-  List<Artifact> getSourceFilterArtifact() {
+  List<Artifact> getSourceFilterArtifactList() {
     if (commandLine.hasOption("s")) {
       String[] mavenCoordinatesOption = commandLine.getOptionValues("s");
       return Arrays.stream(mavenCoordinatesOption)

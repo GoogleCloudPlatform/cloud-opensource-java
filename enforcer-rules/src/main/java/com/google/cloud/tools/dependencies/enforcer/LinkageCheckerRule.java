@@ -224,7 +224,7 @@ public class LinkageCheckerRule extends AbstractEnforcerRule {
       // findLinkageProblems immediately after create.
 
       Path exclusionFile = this.exclusionFile == null ? null : Paths.get(this.exclusionFile);
-      LinkageChecker linkageChecker = LinkageChecker.create(classPath, entryPoints, null, exclusionFile);
+      LinkageChecker linkageChecker = LinkageChecker.create(classPath, entryPoints, ImmutableList.of(), exclusionFile);
       ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
       if (reportOnlyReachable) {
         ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();

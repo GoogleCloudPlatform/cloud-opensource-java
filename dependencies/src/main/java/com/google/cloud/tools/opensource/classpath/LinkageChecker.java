@@ -168,7 +168,7 @@ public class LinkageChecker {
 
     // This sourceClassFile is a source of references to other symbols.
     Set<ClassFile> classFiles = symbolReferences.getClassFiles();
-    if (sourceFilterList != null) {
+    if (!sourceFilterList.isEmpty()) {
       List<String> sourceFilterStringList = sourceFilterList.stream().map(Artifact::toString).collect(Collectors.toList());
       classFiles = classFiles.stream()
               .filter(x -> sourceFilterStringList.contains(x.getClassPathEntry().getArtifact().toString()))
