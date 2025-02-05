@@ -132,7 +132,9 @@ final class LinkageCheckerArguments {
             .longOpt("source-filter")
             .hasArgs()
             .valueSeparator(',')
-            .desc("Source Filter")
+            .desc("List of maven coordinates for artifacts (separated by ','). " +
+                    "These are artifacts whose class files are searched as the source of the " +
+                    "potential Linkage Errors.")
             .build();
     options.addOption(sourceFilter);
 
@@ -290,6 +292,10 @@ final class LinkageCheckerArguments {
     return null;
   }
 
+  /**
+   * Returns a list of artifacts to search where Linkage Errors stem from. If the argument is not
+   * specified, return an empty List.
+   */
   List<Artifact> getSourceFilterArtifactList() {
     if (commandLine.hasOption("s")) {
       String[] mavenCoordinatesOption = commandLine.getOptionValues("s");

@@ -158,6 +158,15 @@ public class LinkageChecker {
   }
 
   /**
+   * Two artifacts are considered equal if the Maven Coordinates (GAV) are equal
+   */
+  private boolean areArtifactsEquals(Artifact artifact1, Artifact artifact2) {
+    return artifact1.getGroupId().equals(artifact2.getGroupId())
+        && artifact1.getArtifactId().equals(artifact2.getArtifactId())
+        && artifact1.getVersion().equals(artifact2.getVersion());
+  }
+
+  /**
    * Searches the classpath for linkage errors.
    *
    * @return {@link LinkageProblem}s found in the class path and referencing classes
@@ -168,11 +177,13 @@ public class LinkageChecker {
 
     // This sourceClassFile is a source of references to other symbols.
     Set<ClassFile> classFiles = symbolReferences.getClassFiles();
+
+    // Filter the list to only contain class files that come from the classes we are interested in
     if (!sourceFilterList.isEmpty()) {
-      List<String> sourceFilterStringList = sourceFilterList.stream().map(Artifact::toString).collect(Collectors.toList());
+      // Run through each class file and check that the class file's corresponding artifact matches
+      // any artifact specified in the sourceFilterList
       classFiles = classFiles.stream()
-              .filter(x -> sourceFilterStringList.contains(x.getClassPathEntry().getArtifact().toString()))
-              .collect(Collectors.toSet());
+              .filter(x -> sourceFilterList.stream().anyMatch(y -> areArtifactsEquals(x.getClassPathEntry().getArtifact(), y))).collect(Collectors.toSet());
     }
     for (ClassFile classFile : classFiles) {
       ImmutableSet<ClassSymbol> classSymbols = symbolReferences.getClassSymbols(classFile);
