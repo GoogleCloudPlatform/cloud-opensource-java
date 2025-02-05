@@ -68,7 +68,7 @@ public class LinkageChecker {
   }
 
   public static LinkageChecker create(List<ClassPathEntry> classPath) throws IOException {
-    return create(classPath, ImmutableSet.copyOf(classPath), null, null);
+    return create(classPath, ImmutableSet.copyOf(classPath), ImmutableList.of(), null);
   }
 
   /**
@@ -133,13 +133,13 @@ public class LinkageChecker {
     List<ClassPathEntry> artifactsInBom = classpath.subList(0, managedDependencies.size());
     ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(artifactsInBom);
 
-    return LinkageChecker.create(classpath, entryPoints, null, exclusionFile);
+    return LinkageChecker.create(classpath, entryPoints, ImmutableList.of(), exclusionFile);
   }
 
   @VisibleForTesting
   LinkageChecker cloneWith(SymbolReferences newSymbolMaps) {
     return new LinkageChecker(
-        classDumper, classPath, newSymbolMaps, classReferenceGraph, null, excludedErrors);
+        classDumper, classPath, newSymbolMaps, classReferenceGraph, ImmutableList.of(), excludedErrors);
   }
 
   private LinkageChecker(
