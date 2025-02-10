@@ -120,20 +120,6 @@
     </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.5.0</version>
-        <configuration>
-          <skip>false</skip>
-          <mainClass>com.google.cloud.tools.opensource.classpath.LinkageCheckerMain</mainClass>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
   <profiles>
     <profile>
       <id>java8-incompatible-reference-check</id>
