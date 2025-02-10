@@ -145,7 +145,7 @@ public class LinkageCheckTask extends DefaultTask {
       }
 
       // TODO(suztomo): Specify correct entry points if reportOnlyReachable is true.
-      LinkageChecker linkageChecker = LinkageChecker.create(classPath, classPath, exclusionFile);
+      LinkageChecker linkageChecker = LinkageChecker.create(classPath, classPath, ImmutableList.of(), exclusionFile);
 
       ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
