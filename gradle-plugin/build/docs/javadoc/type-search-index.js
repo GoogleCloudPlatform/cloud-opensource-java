@@ -1,1 +1,0 @@
-typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"com.google.cloud.tools.dependencies.gradle","l":"LinkageCheckerPlugin"},{"p":"com.google.cloud.tools.dependencies.gradle","l":"LinkageCheckerPluginExtension"},{"p":"com.google.cloud.tools.dependencies.gradle","l":"LinkageCheckTask"}]

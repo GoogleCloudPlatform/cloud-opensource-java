@@ -1,8 +1,0 @@
-com/google/cloud/tools/dependencies/gradle/LinkageCheckerPluginExtension.java
- com.google.cloud.tools.dependencies.gradle.LinkageCheckerPluginExtension
-com/google/cloud/tools/dependencies/gradle/LinkageCheckTask.java
- com.google.cloud.tools.dependencies.gradle.LinkageCheckTask
-com/google/cloud/tools/dependencies/gradle/DependencyNode.java
- com.google.cloud.tools.dependencies.gradle.DependencyNode
-com/google/cloud/tools/dependencies/gradle/LinkageCheckerPlugin.java
- com.google.cloud.tools.dependencies.gradle.LinkageCheckerPlugin
