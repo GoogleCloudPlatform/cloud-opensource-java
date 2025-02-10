@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.google.cloud.tools.dependencies.gradle.LinkageCheckerPluginTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-02-10T20:59:09" hostname="lawrenceqiu-macbookpro.roam.internal" time="1.091">
+  <properties/>
+  <testcase name="linkage_checker_plugin_should_add_task_to_project" classname="com.google.cloud.tools.dependencies.gradle.LinkageCheckerPluginTest" time="1.091"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
