@@ -178,12 +178,17 @@ public class LinkageChecker {
     // This sourceClassFile is a source of references to other symbols.
     Set<ClassFile> classFiles = symbolReferences.getClassFiles();
 
-    // Filter the list to only contain class files that come from the classes we are interested in
+    // Filtering the classFiles from the JARs (instead of using the problem filter) has additional a few
+    // additional benefits. 1. Reduces the total amount of linkage references to match and 2. Doesn't require
+    // an exclusion file to know all the possible flaky or false positive problems
     if (!sourceFilterList.isEmpty()) {
+      // Filter the list to only contain class files that come from the classes we are interested in.
       // Run through each class file and check that the class file's corresponding artifact matches
       // any artifact specified in the sourceFilterList
       classFiles = classFiles.stream()
-              .filter(x -> sourceFilterList.stream().anyMatch(y -> areArtifactsEquals(x.getClassPathEntry().getArtifact(), y))).collect(Collectors.toSet());
+              .filter(x -> sourceFilterList.stream()
+                      .anyMatch(y -> areArtifactsEquals(x.getClassPathEntry().getArtifact(), y)))
+              .collect(Collectors.toSet());
     }
     for (ClassFile classFile : classFiles) {
       ImmutableSet<ClassSymbol> classSymbols = symbolReferences.getClassSymbols(classFile);
