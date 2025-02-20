@@ -1340,4 +1340,32 @@ public class LinkageCheckerTest {
                 "has linkage errors that reference symbols on class"))
         .doesNotContain("java.lang.Object");
   }
+
+  @Test
+  public void testSourceFilter() throws InvalidVersionSpecificationException, IOException {
+    // BQ-Storage v3.9.3 contains 3 known binary incompatibilities with Protobuf-Java 4.x
+    DefaultArtifact sourceArtifact = new DefaultArtifact("com.google.cloud:google-cloud-bigquerystorage:3.9.3");
+    ClassPathResult classPathResult =
+        new ClassPathBuilder()
+            .resolve(
+                ImmutableList.of(
+                        sourceArtifact,
+                    new DefaultArtifact("com.google.protobuf:protobuf-java:4.27.4"),
+                    new DefaultArtifact("com.google.protobuf:protobuf-java-util:4.27.4")),
+                false,
+                DependencyMediation.MAVEN);
+
+    ImmutableList<ClassPathEntry> classPath = classPathResult.getClassPath();
+    LinkageChecker linkageChecker = LinkageChecker.create(
+            classPath,
+            ImmutableSet.copyOf(classPath),
+            ImmutableList.of(sourceArtifact),
+            null);
+
+    // Without a source-filter to narrow down the linkage errors that stem from BQ-Storage, Linkage Checker
+    // would report 119 errors. Narrowing it down with the source filter will only report the 3 known binary
+    // incompatibilities
+    ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
+    Truth.assertThat(problems.size()).isEqualTo(3);
+  }
 }

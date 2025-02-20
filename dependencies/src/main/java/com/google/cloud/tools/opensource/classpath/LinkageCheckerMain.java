@@ -33,7 +33,7 @@ import org.eclipse.aether.artifact.Artifact;
 /**
  * A tool to find linkage errors in a class path.
  */
-class LinkageCheckerMain {
+public class LinkageCheckerMain {
 
   /**
    * Forms a classpath from Maven coordinates or a list of jar files and reports linkage errors in
@@ -133,7 +133,7 @@ class LinkageCheckerMain {
     ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(inputClassPath);
     LinkageChecker linkageChecker =
         LinkageChecker.create(
-            inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
+            inputClassPath, entryPoints, ImmutableList.of(), linkageCheckerArguments.getInputExclusionFile());
 
     ImmutableSet<LinkageProblem> linkageProblems =
         findLinkageProblems(linkageChecker, linkageCheckerArguments.getReportOnlyReachable());
@@ -161,7 +161,7 @@ class LinkageCheckerMain {
 
     LinkageChecker linkageChecker =
         LinkageChecker.create(
-            inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
+            inputClassPath, entryPoints, linkageCheckerArguments.getSourceFilterArtifactList(), linkageCheckerArguments.getInputExclusionFile());
     ImmutableSet<LinkageProblem> linkageProblems =
         findLinkageProblems(linkageChecker,
             linkageCheckerArguments.getReportOnlyReachable());

@@ -25,6 +25,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -123,6 +126,17 @@ final class LinkageCheckerArguments {
             .desc("Jar files (separated by ',')")
             .build();
     inputGroup.addOption(jarOption);
+
+    Option sourceFilter =
+        Option.builder("s")
+            .longOpt("source-filter")
+            .hasArgs()
+            .valueSeparator(',')
+            .desc("List of maven coordinates for artifacts (separated by ','). " +
+                    "These are artifacts whose class files are searched as the source of the " +
+                    "potential Linkage Errors.")
+            .build();
+    options.addOption(sourceFilter);
 
     Option repositoryOption =
         Option.builder("m")
@@ -276,5 +290,19 @@ final class LinkageCheckerArguments {
       return Paths.get(commandLine.getOptionValue("o"));
     }
     return null;
+  }
+
+  /**
+   * Returns a list of artifacts to search where Linkage Errors stem from. If the argument is not
+   * specified, return an empty List.
+   */
+  List<Artifact> getSourceFilterArtifactList() {
+    if (commandLine.hasOption("s")) {
+      String[] mavenCoordinatesOption = commandLine.getOptionValues("s");
+      return Arrays.stream(mavenCoordinatesOption)
+              .map(DefaultArtifact::new)
+              .collect(Collectors.toList());
+    }
+    return ImmutableList.of();
   }
 }
