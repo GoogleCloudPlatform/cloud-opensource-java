@@ -158,7 +158,10 @@ public class LinkageChecker {
   }
 
   /**
-   * Two artifacts are considered equal if the Maven Coordinates (GAV) are equal
+   * Two artifacts are considered equal if only the Maven Coordinates (GAV) are equal. This is
+   * included instead of using Artifact.equals() because the `equals()` implementation
+   * of DefaultArtifact checks more fields than just the GAV Coordinates (also checks the classifier,
+   * file path, properties, etc are all equal).
    */
   private boolean areArtifactsEquals(Artifact artifact1, Artifact artifact2) {
     return artifact1.getGroupId().equals(artifact2.getGroupId())
