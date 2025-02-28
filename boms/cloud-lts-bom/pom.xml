@@ -85,7 +85,7 @@
     <!-- the google-api-services-bigquery version used by the google-cloud-bigquery version above -->
     <google-api-services-bigquery.version>v2-rev20250216-2.0.0</google-api-services-bigquery.version>
     <google-cloud-bigquerystorage.version>3.11.4</google-cloud-bigquerystorage.version>
-    <google-cloud-bigtable.version>2.51.1</google-cloud-bigtable.version>
+    <google-cloud-bigtable.version>2.53.0</google-cloud-bigtable.version>
     <google-cloud-logging.version>3.21.4</google-cloud-logging.version>
     <google-cloud-datastore.version>2.26.4</google-cloud-datastore.version>
     <google-cloud-pubsub.version>1.137.1</google-cloud-pubsub.version>
