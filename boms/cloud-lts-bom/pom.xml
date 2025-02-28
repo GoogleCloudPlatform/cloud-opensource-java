@@ -73,8 +73,8 @@
     <google-cloud-service-usage.version>2.59.0</google-cloud-service-usage.version>
     <google-cloud-tasks.version>2.59.0</google-cloud-tasks.version>
     <google-cloud-trace.version>2.59.0</google-cloud-trace.version>
-    <google-cloud-translate.version>3.57.0</google-cloud-translate.version>
-    <google-cloud-vision.version>3.41.0</google-cloud-vision.version>
+    <google-cloud-translate.version>2.59.0</google-cloud-translate.version>
+    <google-cloud-vision.version>3.57.0</google-cloud-vision.version>
     <google-iam-admin.version>3.54.0</google-iam-admin.version>
     <google-cloud-iamcredentials.version>2.59.0</google-cloud-iamcredentials.version>
     <google-cloud-secretmanager.version>2.59.0</google-cloud-secretmanager.version>
