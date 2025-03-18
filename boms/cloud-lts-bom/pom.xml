@@ -51,7 +51,7 @@
     <!-- Layer 1: Core -->
     <guava.version>33.4.0-jre</guava.version>
     <autovalue.version>1.11.0</autovalue.version>
-    <protobuf.version>3.25.5</protobuf.version>
+    <protobuf.version>3.25.6</protobuf.version>
     <io.grpc.version>1.70.0</io.grpc.version>
     <google-http-client.version>1.46.3</google-http-client.version>
     <google-oauth-client.version>1.38.0</google-oauth-client.version>
