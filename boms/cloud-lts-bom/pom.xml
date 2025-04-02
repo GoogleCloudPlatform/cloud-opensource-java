@@ -95,7 +95,7 @@
     <google-cloud-storage.version>2.47.0</google-cloud-storage.version>
 
     <!-- Layer 3: Beam -->
-    <beam.version>2.63.0</beam.version>
+    <beam.version>2.64.0</beam.version>
     <!-- Layer 4: HBase Connector -->
     <bigtable-hbase-beam.version>2.14.3</bigtable-hbase-beam.version>
   </properties>
