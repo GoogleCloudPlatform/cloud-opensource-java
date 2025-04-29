@@ -53,7 +53,7 @@
     <google.cloud.core.version>2.6.0</google.cloud.core.version>
     <io.grpc.version>1.45.1</io.grpc.version>
     <http.version>1.41.7</http.version>
-    <protobuf.version>3.19.4</protobuf.version>
+    <protobuf.version>4.28.1</protobuf.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
         When updating gax.version, update gax.httpjson.version too. -->
     <gax.version>2.16.0</gax.version>
