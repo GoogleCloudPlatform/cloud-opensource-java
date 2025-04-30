@@ -63,15 +63,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.TreeMap;
+
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
@@ -579,35 +573,35 @@ public class DashboardMain {
     for (ClassPathEntry entry : classPathResult.getClassPath()) {
       List<DependencyPath> dependencyPaths = classPathResult.getDependencyPaths(entry);
 
-      ImmutableList<String> commonVersionlessArtifacts =
-          commonVersionlessArtifacts(dependencyPaths);
+      ImmutableList<String> commonVersionLessArtifacts =
+              commonVersionLessArtifacts(dependencyPaths);
 
       if (dependencyPaths.size() > MINIMUM_NUMBER_DEPENDENCY_PATHS
-          && commonVersionlessArtifacts.size() > 1) { // The last paths elements are always same
+          && commonVersionLessArtifacts.size() > 1) { // The last paths elements are always same
         builder.put(
             entry.toString(),
             summaryMessage(
-                dependencyPaths.size(), commonVersionlessArtifacts, dependencyPaths.get(0)));
+                dependencyPaths.size(), commonVersionLessArtifacts, dependencyPaths.get(0)));
       }
     }
     return builder.build();
   }
-
-  private static ImmutableList<String> commonVersionlessArtifacts(
+//  Fixed inefficiency using Guava's sets utility for more efficient intersection
+  private static ImmutableList<String> commonVersionLessArtifacts(
       List<DependencyPath> dependencyPaths) {
-    ImmutableList<String> initialVersionlessCoordinates =
-        dependencyPaths.get(0).getArtifactKeys();
-    // LinkedHashSet remembers insertion order
-    LinkedHashSet<String> versionlessCoordinatesIntersection =
-        Sets.newLinkedHashSet(initialVersionlessCoordinates);
-    for (DependencyPath dependencyPath : dependencyPaths) {
-      // List of versionless coordinates ("groupId:artifactId")
-      ImmutableList<String> versionlessCoordinatesInPath = dependencyPath.getArtifactKeys();
-      // intersection of elements in DependencyPaths
-      versionlessCoordinatesIntersection.retainAll(versionlessCoordinatesInPath);
-    }
 
-    return ImmutableList.copyOf(versionlessCoordinatesIntersection);
+    if (dependencyPaths.isEmpty()) {
+      return ImmutableList.of();
+    }
+    // Get the first path's coordinates as a set
+    Set<String> commonCoordinates = Sets.newLinkedHashSet(dependencyPaths.get(0).getArtifactKeys());
+
+    for (int i = 1; i < dependencyPaths.size(); i++) {
+      Set<String> pathCoordinates = Sets.newHashSet(dependencyPaths.get(i).getArtifactKeys());
+      commonCoordinates = Sets.intersection(commonCoordinates, pathCoordinates);
+    }
+    // Preserve the original order while returning as an immutableList
+    return ImmutableList.copyOf(commonCoordinates);
   }
 
   private static String summaryMessage(
