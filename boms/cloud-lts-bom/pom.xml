@@ -540,7 +540,7 @@
       <!-- Layer 4: HBase Connector -->
       <dependency>
         <groupId>com.google.cloud.bigtable</groupId>
-        <artifactId>bigtable-hbase-beam</artifactId>
+        <artifactId>dotvisu</artifactId>
         <version>${bigtable-hbase-beam.version}</version>
       </dependency>
     </dependencies>
