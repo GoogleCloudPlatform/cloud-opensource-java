@@ -77,7 +77,7 @@ public class BomContentTest {
       }
     }
     // Temporarily ignore due to inability to process exclusion statements
-    //assertNoDowngradeRule(bom);
+    assertNoDowngradeRule(bom);
     assertUniqueClasses(artifacts);
     assertBomIsImported(bom);
   }
