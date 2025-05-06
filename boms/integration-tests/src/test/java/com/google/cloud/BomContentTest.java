@@ -76,7 +76,7 @@ public class BomContentTest {
         assertReachable(buildMavenCentralUrl(artifact));
       }
     }
-
+    // Temporarily ignore due to inability to process exclusion statements
     assertNoDowngradeRule(bom);
     assertUniqueClasses(artifacts);
     assertBomIsImported(bom);
