@@ -49,10 +49,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- Layer 1: Core -->
-    <guava.version>33.4.0-jre</guava.version>
+    <guava.version>33.4.4-jre</guava.version>
     <autovalue.version>1.11.0</autovalue.version>
     <protobuf.version>3.25.7</protobuf.version>
-    <io.grpc.version>1.70.0</io.grpc.version>
+    <io.grpc.version>1.71.0</io.grpc.version>
     <google-http-client.version>1.46.3</google-http-client.version>
     <google-oauth-client.version>1.38.0</google-oauth-client.version>
     <google-auth-library.version>1.33.1</google-auth-library.version>
@@ -79,7 +79,7 @@
     <google-cloud-iamcredentials.version>2.59.0</google-cloud-iamcredentials.version>
     <google-cloud-secretmanager.version>2.59.0</google-cloud-secretmanager.version>
     <google-api-services-androidpublisher.version>v3-rev20250102-2.0.0</google-api-services-androidpublisher.version>
-    <appengine-api-1.0-sdk.version>2.0.31</appengine-api-1.0-sdk.version>
+    <appengine-api-1.0-sdk.version>2.0.34</appengine-api-1.0-sdk.version>
     <gcs-connector.version>2.2.26</gcs-connector.version>
     <google-cloud-bigquery.version>2.48.1</google-cloud-bigquery.version>
     <!-- the google-api-services-bigquery version used by the google-cloud-bigquery version above -->
