@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -56,6 +57,7 @@ import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
@@ -95,8 +97,9 @@ public final class RepositoryUtility {
     locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
     locator.addService(TransporterFactory.class, FileTransporterFactory.class);
     locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
-  
-    return locator.getService(RepositorySystem.class);
+    RepositorySystem system = locator.getService(RepositorySystem.class);
+    Verify.verifyNotNull(system, "Couldn't retrieve RepositorySystem");
+    return system;
   }
 
   @VisibleForTesting
@@ -104,7 +107,8 @@ public final class RepositoryUtility {
       RepositorySystem system) {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
     LocalRepository localRepository = new LocalRepository(findLocalRepository());
-    session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
+    LocalRepositoryManager localRepositoryManager = system.newLocalRepositoryManager(session, localRepository);
+    session.setLocalRepositoryManager(localRepositoryManager);
     return session;
   }
 
