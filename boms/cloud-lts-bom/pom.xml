@@ -47,9 +47,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
     <!-- Layer 1: Core -->
-    <guava.version>33.4.4-jre</guava.version>
+    <guava.version>33.4.0-jre</guava.version>
     <autovalue.version>1.11.0</autovalue.version>
     <protobuf.version>3.25.7</protobuf.version>
     <io.grpc.version>1.71.0</io.grpc.version>
@@ -58,26 +57,26 @@
     <google-auth-library.version>1.33.1</google-auth-library.version>
     <google-api-client.version>2.7.2</google-api-client.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier. -->
-    <gax.version>2.62.0</gax.version>
-    <api-common.version>2.45.0</api-common.version>
-    <google-cloud-core.version>2.52.0</google-cloud-core.version>
-    <proto-google-common-protos.version>2.53.0</proto-google-common-protos.version>
+    <gax.version>2.68.0</gax.version>
+    <api-common.version>2.51.0</api-common.version>
+    <google-cloud-core.version>2.58.0</google-cloud-core.version>
+    <proto-google-common-protos.version>2.59.0</proto-google-common-protos.version>
 
     <!-- Layer 2: Cloud -->
-    <google-cloud-container.version>2.62.0</google-cloud-container.version>
-    <google-cloud-kms.version>2.62.0</google-cloud-kms.version>
-    <google-cloud-monitoring.version>3.60.0</google-cloud-monitoring.version>
-    <google-cloud-orchestration-airflow.version>1.59.0</google-cloud-orchestration-airflow.version>
-    <google-cloud-redis.version>2.62.0</google-cloud-redis.version>
-    <google-cloud-resourcemanager.version>1.61.0</google-cloud-resourcemanager.version>
-    <google-cloud-service-usage.version>2.59.0</google-cloud-service-usage.version>
-    <google-cloud-tasks.version>2.59.0</google-cloud-tasks.version>
-    <google-cloud-trace.version>2.59.0</google-cloud-trace.version>
-    <google-cloud-translate.version>2.59.0</google-cloud-translate.version>
-    <google-cloud-vision.version>3.57.0</google-cloud-vision.version>
-    <google-iam-admin.version>3.54.0</google-iam-admin.version>
-    <google-cloud-iamcredentials.version>2.59.0</google-cloud-iamcredentials.version>
-    <google-cloud-secretmanager.version>2.59.0</google-cloud-secretmanager.version>
+    <google-cloud-container.version>2.70.0</google-cloud-container.version>
+    <google-cloud-kms.version>2.70.0</google-cloud-kms.version>
+    <google-cloud-monitoring.version>3.68.0</google-cloud-monitoring.version>
+    <google-cloud-orchestration-airflow.version>1.67.0</google-cloud-orchestration-airflow.version>
+    <google-cloud-redis.version>2.70.0</google-cloud-redis.version>
+    <google-cloud-resourcemanager.version>1.69.0</google-cloud-resourcemanager.version>
+    <google-cloud-service-usage.version>2.67.0</google-cloud-service-usage.version>
+    <google-cloud-tasks.version>2.67.0</google-cloud-tasks.version>
+    <google-cloud-trace.version>2.67.0</google-cloud-trace.version>
+    <google-cloud-translate.version>2.67.0</google-cloud-translate.version>
+    <google-cloud-vision.version>3.65.0</google-cloud-vision.version>
+    <google-iam-admin.version>3.62.0</google-iam-admin.version>
+    <google-cloud-iamcredentials.version>2.67.0</google-cloud-iamcredentials.version>
+    <google-cloud-secretmanager.version>2.67.0</google-cloud-secretmanager.version>
     <google-api-services-androidpublisher.version>v3-rev20250102-2.0.0</google-api-services-androidpublisher.version>
     <appengine-api-1.0-sdk.version>2.0.34</appengine-api-1.0-sdk.version>
     <gcs-connector.version>2.2.26</gcs-connector.version>
