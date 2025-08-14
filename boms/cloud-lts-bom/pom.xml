@@ -97,7 +97,7 @@
     <!-- Layer 3: Beam -->
     <beam.version>2.67.0</beam.version>
     <!-- Layer 4: HBase Connector -->
-    <bigtable-hbase-beam.version>2.14.9</bigtable-hbase-beam.version>
+    <bigtable-hbase-beam.version>2.15.3</bigtable-hbase-beam.version>
   </properties>
 
   <distributionManagement>
