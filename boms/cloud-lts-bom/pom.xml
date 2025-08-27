@@ -51,53 +51,53 @@
     <!-- Layer 1: Core -->
     <guava.version>33.4.0-jre</guava.version>
     <autovalue.version>1.11.0</autovalue.version>
-    <protobuf.version>3.25.7</protobuf.version>
-    <io.grpc.version>1.70.0</io.grpc.version>
-    <google-http-client.version>1.46.3</google-http-client.version>
-    <google-oauth-client.version>1.38.0</google-oauth-client.version>
-    <google-auth-library.version>1.33.1</google-auth-library.version>
+    <protobuf.version>3.25.8</protobuf.version>
+    <io.grpc.version>1.71.0</io.grpc.version>
+    <google-http-client.version>1.47.0</google-http-client.version>
+    <google-oauth-client.version>1.39.0</google-oauth-client.version>
+    <google-auth-library.version>1.36.0</google-auth-library.version>
     <google-api-client.version>2.7.2</google-api-client.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier. -->
-    <gax.version>2.62.0</gax.version>
-    <api-common.version>2.45.0</api-common.version>
-    <google-cloud-core.version>2.52.0</google-cloud-core.version>
-    <proto-google-common-protos.version>2.53.0</proto-google-common-protos.version>
+    <gax.version>2.67.0</gax.version>
+    <api-common.version>2.50.0</api-common.version>
+    <google-cloud-core.version>2.57.0</google-cloud-core.version>
+    <proto-google-common-protos.version>2.58.0</proto-google-common-protos.version>
 
     <!-- Layer 2: Cloud -->
-    <google-cloud-container.version>2.62.0</google-cloud-container.version>
-    <google-cloud-kms.version>2.62.0</google-cloud-kms.version>
-    <google-cloud-monitoring.version>3.60.0</google-cloud-monitoring.version>
-    <google-cloud-orchestration-airflow.version>1.59.0</google-cloud-orchestration-airflow.version>
-    <google-cloud-redis.version>2.62.0</google-cloud-redis.version>
-    <google-cloud-resourcemanager.version>1.61.0</google-cloud-resourcemanager.version>
-    <google-cloud-service-usage.version>2.59.0</google-cloud-service-usage.version>
-    <google-cloud-tasks.version>2.59.0</google-cloud-tasks.version>
-    <google-cloud-trace.version>2.59.0</google-cloud-trace.version>
-    <google-cloud-translate.version>2.59.0</google-cloud-translate.version>
-    <google-cloud-vision.version>3.57.0</google-cloud-vision.version>
-    <google-iam-admin.version>3.54.0</google-iam-admin.version>
-    <google-cloud-iamcredentials.version>2.59.0</google-cloud-iamcredentials.version>
-    <google-cloud-secretmanager.version>2.59.0</google-cloud-secretmanager.version>
-    <google-api-services-androidpublisher.version>v3-rev20250102-2.0.0</google-api-services-androidpublisher.version>
-    <appengine-api-1.0-sdk.version>2.0.31</appengine-api-1.0-sdk.version>
-    <gcs-connector.version>2.2.26</gcs-connector.version>
-    <google-cloud-bigquery.version>2.48.1</google-cloud-bigquery.version>
+    <google-cloud-container.version>2.67.0</google-cloud-container.version>
+    <google-cloud-kms.version>2.67.0</google-cloud-kms.version>
+    <google-cloud-monitoring.version>3.65.0</google-cloud-monitoring.version>
+    <google-cloud-orchestration-airflow.version>1.64.0</google-cloud-orchestration-airflow.version>
+    <google-cloud-redis.version>2.67.0</google-cloud-redis.version>
+    <google-cloud-resourcemanager.version>1.66.0</google-cloud-resourcemanager.version>
+    <google-cloud-service-usage.version>2.64.0</google-cloud-service-usage.version>
+    <google-cloud-tasks.version>2.64.0</google-cloud-tasks.version>
+    <google-cloud-trace.version>2.64.0</google-cloud-trace.version>
+    <google-cloud-translate.version>2.64.0</google-cloud-translate.version>
+    <google-cloud-vision.version>3.62.0</google-cloud-vision.version>
+    <google-iam-admin.version>3.59.0</google-iam-admin.version>
+    <google-cloud-iamcredentials.version>2.64.0</google-cloud-iamcredentials.version>
+    <google-cloud-secretmanager.version>2.64.0</google-cloud-secretmanager.version>
+    <google-api-services-androidpublisher.version>v3-rev20250602-2.0.0</google-api-services-androidpublisher.version>
+    <appengine-api-1.0-sdk.version>2.0.34</appengine-api-1.0-sdk.version>
+    <gcs-connector.version>3.0.9</gcs-connector.version>
+    <google-cloud-bigquery.version>2.51.0</google-cloud-bigquery.version>
     <!-- the google-api-services-bigquery version used by the google-cloud-bigquery version above -->
-    <google-api-services-bigquery.version>v2-rev20250216-2.0.0</google-api-services-bigquery.version>
-    <google-cloud-bigquerystorage.version>3.11.4</google-cloud-bigquerystorage.version>
-    <google-cloud-bigtable.version>2.54.0</google-cloud-bigtable.version>
-    <google-cloud-logging.version>3.21.4</google-cloud-logging.version>
-    <google-cloud-datastore.version>2.26.4</google-cloud-datastore.version>
-    <google-cloud-pubsub.version>1.137.1</google-cloud-pubsub.version>
+    <google-api-services-bigquery.version>v2-rev20250511-2.0.0</google-api-services-bigquery.version>
+    <google-cloud-bigquerystorage.version>3.15.0</google-cloud-bigquerystorage.version>
+    <google-cloud-bigtable.version>2.60.0</google-cloud-bigtable.version>
+    <google-cloud-datastore.version>2.29.1</google-cloud-datastore.version>
+    <google-cloud-logging.version>3.22.5</google-cloud-logging.version>
+    <google-cloud-pubsub.version>1.140.1</google-cloud-pubsub.version>
     <!-- the proto-google-cloud-pubsub-v1 used by the google-cloud-pubsub version above -->
-    <proto-google-cloud-pubsub-v1.version>1.119.1</proto-google-cloud-pubsub-v1.version>
-    <google-cloud-spanner.version>6.88.0</google-cloud-spanner.version>
-    <google-cloud-storage.version>2.49.0</google-cloud-storage.version>
+    <proto-google-cloud-pubsub-v1.version>1.122.1</proto-google-cloud-pubsub-v1.version>
+    <google-cloud-spanner.version>6.95.1</google-cloud-spanner.version>
+    <google-cloud-storage.version>2.53.0</google-cloud-storage.version>
 
     <!-- Layer 3: Beam -->
-    <beam.version>2.64.0</beam.version>
+    <beam.version>2.67.0</beam.version>
     <!-- Layer 4: HBase Connector -->
-    <bigtable-hbase-beam.version>2.14.9</bigtable-hbase-beam.version>
+    <bigtable-hbase-beam.version>2.15.3</bigtable-hbase-beam.version>
   </properties>
 
   <distributionManagement>
@@ -462,7 +462,7 @@
       <dependency>
         <groupId>com.google.cloud.bigdataoss</groupId>
         <artifactId>gcs-connector</artifactId>
-        <version>hadoop3-${gcs-connector.version}</version>
+        <version>${gcs-connector.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud.bigdataoss</groupId>
