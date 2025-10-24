@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "separate-pull-requests": true,
+  "include-component-in-tag": true,
+  "packages": {
+    ".": {
+      "component": "dependencies",
+      "release-type": "java-yoshi"
+    },
+    "boms/cloud-lts-bom": {
+        "component": "gcp-lts-bom",
+        "release-type": "java-yoshi"
+    }
+  },
+  "bootstrap-sha": "8eb8233f0f402a52f9452ccc633fbce63904163d"
+}
