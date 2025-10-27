@@ -10,4 +10,13 @@ branches:
     handleGHRelease: true
     releaseType: java-lts
     branch: 8.0.x-lts
-  
+  - bumpMinorPreMajor: true
+    handleGHRelease: true
+    releaseType: java-lts
+    branch: 7.0.x-lts
+  - bumpMinorPreMajor: true
+    handleGHRelease: true
+    releaseType: java-lts
+    branch: 6.0.x-lts
+
+
