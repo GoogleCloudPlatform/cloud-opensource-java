@@ -1,2 +1,4 @@
 # Format:
 # module:released-version:current-version
+
+gcp-lts-bom:6.0.2:6.0.3-SNAPSHOT
