@@ -1,5 +1,12 @@
 # Linkage Checker Enforcer Rule and Linkage Monitor Change Log
 
+## [1.6.0](https://github.com/GoogleCloudPlatform/cloud-opensource-java/compare/dependencies-v1.5.15...dependencies-v1.6.0) (2025-10-28)
+
+
+### Features
+
+* LTS 9 ([#2410](https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2410)) ([536aad1](https://github.com/GoogleCloudPlatform/cloud-opensource-java/commit/536aad1459233175c8bb79bf29233e807f879df3))
+
 ## 1.5.12
 * Fixed the bug in the Gradle plugin that affected artifacts with "pom" packaging ([#2196](
   https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/2196))
