@@ -1,5 +1,13 @@
 # Linkage Checker Enforcer Rule and Linkage Monitor Change Log
 
+## [6.0.3](https://github.com/GoogleCloudPlatform/cloud-opensource-java/compare/lts-v6.0.2...lts-v6.0.3) (2025-10-28)
+
+
+### Bug Fixes
+
+* add versions.txt to 6.0.x-lts branch ([365ffc1](https://github.com/GoogleCloudPlatform/cloud-opensource-java/commit/365ffc1c481c1e2aba2e9ed9775c877a240dc0fd))
+* prepare Release Please for 6.0.x-lts branch ([#2424](https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2424)) ([2881d73](https://github.com/GoogleCloudPlatform/cloud-opensource-java/commit/2881d736d7bef780c77c2fcb1ba712329b1baf73))
+
 ## 1.5.12
 * Fixed the bug in the Gradle plugin that affected artifacts with "pom" packaging ([#2196](
   https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/2196))
