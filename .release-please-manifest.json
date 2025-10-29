@@ -1,5 +1,5 @@
 
    {
-     ".": "1.5.15",
+     "dependencies": "1.5.15",
      "boms/cloud-lts-bom": "9.0.1"
    }

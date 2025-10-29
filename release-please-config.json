@@ -3,9 +3,10 @@
   "separate-pull-requests": true,
   "include-component-in-tag": true,
   "packages": {
-    ".": {
+    "dependencies": {
       "component": "dependencies",
-      "release-type": "java-yoshi"
+      "release-type": "java-yoshi",
+      "extra-files": ["pom.xml", "enforcer-rules/pom.xml", "gradle-plugin/build.gradle", "linkage-monitor/pom.xml"]
     },
     "boms/cloud-lts-bom": {
         "component": "gcp-lts-bom",
