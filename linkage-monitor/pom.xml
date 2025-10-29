@@ -22,7 +22,7 @@
   <parent>
     <groupId>com.google.cloud.tools</groupId>
     <artifactId>dependencies-parent</artifactId>
-    <version>1.5.16-SNAPSHOT</version><!-- {x-version-update:dependencies:current} -->
+    <version>1.6.0</version><!-- {x-version-update:dependencies:current} -->
   </parent>
 
   <artifactId>linkage-monitor</artifactId>
