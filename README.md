@@ -3,14 +3,6 @@
 This project explores common infrastructure and best practices for open source
 Java projects for the Google Cloud Platform (GCP).
 
-# Google Cloud Platform Java Dependency Dashboard
-
-[Google Cloud Platform Java Dependency Dashboard](
-https://storage.googleapis.com/cloud-opensource-java-dashboard/com.google.cloud/libraries-bom/snapshot/index.html)
-(runs daily; work in progress) shows multiple checks on the consistency among
-Google Cloud Java libraries. For manually generating the dashboard, see
-[its README](./dashboard/README.md).
-
 # Google Best Practices for Java Libraries
 
 [Google Best Practices for Java Libraries](https://googlecloudplatform.github.io/cloud-opensource-java/)
@@ -43,6 +35,8 @@ The [GCP Libraries BOM](https://cloud.google.com/java/docs/bom) is a Bill-of-Mat
 provides consistent versions of Google Cloud Java libraries that work together
 without linkage errors.
 
+This has moved to https://github.com/googleapis/java-cloud-bom/tree/main/libraries-bom.
+
 # Development
 
 This project is built using _Maven_.
@@ -61,6 +55,4 @@ This project is built using _Maven_.
 # Disclaimer
 
 This is not an officially supported Google product.
-
-
 

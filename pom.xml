@@ -54,11 +54,8 @@
   </licenses>
 
   <modules>
-    <module>boms</module>
     <module>dependencies</module>
-    <module>dashboard</module>
     <module>enforcer-rules</module>
-    <module>linkage-monitor</module>
   </modules>
 
   <dependencyManagement>

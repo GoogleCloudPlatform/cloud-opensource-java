@@ -27,7 +27,7 @@ group = 'com.google.cloud.tools'
 
 sourceCompatibility = 1.8
 
-version = '1.5.15' // {x-version-update:dependencies:current}
+version = '1.5.16-SNAPSHOT' // {x-version-update:dependencies:current}
 
 dependencies {
   implementation "com.google.cloud.tools:dependencies:$version"
