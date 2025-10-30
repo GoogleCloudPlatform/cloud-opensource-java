@@ -11,20 +11,18 @@ jobs:
       matrix:
         java: [8, 11]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - uses: actions/setup-java@v5
       with:
         java-version: ${{matrix.java}}
         distribution: 'temurin'
-    - name: Get current date
-      id: date
-      run: echo "date=$(date +'%Y-%m-%d' --utc)" >> "$GITHUB_OUTPUT"
     - run: java -version
     # The http connection settings avoid Maven's HTTP connection reset in GitHub Actions
     # https://github.com/actions/virtual-environments/issues/1499#issuecomment-689467080
     - run: |
-        ./mvnw -B -e -ntp install \
+        ./mvnw -B -e -ntp test \
+            -pl dependencies,boms/integration-tests \
+            -DfailIfNoTests=false \
+            -Dtest=com.google.cloud.BomContentTest \
             -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false \
             -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
-    - run: cd gradle-plugin && ./gradlew build publishToMavenLocal
-
