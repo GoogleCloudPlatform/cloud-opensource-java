@@ -9,7 +9,6 @@
   <artifactId>gcp-lts-bom</artifactId>
   <version>9.0.2-SNAPSHOT</version><!-- {x-version-update:gcp-lts-bom:current} -->
   <packaging>pom</packaging>
-
   <name>Google Cloud Long Term Support BOM</name>
   <description>Google Cloud Long Term Support BOM</description>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java</url>
