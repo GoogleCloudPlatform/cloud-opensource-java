@@ -21,3 +21,9 @@ branches:
     packageName: gcp-lts-bom
     manifest: true
     branch: 6.0.x-lts
+  - bumpMinorPreMajor: true
+    handleGHRelease: true
+    packageName: gcp-lts-bom
+    manifest: true
+    branch: protobuf-4.x-rc
+    releaseType: java-yoshi
