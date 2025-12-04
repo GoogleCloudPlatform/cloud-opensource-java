@@ -17,4 +17,6 @@
     }
   },
   "bootstrap-sha": "6b9240114536a03b72929d5fade85599fbdbbdd0"
+,
+  "prerelease": true
 }
