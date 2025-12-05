@@ -1,15 +1,19 @@
 handleGHRelease: true
 manifest: true
 branches:
-    - bumpMinorPreMajor: true
+    - branch: 9.0.x-lts
+      bumpMinorPreMajor: true
       packageName: gcp-lts-bom
-      branch: 9.0.x-lts
-    - bumpMinorPreMajor: true
+    - branch: 8.0.x-lts
+      bumpMinorPreMajor: true
       packageName: gcp-lts-bom
-      branch: 8.0.x-lts
-    - bumpMinorPreMajor: true
+    - branch: 7.0.x-lts
+      bumpMinorPreMajor: true
       packageName: gcp-lts-bom
-      branch: 7.0.x-lts
-    - bumpMinorPreMajor: true
+    - branch: 6.0.x-lts
+      bumpMinorPreMajor: true
       packageName: gcp-lts-bom
-      branch: 6.0.x-lts
+    - branch: protobuf-4.x-rc
+      bumpMinorPreMajor: true
+      packageName: gcp-lts-bom
+      releaseType: java-yoshi
