@@ -2,9 +2,6 @@
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "separate-pull-requests": true,
   "include-component-in-tag": true,
-  "prerelease-type": "rc1",
-  "versioning": "prerelease",
-  "release-type": "java-yoshi",
   "packages": {
     "dependencies": {
       "component": "dependencies",
@@ -17,6 +14,4 @@
     }
   },
   "bootstrap-sha": "6b9240114536a03b72929d5fade85599fbdbbdd0"
-,
-  "prerelease": true
 }
