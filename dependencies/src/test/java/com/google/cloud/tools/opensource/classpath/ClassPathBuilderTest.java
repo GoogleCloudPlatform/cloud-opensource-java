@@ -93,8 +93,9 @@ public class ClassPathBuilderTest {
   /** Test that BOM members come before the transitive dependencies. */
   @Test
   public void testBomToPaths_firstElementsAreBomMembers() throws RepositoryException {
-    List<Artifact> managedDependencies = 
-        Bom.readBom("com.google.cloud:google-cloud-bom:0.81.0-alpha")
+    Bom bom = Bom.readBom("com.google.cloud:google-cloud-bom:0.81.0-alpha");
+    List<Artifact> managedDependencies =
+        bom
         .getManagedDependencies();
 
     ImmutableList<ClassPathEntry> classPath =
