@@ -96,11 +96,21 @@
       <groupId>org.relaxng</groupId>
       <artifactId>jing</artifactId>
       <version>20181222</version>
+      <exclusions>
+        <!-- isorelax:isorelax has no license metadata in its POM. Use the same classes
+          from org.netbeans.external:isorelax below. -->
+        <exclusion>
+          <groupId>isorelax</groupId>
+          <artifactId>isorelax</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
-      <groupId>isorelax</groupId>
+      <!-- ISO RELAX (JARV) API, MIT license. Same org.iso_relax classes as
+        isorelax:isorelax:20030108. -->
+      <groupId>org.netbeans.external</groupId>
       <artifactId>isorelax</artifactId>
-      <version>20030108</version>
+      <version>RELEASE310</version>
     </dependency>
     <dependency>
       <groupId>commons-cli</groupId>
