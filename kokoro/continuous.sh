@@ -12,4 +12,4 @@ cd github/cloud-opensource-java
 ./mvnw -V -B -X -ntp clean install -Djavadoc.skip
 
 cd gradle-plugin
-./gradlew build publishToMavenLocal
+./gradlew build
