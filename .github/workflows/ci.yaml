@@ -61,6 +61,25 @@ jobs:
         workload_identity_provider: 'projects/305452601764/locations/global/workloadIdentityPools/builders/providers/github'
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f
+    - name: Clean up stale releases from staging repo
+      run: |
+        # clean up stale releases from staging repo
+        packages=$(gcloud artifacts packages list \
+            --project="oss-exit-gate-prod" \
+            --location="us" \
+            --repository="cloud-opensource-java--mavencentral" \
+            --format="value(name)" 2>/dev/null)
+
+        echo "${packages}" | xargs -r -I {} sh -c '
+            package_name=$(basename "{}")
+            echo "Deleting package: $package_name..."
+            gcloud artifacts packages delete "{}" \
+                --project="\'"oss-exit-gate-prod"\'" \
+                --location="\'"us"\'" \
+                --repository="\'cloud-opensource-java--mavencentral\'" \
+                --quiet
+        '
+
     - name: Stage BOM to OSS Exit Gate Maven Artifact Registry
       run: |
         ./mvnw -B -f boms/cloud-tools-opensource-boms/pom.xml deploy -DskipTests \
