@@ -1,4 +1,4 @@
 # Format:
 # module:released-version:current-version
 
-dependencies:1.5.16:1.5.16
+dependencies:1.5.16:1.5.17-SNAPSHOT
