@@ -1,5 +1,16 @@
 # Changelog
 
+## [11.0.0](https://github.com/GoogleCloudPlatform/cloud-opensource-java/compare/gcp-lts-bom-v10.0.0...gcp-lts-bom-v11.0.0) (2026-11-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* Update dependencies for LTS 11
+
+### Features
+
+* Update dependencies for LTS 11 ([f4aa478](https://github.com/GoogleCloudPlatform/cloud-opensource-java/commit/f4aa4784186f7418d182cd9ea0fabd261609f75c))
+
 ## [10.0.0](https://github.com/GoogleCloudPlatform/cloud-opensource-java/compare/gcp-lts-bom-v9.0.1...gcp-lts-bom-v10.0.0) (2026-04-08)
 
 
