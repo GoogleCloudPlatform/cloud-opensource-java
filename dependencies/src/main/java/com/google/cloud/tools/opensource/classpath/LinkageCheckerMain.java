@@ -156,6 +156,20 @@ public class LinkageCheckerMain {
     ImmutableList<ClassPathEntry> inputClassPath = classPathResult.getClassPath();
     ImmutableList<ArtifactProblem> artifactProblems =
         ImmutableList.copyOf(classPathResult.getArtifactProblems());
+    if (inputClassPath.size() < artifacts.size()) {
+      StringBuilder message =
+          new StringBuilder(
+              "Could not resolve all supplied Maven coordinates to a classpath. "
+                  + "Resolved "
+                  + inputClassPath.size()
+                  + " of "
+                  + artifacts.size()
+                  + " artifacts.");
+      if (!artifactProblems.isEmpty()) {
+        message.append(" Problems: ").append(artifactProblems);
+      }
+      throw new IllegalArgumentException(message.toString());
+    }
     ImmutableSet<ClassPathEntry> entryPoints =
         ImmutableSet.copyOf(inputClassPath.subList(0, artifacts.size()));
 
